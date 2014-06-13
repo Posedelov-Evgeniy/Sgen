@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QApplication>
 #include <QTimer>
-#include "./api/inc/fmod.hpp"
-#include "./api/inc/fmod_errors.h"
+#include "fmod.hpp"
+#include "fmod_errors.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>

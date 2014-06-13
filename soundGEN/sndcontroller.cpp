@@ -26,9 +26,9 @@ FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned i
         double kR = freq_r*2.0*M_PI;
         for (count=0; count<datalen; count++)
         {
-            *stereo16bitbuffer++ = (signed short)(amp_l * mfct.left_channel_fct(t, kL, freq_l) * 32767.0d);    // left channel
-            *stereo16bitbuffer++ = (signed short)(amp_r * mfct.right_channel_fct(t, kR, freq_r) * 32767.0d);    // right channel
-            t += 1.0/44100.0d;
+            *(stereo16bitbuffer++) = (signed short)(amp_l * mfct.left_channel_fct(t, kL, freq_l) * 32767.0);    // left channel
+            *(stereo16bitbuffer++) = (signed short)(amp_r * mfct.right_channel_fct(t, kR, freq_r) * 32767.0);    // right channel
+            t += 1.0/44100.0;
         }
     }
 
