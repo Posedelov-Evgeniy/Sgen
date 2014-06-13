@@ -62,6 +62,9 @@ bool SndController::parseFunctions(QCoreApplication *app) {
         lib.unload();
     }
 
+    QDir dir(app->applicationDirPath());
+    dir.mkdir("efr");
+
     QFile file(app->applicationDirPath()+"/efr/main.h");
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
@@ -81,6 +84,17 @@ bool SndController::parseFunctions(QCoreApplication *app) {
     out2 << "extern \"C\" double sound_func_r(double t, double k, double f) { return (double) ("+text_r+"); };\r\n";
     out2 << "int main() {return 0;};\r\n";
     file2.close();
+
+    QFile file3(app->applicationDirPath()+"/efr/Makefile");
+    file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+    QTextStream out3(&file3);
+    out3 << "x64: main.c\r\n";
+    out3 << "	g++ -m64 -Wall -fPIC -c main.c\r\n";
+    out3 << "	g++ -shared -o main.so main.o\r\n";
+    out3 << "clean:\r\n";
+    out3 << "	rm -f main.o\r\n";
+    out3 << "	rm -f main.so\r\n";
+    file3.close();
 
     QProcess* pConsoleProc = new QProcess;
     QString tcmd = "make -C \""+app->applicationDirPath()+"/efr\" -f Makefile";
