@@ -24,6 +24,8 @@ private slots:
 
     void sound_starting();
 
+    void cycle_starting();
+
     void on_functionsButton_clicked();
 
     void on_pushButton_clicked();

@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
     QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
+    QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));
+
 }
 
 MainWindow::~MainWindow()
@@ -40,6 +42,14 @@ void MainWindow::on_pushButton_3_clicked()
 {
     auto_restart = true;
     sc->stop();
+}
+
+void MainWindow::cycle_starting()
+{
+    ui->lcdNumber_2->display(sc->getInstLFreq());
+    ui->lcdNumber_4->display(sc->getInstRFreq());
+    ui->lcdNumber->display(sc->getInstLAmp());
+    ui->lcdNumber_3->display(sc->getInstRAmp());
 }
 
 void MainWindow::sound_starting()

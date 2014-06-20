@@ -49,10 +49,15 @@ public:
     void SetRAmp(double new_amp_r);
     void SetLFreq(double new_freq_l);
     void SetRFreq(double new_freq_r);
+    double getInstLFreq();
+    double getInstRFreq();
+    double getInstLAmp();
+    double getInstRAmp();
 signals:
     void starting();
     void started();
     void stopped();
+    void cycle_start();
 public slots:
     void run();
     void stop();

@@ -4,6 +4,8 @@ static mainFct mfct;
 static double freq_l, freq_r;
 static double amp_l, amp_r;
 static double t;
+static double l_fr, r_fr;
+static double l_ar, r_ar;
 
 void ERRCHECK(FMOD_RESULT result)
 {
@@ -24,12 +26,38 @@ FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned i
     if (mfct.left_channel_fct && mfct.right_channel_fct) {
         double kL = freq_l*2.0*M_PI;
         double kR = freq_r*2.0*M_PI;
+        double l_pprev=0, r_pprev=0, l_prev=0, r_prev=0, l_curr=0, r_curr=0, l_cnt=0, r_cnt=0, l_a = 0, r_a = 0;
+
         for (count=0; count<datalen; count++)
         {
-            *(stereo16bitbuffer++) = (signed short)(amp_l * mfct.left_channel_fct(t, kL, freq_l) * 32767.0);    // left channel
-            *(stereo16bitbuffer++) = (signed short)(amp_r * mfct.right_channel_fct(t, kR, freq_r) * 32767.0);    // right channel
+            l_curr = amp_l * mfct.left_channel_fct(t, kL, freq_l);
+            r_curr = amp_r * mfct.right_channel_fct(t, kR, freq_r);
+            *(stereo16bitbuffer++) = (signed short)(l_curr * 32767.0);   // left channel
+            *(stereo16bitbuffer++) = (signed short)(r_curr * 32767.0);   // right channel
             t += 1.0/44100.0;
+
+            l_curr = fabs(l_curr);
+            r_curr = fabs(r_curr);
+
+            if (l_pprev>0 || r_pprev>0) {
+                if (l_prev>l_curr && l_prev>l_pprev) l_cnt++;
+                if (r_prev>r_curr && r_prev>r_pprev) r_cnt++;
+            }
+
+            if (l_a<l_curr) l_a = l_curr;
+            if (r_a<r_curr) r_a = r_curr;
+
+            l_pprev = l_prev;
+            r_pprev = r_prev;
+            l_prev = l_curr;
+            r_prev = r_curr;
         }
+
+        l_fr = 0.5 * l_cnt/(datalen/44100.0);
+        r_fr = 0.5 * r_cnt/(datalen/44100.0);
+
+        l_ar = l_a<=1.0 ? l_a : 1.0;
+        r_ar = r_a<=1.0 ? r_a : 1.0;
     }
 
     return FMOD_OK;
@@ -53,6 +81,8 @@ void SndController::resetParams() {
     text_r = "cos(k*t)";
     freq_l = freq_r = 500;
     amp_l = amp_r = 1.0;
+    l_fr = r_fr = 0;
+    l_ar = r_ar = 0;
     t = 0.0;
 }
 
@@ -164,7 +194,7 @@ int SndController::doprocess() {
     memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
     createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);              /* required. */
     createsoundexinfo.decodebuffersize  = 44100;                                       /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo.length            = 44100 * channels * sizeof(signed short) * 5; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo.length            = 44100 * channels * sizeof(signed short) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
     createsoundexinfo.numchannels       = channels;                                    /* Number of channels in the sound. */
     createsoundexinfo.defaultfrequency  = 44100;                                       /* Default playback rate of sound. */
     createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;                     /* Data format of sound. */
@@ -186,6 +216,8 @@ int SndController::doprocess() {
     do
     {
         system->update();
+
+        emit cycle_start();
 
         if (channel)
         {
@@ -223,7 +255,7 @@ int SndController::doprocess() {
         }
 
         //Sleep(20);
-        QTimer::singleShot(5000, &loop, SLOT(quit()));
+        QTimer::singleShot(2000, &loop, SLOT(quit()));
         loop.exec();
 
     } while (!is_stopped);
@@ -285,4 +317,17 @@ void SndController::SetLFreq(double new_freq_l) {
 
 void SndController::SetRFreq(double new_freq_r) {
     freq_r = new_freq_r;
+}
+
+double SndController::getInstLFreq() {
+    return l_fr;
+}
+double SndController::getInstRFreq() {
+    return r_fr;
+}
+double SndController::getInstLAmp() {
+    return l_ar;
+}
+double SndController::getInstRAmp() {
+    return r_ar;
 }
