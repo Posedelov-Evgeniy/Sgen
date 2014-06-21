@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include "sndcontroller.h"
 
 namespace Ui {
@@ -48,6 +49,7 @@ private:
     Ui::MainWindow *ui;
     SndController *sc;
     bool auto_restart;
+    bool panel_opened;
 };
 
 #endif // MAINWINDOW_H

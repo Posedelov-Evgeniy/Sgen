@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>517</width>
-    <height>417</height>
+    <width>516</width>
+    <height>413</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -62,9 +62,7 @@
      </rect>
     </property>
     <property name="plainText">
-     <string>double square(double t) {
-  return sin(t) &gt;=0 ? 1 : -1;
-}</string>
+     <string/>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
@@ -435,7 +433,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>517</width>
+     <width>516</width>
      <height>25</height>
     </rect>
    </property>

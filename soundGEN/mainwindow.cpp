@@ -5,18 +5,70 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
     auto_restart = false;
+    panel_opened = false;
     ui->setupUi(this);
     sc = new SndController(this);
+
+    ui->lineEdit->setText(settings.value("main/function_l", "sin(k*t)").toString());
+    ui->lineEdit_2->setText(settings.value("main/function_r", "cos(k*t)").toString());
+    ui->doubleSpinBox->setValue(settings.value("main/amp_l", 1).toDouble());
+    ui->doubleSpinBox_3->setValue(settings.value("main/amp_r", 1).toDouble());
+    ui->doubleSpinBox_2->setValue(settings.value("main/freq_l", 500).toDouble());
+    ui->doubleSpinBox_4->setValue(settings.value("main/freq_r", 500).toDouble());
+
+    if (settings.value("window/f_panel_opened", 0).toInt()==1) {
+        ui->functionsButton->click();
+    }
+
+    QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
+
+    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
+    if(!file.exists()){
+        qDebug() << "Functions.cpp not exists";
+    }
+    if (file.open(QIODevice::ReadOnly))
+    {
+        QTextStream stream(&file);
+        QString funct_str = stream.readAll().toUtf8();
+        ui->plainTextEdit->document()->setPlainText(funct_str);
+    }
+
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
     QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
     QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));
-
 }
 
 MainWindow::~MainWindow()
 {
+    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
+    settings.setValue("main/function_l", ui->lineEdit->text());
+    settings.setValue("main/function_r", ui->lineEdit_2->text());
+    settings.setValue("main/amp_l", ui->doubleSpinBox->value());
+    settings.setValue("main/amp_r", ui->doubleSpinBox_3->value());
+    settings.setValue("main/freq_l", ui->doubleSpinBox_2->value());
+    settings.setValue("main/freq_r", ui->doubleSpinBox_4->value());
+
+    settings.setValue("window/f_panel_opened", panel_opened ? 1 : 0);
+
+    QRect gg = this->geometry();
+    settings.setValue("window/left", gg.left());
+    settings.setValue("window/top", gg.top());
+
+    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
+    if (file.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&file);
+        stream << ui->plainTextEdit->document()->toPlainText();
+        file.close();
+        if (stream.status() != QTextStream::Ok)
+        {
+            qDebug() << "Error writing functions.cpp";
+        }
+    }
+
     delete ui;
 }
 
@@ -26,6 +78,7 @@ void MainWindow::on_functionsButton_clicked()
     QRect gg = this->geometry();
     gg.setWidth(ui->functionsButton->isChecked() ? 822 : 515);
     this->setGeometry(gg);
+    panel_opened = !panel_opened;
 }
 
 void MainWindow::on_pushButton_clicked()
