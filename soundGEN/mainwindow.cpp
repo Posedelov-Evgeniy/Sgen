@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     auto_restart = false;
     panel_opened = false;
     ui->setupUi(this);
-    sc = new SndController(this);
+    sc = SndController::Instance();
 
     ui->lineEdit->setText(settings.value("main/function_l", "sin(k*t)").toString());
     ui->lineEdit_2->setText(settings.value("main/function_r", "cos(k*t)").toString());

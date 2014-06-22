@@ -1,11 +1,7 @@
 #include "sndcontroller.h"
+#include "fmod_errors.h"
 
-static mainFct mfct;
-static double freq_l, freq_r;
-static double amp_l, amp_r;
-static double t;
-static double l_fr, r_fr;
-static double l_ar, r_ar;
+SndController *SndController::_self_controller = 0;
 
 void ERRCHECK(FMOD_RESULT result)
 {
@@ -18,20 +14,58 @@ void ERRCHECK(FMOD_RESULT result)
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
+    SndController::Instance()->fillBuffer(sound, data, datalen);
+    return FMOD_OK;
+}
+
+FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype)
+{
+    /*
+        This is useful if the user calls Sound::setPosition and you want to seek your data accordingly.
+    */
+    return FMOD_OK;
+}
+
+SndController::SndController(QObject *parent) :
+    QObject(parent)
+{
+}
+
+SndController *SndController::Instance()
+{
+    if(!_self_controller)
+    {
+        _self_controller = new SndController();
+    }
+    return _self_controller;
+}
+
+bool SndController::DeleteInstance()
+{
+    if(_self_controller)
+    {
+        delete _self_controller;
+        _self_controller = 0;
+        return true;
+    }
+    return false;
+}
+
+void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
+{
     unsigned int  count;
     signed short *stereo16bitbuffer = (signed short *)data;
 
     datalen = datalen>>2;  // >>2 = 16bit stereo (4 bytes per sample)
 
     if (mfct.left_channel_fct && mfct.right_channel_fct) {
-        double kL = freq_l*2.0*M_PI;
-        double kR = freq_r*2.0*M_PI;
+
         double l_pprev=0, r_pprev=0, l_prev=0, r_prev=0, l_curr=0, r_curr=0, l_cnt=0, r_cnt=0, l_a = 0, r_a = 0;
 
         for (count=0; count<datalen; count++)
         {
-            l_curr = amp_l * mfct.left_channel_fct(t, kL, freq_l);
-            r_curr = amp_r * mfct.right_channel_fct(t, kR, freq_r);
+            l_curr = getLResult();
+            r_curr = getRResult();
             *(stereo16bitbuffer++) = (signed short)(l_curr * 32767.0);   // left channel
             *(stereo16bitbuffer++) = (signed short)(r_curr * 32767.0);   // right channel
             t += 1.0/44100.0;
@@ -59,21 +93,6 @@ FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned i
         l_ar = l_a<=1.0 ? l_a : 1.0;
         r_ar = r_a<=1.0 ? r_a : 1.0;
     }
-
-    return FMOD_OK;
-}
-
-FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsigned int position, FMOD_TIMEUNIT postype)
-{
-    /*
-        This is useful if the user calls Sound::setPosition and you want to seek your data accordingly.
-    */
-    return FMOD_OK;
-}
-
-SndController::SndController(QObject *parent) :
-    QObject(parent)
-{
 }
 
 void SndController::resetParams() {
@@ -83,6 +102,8 @@ void SndController::resetParams() {
     amp_l = amp_r = 1.0;
     l_fr = r_fr = 0;
     l_ar = r_ar = 0;
+    kL = freq_l*2.0*M_PI;
+    kR = freq_r*2.0*M_PI;
     t = 0.0;
 }
 
@@ -134,10 +155,20 @@ bool SndController::parseFunctions(QCoreApplication *app) {
 
     lib.setFileName(app->applicationDirPath()+"/efr/main");
     lib.load();
-    mfct.left_channel_fct = (Fct)(lib.resolve("sound_func_l"));
-    mfct.right_channel_fct = (Fct)(lib.resolve("sound_func_r"));
+    mfct.left_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_l"));
+    mfct.right_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_r"));
 
     return mfct.left_channel_fct && mfct.right_channel_fct;
+}
+
+double SndController::getLResult()
+{
+    return amp_l * mfct.left_channel_fct(t, kL, freq_l);
+}
+
+double SndController::getRResult()
+{
+    return amp_r * mfct.right_channel_fct(t, kR, freq_r);
 }
 
 int SndController::doprocess() {
@@ -313,10 +344,12 @@ void SndController::SetRAmp(double new_amp_r) {
 
 void SndController::SetLFreq(double new_freq_l) {
     freq_l = new_freq_l;
+    kL = freq_l*2.0*M_PI;
 }
 
 void SndController::SetRFreq(double new_freq_r) {
     freq_r = new_freq_r;
+    kR = freq_r*2.0*M_PI;
 }
 
 double SndController::getInstLFreq() {

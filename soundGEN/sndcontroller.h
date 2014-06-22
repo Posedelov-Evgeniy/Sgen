@@ -5,7 +5,6 @@
 #include <QApplication>
 #include <QTimer>
 #include "fmod.hpp"
-#include "fmod_errors.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -13,27 +12,37 @@
 #include <QtCore/QCoreApplication>
 #include <QProcess>
 
-typedef double (*Fct) (double, double, double);
+typedef double (*GenSoundFunction) (double, double, double);
 
-struct channelInfo {
-    Fct ch_function;
-    double freq;
-    double amp;
+struct GenSoundFunctions {
+    GenSoundFunction left_channel_fct;
+    GenSoundFunction right_channel_fct;
 };
 
-struct mainFct {
-    Fct left_channel_fct;
-    Fct right_channel_fct;
-};
 
 class SndController : public QObject
 {
     Q_OBJECT
 private:
+    static SndController* _self_controller;
+    SndController(QObject *parent = 0);
+    Q_DISABLE_COPY(SndController);
+
     bool parseFunctions(QCoreApplication *app);
+    double getLResult();
+    double getRResult();
+
     int doprocess();
     void resetParams();
     bool is_stopped;
+
+    GenSoundFunctions mfct;
+    double freq_l, freq_r, kL, kR;
+    double amp_l, amp_r;
+    double t;
+    double l_fr, r_fr;
+    double l_ar, r_ar;
+
     QString text_l;
     QString text_r;
     QString text_functions;
@@ -41,7 +50,11 @@ private:
     QEventLoop loop;
     QEventLoop loopStop;
 public:
-    explicit SndController(QObject *parent = 0);
+    static SndController* Instance();
+    static bool DeleteInstance();
+
+    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
+
     void SetLFunctionStr(QString new_text_l);
     void SetRFunctionStr(QString new_text_r);
     void SetFunctionsStr(QString new_f);

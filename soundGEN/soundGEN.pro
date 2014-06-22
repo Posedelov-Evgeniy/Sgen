@@ -31,7 +31,7 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     sndcontroller.cpp
 
-HEADERS  += mainwindow.h \
-    sndcontroller.h
+HEADERS  += sndcontroller.h \
+    mainwindow.h
 
 FORMS    += mainwindow.ui
