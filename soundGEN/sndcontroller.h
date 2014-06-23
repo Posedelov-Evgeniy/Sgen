@@ -12,7 +12,9 @@
 #include <QtCore/QCoreApplication>
 #include <QProcess>
 
-typedef double (*GenSoundFunction) (double, double, double);
+typedef double (*PlaySoundFunction) (double);
+
+typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction);
 
 struct GenSoundFunctions {
     GenSoundFunction left_channel_fct;
@@ -28,7 +30,7 @@ private:
     SndController(QObject *parent = 0);
     Q_DISABLE_COPY(SndController);
 
-    bool parseFunctions(QCoreApplication *app);
+    bool parseFunctions();
     double getLResult();
     double getRResult();
 
@@ -42,7 +44,11 @@ private:
     double t;
     double l_fr, r_fr;
     double l_ar, r_ar;
+    FMOD::Sound *base_sound;
+    unsigned int soundLenPcmBytes;
+    signed short *pcmData;
 
+    QString sound_file;
     QString text_l;
     QString text_r;
     QString text_functions;
@@ -54,7 +60,9 @@ public:
     static bool DeleteInstance();
 
     void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
+    double playSound(int i, double t);
 
+    void SetSoundFile(QString new_file);
     void SetLFunctionStr(QString new_text_l);
     void SetRFunctionStr(QString new_text_r);
     void SetFunctionsStr(QString new_f);

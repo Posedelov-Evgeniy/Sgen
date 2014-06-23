@@ -26,9 +26,19 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     return FMOD_OK;
 }
 
+double base_play_soundL(double t) {
+    return SndController::Instance()->playSound(0, t);
+}
+double base_play_soundR(double t) {
+    return SndController::Instance()->playSound(1, t);
+}
+
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
+    base_sound = 0;
+    pcmData = 0;
+    soundLenPcmBytes = 0;
 }
 
 SndController *SndController::Instance()
@@ -49,6 +59,21 @@ bool SndController::DeleteInstance()
         return true;
     }
     return false;
+}
+
+double SndController::playSound(int i, double t)
+{
+    double result = 0;
+
+    if (base_sound && pcmData && soundLenPcmBytes)
+    {
+        unsigned int offset = t*44100.0*2 + i;
+        if (offset<soundLenPcmBytes) {
+            result = pcmData[offset]/32767.0;
+        }
+
+    }
+    return result;
 }
 
 void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
@@ -95,19 +120,9 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
     }
 }
 
-void SndController::resetParams() {
-    text_l = "sin(k*t)";
-    text_r = "cos(k*t)";
-    freq_l = freq_r = 500;
-    amp_l = amp_r = 1.0;
-    l_fr = r_fr = 0;
-    l_ar = r_ar = 0;
-    kL = freq_l*2.0*M_PI;
-    kR = freq_r*2.0*M_PI;
-    t = 0.0;
-}
-
-bool SndController::parseFunctions(QCoreApplication *app) {
+bool SndController::parseFunctions()
+{
+    QCoreApplication *app = QCoreApplication::instance();
 
     if (lib.isLoaded()) {
         lib.unload();
@@ -119,8 +134,9 @@ bool SndController::parseFunctions(QCoreApplication *app) {
     QFile file(app->applicationDirPath()+"/efr/main.h");
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
-    out << "extern \"C\" double sound_func_l(double t, double k, double f);\r\n";
-    out << "extern \"C\" double sound_func_r(double t, double k, double f);\r\n";
+    out << "typedef double (*PlaySoundFunction) (double);\r\n";
+    out << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction sound);\r\n";
+    out << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction sound);\r\n";
     file.close();
 
     QFile file2(app->applicationDirPath()+"/efr/main.c");
@@ -131,8 +147,8 @@ bool SndController::parseFunctions(QCoreApplication *app) {
     out2 << "#include <stdio.h>\r\n";
     out2 << "#include \"main.h\"\r\n";
     out2 << text_functions + "\r\n";
-    out2 << "extern \"C\" double sound_func_l(double t, double k, double f) { return (double) ("+text_l+"); };\r\n";
-    out2 << "extern \"C\" double sound_func_r(double t, double k, double f) { return (double) ("+text_r+"); };\r\n";
+    out2 << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction sound) { return (double) ("+text_l+"); };\r\n";
+    out2 << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction sound) { return (double) ("+text_r+"); };\r\n";
     out2 << "int main() {return 0;};\r\n";
     file2.close();
 
@@ -161,14 +177,36 @@ bool SndController::parseFunctions(QCoreApplication *app) {
     return mfct.left_channel_fct && mfct.right_channel_fct;
 }
 
+void SndController::resetParams() {
+    text_l = "sin(k*t)";
+    text_r = "cos(k*t)";
+    sound_file = "";
+    freq_l = freq_r = 500;
+    kL = kR = freq_l*2.0*M_PI;
+    amp_l = amp_r = 1.0;
+    l_fr = r_fr = 0;
+    l_ar = r_ar = 0;
+    t = 0.0;
+    if (base_sound) {
+        FMOD_RESULT result = base_sound->release();
+        ERRCHECK(result);
+        base_sound = 0;
+        soundLenPcmBytes = 0;
+        if (pcmData) {
+            delete pcmData;
+            pcmData = 0;
+        }
+    }
+}
+
 double SndController::getLResult()
 {
-    return amp_l * mfct.left_channel_fct(t, kL, freq_l);
+    return amp_l * mfct.left_channel_fct(t, kL, freq_l, base_play_soundL);
 }
 
 double SndController::getRResult()
 {
-    return amp_r * mfct.right_channel_fct(t, kR, freq_r);
+    return amp_r * mfct.right_channel_fct(t, kR, freq_r, base_play_soundR);
 }
 
 int SndController::doprocess() {
@@ -195,7 +233,7 @@ int SndController::doprocess() {
     printf("Freq R: %f\r", freq_r);
     fflush(stdout);
 
-    if (!parseFunctions(QCoreApplication::instance())) {
+    if (!parseFunctions()) {
         printf("Error in functions!\r");
         return 0;
     }
@@ -234,6 +272,30 @@ int SndController::doprocess() {
 
     result = system->createSound(0, mode, &createsoundexinfo, &sound);
     ERRCHECK(result);
+
+    if (!sound_file.isEmpty()) {
+        system->createSound(qPrintable(sound_file), FMOD_OPENONLY | FMOD_ACCURATETIME, 0, &base_sound);
+        ERRCHECK(result);
+        result = base_sound->setMode(FMOD_LOOP_OFF);
+        ERRCHECK(result);
+        if (!pcmData)
+        {
+            unsigned int read = 0;
+            base_sound->getLength(&soundLenPcmBytes, FMOD_TIMEUNIT_PCMBYTES);
+            base_sound->seekData(0);
+
+            printf("PCM BYTES: %d\r", soundLenPcmBytes);
+
+            pcmData = new signed short[soundLenPcmBytes];
+            base_sound->readData(pcmData, soundLenPcmBytes, &read);
+            if (read<soundLenPcmBytes) {
+                soundLenPcmBytes = read;
+            }
+
+            printf("READ: %d\r", soundLenPcmBytes);
+            fflush(stdout);
+        }
+    }
 
     /*
         Play the sound.
@@ -302,6 +364,17 @@ int SndController::doprocess() {
     */
     result = sound->release();
     ERRCHECK(result);
+
+    if (base_sound) {
+        result = base_sound->release();
+        ERRCHECK(result);
+        base_sound = 0;
+        soundLenPcmBytes = 0;
+        if (pcmData) {
+            delete pcmData;
+            pcmData = 0;
+        }
+    }
     result = system->close();
     ERRCHECK(result);
     result = system->release();
@@ -320,6 +393,11 @@ void SndController::run() {
 void SndController::stop() {
     is_stopped = true;
     loop.exit();
+}
+
+void SndController::SetSoundFile(QString new_file)
+{
+    sound_file = new_file;
 }
 
 void SndController::SetLFunctionStr(QString new_text_l) {

@@ -11,6 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     sc = SndController::Instance();
 
+    ui->lineEdit_3->setText(settings.value("main/sound", "").toString());
+
     ui->lineEdit->setText(settings.value("main/function_l", "sin(k*t)").toString());
     ui->lineEdit_2->setText(settings.value("main/function_r", "cos(k*t)").toString());
     ui->doubleSpinBox->setValue(settings.value("main/amp_l", 1).toDouble());
@@ -44,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
+
+    settings.setValue("main/sound", ui->lineEdit_3->text());
     settings.setValue("main/function_l", ui->lineEdit->text());
     settings.setValue("main/function_r", ui->lineEdit_2->text());
     settings.setValue("main/amp_l", ui->doubleSpinBox->value());
@@ -109,6 +113,7 @@ void MainWindow::sound_starting()
 {
     sc->SetLFunctionStr(ui->lineEdit->text());
     sc->SetRFunctionStr(ui->lineEdit_2->text());
+    sc->SetSoundFile(ui->lineEdit_3->text());
     sc->SetLAmp(ui->doubleSpinBox->value());
     sc->SetRAmp(ui->doubleSpinBox_3->value());
     sc->SetLFreq(ui->doubleSpinBox_2->value());
@@ -157,4 +162,10 @@ void MainWindow::on_doubleSpinBox_4_valueChanged(double arg1)
 void MainWindow::on_MainWindow_destroyed()
 {
     sc->stop();
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "/home", tr("Sound files (*.mp3 *.wav *.ogg)"));
+    ui->lineEdit_3->setText(fileName);
 }

@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSettings>
+#include <QFileDialog>
 #include "sndcontroller.h"
 
 namespace Ui {
@@ -44,6 +45,8 @@ private slots:
     void on_doubleSpinBox_4_valueChanged(double arg1);
 
     void on_MainWindow_destroyed();
+
+    void on_pushButton_4_clicked();
 
 private:
     Ui::MainWindow *ui;
