@@ -123,6 +123,7 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
 bool SndController::parseFunctions()
 {
     QCoreApplication *app = QCoreApplication::instance();
+    QString error = "";
 
     if (lib.isLoaded()) {
         lib.unload();
@@ -165,14 +166,25 @@ bool SndController::parseFunctions()
 
     QProcess* pConsoleProc = new QProcess;
     QString tcmd = "make -C \""+app->applicationDirPath()+"/efr\" -f Makefile";
-    pConsoleProc->execute(tcmd);
+    pConsoleProc->start(tcmd, QProcess::ReadOnly);
+    if(pConsoleProc->waitForFinished()==true)
+    {
+       QByteArray b = pConsoleProc->readAllStandardError();
+       error = QString(b);
+       qDebug() <<  error << endl;
+    }
     pConsoleProc->close();
     delete pConsoleProc;
 
-    lib.setFileName(app->applicationDirPath()+"/efr/main");
-    lib.load();
-    mfct.left_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_l"));
-    mfct.right_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_r"));
+    if (error.isEmpty()) {
+        lib.setFileName(app->applicationDirPath()+"/efr/main");
+        lib.load();
+        mfct.left_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_l"));
+        mfct.right_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_r"));
+    } else {
+        mfct.left_channel_fct = 0;
+        mfct.right_channel_fct = 0;
+    }
 
     return mfct.left_channel_fct && mfct.right_channel_fct;
 }
@@ -224,6 +236,7 @@ int SndController::doprocess() {
 
     emit starting();
 
+    emit write_message("Initialization...");
     printf("Starting with: \r");
     printf("Function L: %s\r", qPrintable(text_l));
     printf("Function R: %s\r", qPrintable(text_r));
@@ -234,7 +247,7 @@ int SndController::doprocess() {
     fflush(stdout);
 
     if (!parseFunctions()) {
-        printf("Error in functions!\r");
+        emit write_message("Error in functions!");
         return 0;
     }
 
@@ -302,6 +315,8 @@ int SndController::doprocess() {
     */
     result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
     ERRCHECK(result);
+
+    emit write_message("Playing");
 
     /*
         Main loop.
@@ -381,6 +396,8 @@ int SndController::doprocess() {
     ERRCHECK(result);
 
     is_stopped = false;
+
+    emit write_message("Stopped");
 
     return 0;
 }

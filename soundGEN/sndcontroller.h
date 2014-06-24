@@ -79,6 +79,7 @@ signals:
     void started();
     void stopped();
     void cycle_start();
+    void write_message(QString message);
 public slots:
     void run();
     void stop();
