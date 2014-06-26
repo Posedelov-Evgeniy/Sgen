@@ -29,9 +29,12 @@ else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodexL64.so
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    sndcontroller.cpp
+    sndcontroller.cpp \
+    widgets/soundpicker.cpp
 
 HEADERS  += sndcontroller.h \
-    mainwindow.h
+    mainwindow.h \
+    widgets/soundpicker.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    widgets/soundpicker.ui
