@@ -58,9 +58,9 @@
         <property name="currentIndex">
          <number>0</number>
         </property>
-        <widget class="QWidget" name="horizontalTabWidgetPage1">
+        <widget class="QWidget" name="main_tab">
          <attribute name="title">
-          <string>Функции</string>
+          <string>Основное</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="sizeConstraint">
@@ -421,40 +421,13 @@
             </item>
            </layout>
           </item>
-          <item>
-           <widget class="QPushButton" name="functionsButton">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>28</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>28</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&gt;</string>
-            </property>
-            <property name="checkable">
-             <bool>true</bool>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="functions_tab">
+         <attribute name="title">
+          <string>Пользовательские функции</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
            <widget class="QPlainTextEdit" name="plainTextEdit_user_functions">
             <property name="sizePolicy">

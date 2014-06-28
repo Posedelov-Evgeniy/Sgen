@@ -7,26 +7,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
     auto_restart = false;
-    panel_opened = false;
     ui->setupUi(this);
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText("Перезапуск");
     sound_stopped();
-
-    ui->plainTextEdit_user_functions->setVisible(panel_opened);
-    base_width = QWidget::width();
-    base_height = QWidget::height();
-    //base_controls_top = ui->groupBox_controls_buttons->pos().y();
-    //base_sounds_top = base_controls_top - 5;
-    base_functions_button_height = ui->functionsButton->height();
     sc = SndController::Instance();
 
     int length = settings.value("main/sounds_count", 1).toInt();
     if (length<1) length = 1;
     if (length>maxSounds) length = maxSounds;
     for (int i=1;i<=length;i++) {
-        addSoundPicker(settings.value("main/sound"+QString::number(i), "").toString());
+        addSoundPicker(settings.value("main/sound"+QString::number(i), "").toString(), settings.value("main/sound"+QString::number(i)+"_function", "").toString());
     }
 
     ui->lineEdit_function_left->setText(settings.value("main/function_l", "sin(k*t)").toString());
@@ -36,11 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
     ui->doubleSpinBox_freq_right->setValue(settings.value("main/freq_r", 500).toDouble());
 
-    if (settings.value("window/f_panel_opened", 0).toInt()==1) {
-        ui->functionsButton->click();
-    }
-
     QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
+    QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
 
     QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
     if(!file.exists()){
@@ -69,6 +58,7 @@ MainWindow::~MainWindow()
     int i = 1;
     foreach(picker, sounds) {
         settings.setValue("main/sound"+QString::number(i), picker->getFilename());
+        settings.setValue("main/sound"+QString::number(i)+"_function", picker->getFunctionname());
         i++;
     }
 
@@ -79,11 +69,11 @@ MainWindow::~MainWindow()
     settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
     settings.setValue("main/freq_r", ui->doubleSpinBox_freq_right->value());
 
-    settings.setValue("window/f_panel_opened", panel_opened ? 1 : 0);
-
     QRect gg = this->geometry();
     settings.setValue("window/left", gg.left());
     settings.setValue("window/top", gg.top());
+    settings.setValue("window/width", gg.width());
+    settings.setValue("window/height", gg.height());
 
     QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
     if (file.open(QIODevice::WriteOnly))
@@ -98,12 +88,6 @@ MainWindow::~MainWindow()
     }
 
     delete ui;
-}
-
-void MainWindow::on_functionsButton_clicked()
-{
-    panel_opened = !panel_opened;
-    ui->plainTextEdit_user_functions->setVisible(panel_opened);
 }
 
 void MainWindow::cycle_starting()
@@ -123,12 +107,16 @@ void MainWindow::sound_starting()
 {
     sc->SetLFunctionStr(ui->lineEdit_function_left->text());
     sc->SetRFunctionStr(ui->lineEdit_function_right->text());
-    sc->SetSoundFile(sounds.first()->getFilename());
     sc->SetLAmp(ui->doubleSpinBox_amp_left->value());
     sc->SetRAmp(ui->doubleSpinBox_amp_right->value());
     sc->SetLFreq(ui->doubleSpinBox_freq_left->value());
     sc->SetRFreq(ui->doubleSpinBox_freq_right->value());
     sc->SetFunctionsStr(ui->plainTextEdit_user_functions->document()->toPlainText());
+
+    SoundPicker *picker;
+    foreach(picker, sounds) {
+        sc->AddSound(picker->getFilename(), picker->getFunctionname());
+    }
 }
 
 void MainWindow::sound_stopped()
@@ -174,7 +162,7 @@ void MainWindow::on_doubleSpinBox_freq_right_valueChanged(double arg1)
     sc->SetRFreq(arg1);
 }
 
-void MainWindow::addSoundPicker(QString fname)
+void MainWindow::addSoundPicker(QString file_name, QString function_name)
 {
     int length = sounds.length();
     if (length<maxSounds)
@@ -187,11 +175,12 @@ void MainWindow::addSoundPicker(QString fname)
         ui->sound_container->layout()->addWidget(picker);
         ui->sound_container->adjustSize();
 
-        picker->setFilename(fname);
+        picker->setFilename(file_name);
+        picker->setFunctionname(function_name);
         QObject::connect(picker, SIGNAL(add_new(SoundPicker*)), this, SLOT(add_sound(SoundPicker*)));
         QObject::connect(picker, SIGNAL(remove_item(SoundPicker*)), this, SLOT(remove_sound(SoundPicker*)));
         sounds.append(picker);
-        adjustSoundSizes();
+        adjustSoundParams();
     }
 }
 
@@ -202,40 +191,39 @@ void MainWindow::removeSoundPicker(SoundPicker *p)
             sounds.at(pos)->deleteLater();
             delete sounds.at(pos);
             sounds.removeAt(pos);
-            adjustSoundSizes();
+            adjustSoundParams();
         }
     }
 }
 
-void MainWindow::adjustSoundSizes()
+void MainWindow::adjustSoundParams()
 {
-    /*int def_height = sounds.isEmpty() ? 0 : sounds.length() * sounds.first()->height();
-    setFixedHeight(base_height + def_height);
-
-    QPoint pp;
-    QRect rr;
-
-    pp = ui->groupBox_controls_buttons->pos();
-    ui->groupBox_controls_buttons->move(pp.x(), base_controls_top + def_height);
-
-    rr = ui->functionsButton->geometry();
-    rr.setHeight(base_functions_button_height + def_height);
-    ui->functionsButton->setGeometry(rr);*/
-
     SoundPicker *picker;
+    QList<QString> func_names;
+    QString current_func_name;
+
     int i = 0;
+    int j = 1;
     int last = sounds.length()-1;
     foreach(picker, sounds) {
-        picker->move(20, base_sounds_top + i * picker->height());
         picker->setAddButtonEnabled(i==last);
         picker->setRemoveButtonEnabled(last>0);
+
+        current_func_name = picker->getFunctionname();
+        if (current_func_name.isEmpty() || current_func_name.indexOf(' ')>-1 || func_names.indexOf(current_func_name)>=0)
+        {
+            while (func_names.indexOf(current_func_name = "sound"+QString::number(j))>=0) j++;
+            picker->setFunctionname(current_func_name);
+        }
+        func_names.append(current_func_name);
+
         i++;
     }
 }
 
 void MainWindow::add_sound(SoundPicker *p)
 {
-    addSoundPicker("");
+    addSoundPicker("", "");
 }
 
 void MainWindow::remove_sound(SoundPicker *p)

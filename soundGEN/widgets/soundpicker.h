@@ -18,8 +18,9 @@ public:
     void setAddButtonEnabled(bool enabled);
     void setRemoveButtonEnabled(bool enabled);
     void setFilename(QString filename);
+    void setFunctionname(QString functionname);
     QString getFilename();
-
+    QString getFunctionname();
 signals:
     void remove_item(SoundPicker *p);
     void add_new(SoundPicker *p);

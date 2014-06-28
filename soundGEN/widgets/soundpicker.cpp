@@ -30,9 +30,19 @@ void SoundPicker::setFilename(QString filename)
     ui->lineEdit_sound->setText(filename);
 }
 
+void SoundPicker::setFunctionname(QString functionname)
+{
+    ui->lineEdit_function->setText(functionname);
+}
+
 QString SoundPicker::getFilename()
 {
     return ui->lineEdit_sound->text();
+}
+
+QString SoundPicker::getFunctionname()
+{
+    return ui->lineEdit_function->text();
 }
 
 void SoundPicker::on_pushButton_sound_clicked()

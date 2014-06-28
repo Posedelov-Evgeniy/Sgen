@@ -1,16 +1,7 @@
 #include "sndcontroller.h"
-#include "fmod_errors.h"
 
 SndController *SndController::_self_controller = 0;
 
-void ERRCHECK(FMOD_RESULT result)
-{
-    if (result != FMOD_OK)
-    {
-        printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
-        exit(-1);
-    }
-}
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
@@ -26,19 +17,29 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     return FMOD_OK;
 }
 
-double base_play_soundL(double t) {
-    return SndController::Instance()->playSound(0, t);
-}
-double base_play_soundR(double t) {
-    return SndController::Instance()->playSound(1, t);
+double base_play_sound(int i, unsigned int c, double t) {
+    return SndController::Instance()->playSound(i, c, t);
 }
 
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
-    base_sound = 0;
-    pcmData = 0;
-    soundLenPcmBytes = 0;
+    baseSoundList = new SoundList();
+}
+
+SndController::~SndController()
+{
+    baseSoundList->clearSounds();
+    delete baseSoundList;
+}
+
+void SndController::ERRCHECK(FMOD_RESULT result)
+{
+    if (result != FMOD_OK)
+    {
+        printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
+        exit(-1);
+    }
 }
 
 SndController *SndController::Instance()
@@ -61,19 +62,9 @@ bool SndController::DeleteInstance()
     return false;
 }
 
-double SndController::playSound(int i, double t)
+double SndController::playSound(int index, unsigned int channel, double t)
 {
-    double result = 0;
-
-    if (base_sound && pcmData && soundLenPcmBytes)
-    {
-        unsigned int offset = t*44100.0*2 + i;
-        if (offset<soundLenPcmBytes) {
-            result = pcmData[offset]/32767.0;
-        }
-
-    }
-    return result;
+    return baseSoundList->playSound(index, channel, t);
 }
 
 void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
@@ -135,9 +126,9 @@ bool SndController::parseFunctions()
     QFile file(app->applicationDirPath()+"/efr/main.h");
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
-    out << "typedef double (*PlaySoundFunction) (double);\r\n";
-    out << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction sound);\r\n";
-    out << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction sound);\r\n";
+    out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\r\n";
+    out << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\r\n";
+    out << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\r\n";
     file.close();
 
     QFile file2(app->applicationDirPath()+"/efr/main.c");
@@ -147,9 +138,11 @@ bool SndController::parseFunctions()
     out2 << "#include <string.h>\r\n";
     out2 << "#include <stdio.h>\r\n";
     out2 << "#include \"main.h\"\r\n";
-    out2 << text_functions + "\r\n";
-    out2 << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction sound) { return (double) ("+text_l+"); };\r\n";
-    out2 << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction sound) { return (double) ("+text_r+"); };\r\n";
+    out2 << text_functions + "\r\n\r\n";
+    out2 << "PlaySoundFunction BaseSoundFunction;\r\n\r\n";
+    out2 << baseSoundList->getFunctionsText() + "\r\n";
+    out2 << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\r\n";
+    out2 << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\r\n";
     out2 << "int main() {return 0;};\r\n";
     file2.close();
 
@@ -192,33 +185,23 @@ bool SndController::parseFunctions()
 void SndController::resetParams() {
     text_l = "sin(k*t)";
     text_r = "cos(k*t)";
-    sound_file = "";
     freq_l = freq_r = 500;
     kL = kR = freq_l*2.0*M_PI;
     amp_l = amp_r = 1.0;
     l_fr = r_fr = 0;
     l_ar = r_ar = 0;
     t = 0.0;
-    if (base_sound) {
-        FMOD_RESULT result = base_sound->release();
-        ERRCHECK(result);
-        base_sound = 0;
-        soundLenPcmBytes = 0;
-        if (pcmData) {
-            delete pcmData;
-            pcmData = 0;
-        }
-    }
+    baseSoundList->clearSounds();
 }
 
 double SndController::getLResult()
 {
-    return amp_l * mfct.left_channel_fct(t, kL, freq_l, base_play_soundL);
+    return amp_l * mfct.left_channel_fct(t, kL, freq_l, base_play_sound);
 }
 
 double SndController::getRResult()
 {
-    return amp_r * mfct.right_channel_fct(t, kR, freq_r, base_play_soundR);
+    return amp_r * mfct.right_channel_fct(t, kR, freq_r, base_play_sound);
 }
 
 int SndController::doprocess() {
@@ -286,29 +269,8 @@ int SndController::doprocess() {
     result = system->createSound(0, mode, &createsoundexinfo, &sound);
     ERRCHECK(result);
 
-    if (!sound_file.isEmpty()) {
-        system->createSound(qPrintable(sound_file), FMOD_OPENONLY | FMOD_ACCURATETIME, 0, &base_sound);
-        ERRCHECK(result);
-        result = base_sound->setMode(FMOD_LOOP_OFF);
-        ERRCHECK(result);
-        if (!pcmData)
-        {
-            unsigned int read = 0;
-            base_sound->getLength(&soundLenPcmBytes, FMOD_TIMEUNIT_PCMBYTES);
-            base_sound->seekData(0);
-
-            printf("PCM BYTES: %d\r", soundLenPcmBytes);
-
-            pcmData = new signed short[soundLenPcmBytes];
-            base_sound->readData(pcmData, soundLenPcmBytes, &read);
-            if (read<soundLenPcmBytes) {
-                soundLenPcmBytes = read;
-            }
-
-            printf("READ: %d\r", soundLenPcmBytes);
-            fflush(stdout);
-        }
-    }
+    baseSoundList->setSystem(system);
+    baseSoundList->InitSounds();
 
     /*
         Play the sound.
@@ -379,17 +341,7 @@ int SndController::doprocess() {
     */
     result = sound->release();
     ERRCHECK(result);
-
-    if (base_sound) {
-        result = base_sound->release();
-        ERRCHECK(result);
-        base_sound = 0;
-        soundLenPcmBytes = 0;
-        if (pcmData) {
-            delete pcmData;
-            pcmData = 0;
-        }
-    }
+    baseSoundList->clearSounds();
     result = system->close();
     ERRCHECK(result);
     result = system->release();
@@ -410,11 +362,6 @@ void SndController::run() {
 void SndController::stop() {
     is_stopped = true;
     loop.exit();
-}
-
-void SndController::SetSoundFile(QString new_file)
-{
-    sound_file = new_file;
 }
 
 void SndController::SetLFunctionStr(QString new_text_l) {
@@ -458,4 +405,9 @@ double SndController::getInstLAmp() {
 }
 double SndController::getInstRAmp() {
     return r_ar;
+}
+
+void SndController::AddSound(QString new_file, QString new_function)
+{
+    baseSoundList->AddSound(new_file, new_function);
 }

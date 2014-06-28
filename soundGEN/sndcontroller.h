@@ -4,15 +4,17 @@
 #include <QObject>
 #include <QApplication>
 #include <QTimer>
-#include "fmod.hpp"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <QtGui>
 #include <QtCore/QCoreApplication>
 #include <QProcess>
+#include "fmod.hpp"
+#include "fmod_errors.h"
+#include "soundlist.h"
 
-typedef double (*PlaySoundFunction) (double);
+typedef double (*PlaySoundFunction) (int,unsigned int,double);
 
 typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction);
 
@@ -21,13 +23,14 @@ struct GenSoundFunctions {
     GenSoundFunction right_channel_fct;
 };
 
-
 class SndController : public QObject
 {
     Q_OBJECT
 private:
     static SndController* _self_controller;
     SndController(QObject *parent = 0);
+    ~SndController();
+
     Q_DISABLE_COPY(SndController);
 
     bool parseFunctions();
@@ -38,31 +41,28 @@ private:
     void resetParams();
     bool is_stopped;
 
-    GenSoundFunctions mfct;
     double freq_l, freq_r, kL, kR;
     double amp_l, amp_r;
     double t;
     double l_fr, r_fr;
     double l_ar, r_ar;
-    FMOD::Sound *base_sound;
-    unsigned int soundLenPcmBytes;
-    signed short *pcmData;
 
-    QString sound_file;
+    GenSoundFunctions mfct;
+    SoundList *baseSoundList;
     QString text_l;
     QString text_r;
     QString text_functions;
     QLibrary lib;
     QEventLoop loop;
     QEventLoop loopStop;
+    void ERRCHECK(FMOD_RESULT result);
 public:
     static SndController* Instance();
     static bool DeleteInstance();
 
     void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
-    double playSound(int i, double t);
+    double playSound(int index, unsigned int channel, double t);
 
-    void SetSoundFile(QString new_file);
     void SetLFunctionStr(QString new_text_l);
     void SetRFunctionStr(QString new_text_r);
     void SetFunctionsStr(QString new_f);
@@ -74,6 +74,8 @@ public:
     double getInstRFreq();
     double getInstLAmp();
     double getInstRAmp();
+    void AddSound(QString new_file, QString new_function);
+
 signals:
     void starting();
     void started();

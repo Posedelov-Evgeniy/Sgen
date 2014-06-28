@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QFileDialog>
-#include <QAbstractButton>
+#include <QPushButton>
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
 
@@ -36,8 +36,6 @@ private slots:
 
     void get_message(QString message);
 
-    void on_functionsButton_clicked();
-
     void on_MainWindow_destroyed();
 
     void on_doubleSpinBox_amp_left_valueChanged(double arg1);
@@ -47,6 +45,7 @@ private slots:
     void on_doubleSpinBox_freq_left_valueChanged(double arg1);
 
     void on_doubleSpinBox_freq_right_valueChanged(double arg1);
+
     void on_buttonBox_clicked(QAbstractButton *button);
 
 private:
@@ -54,14 +53,11 @@ private:
     Ui::MainWindow *ui;
     SndController *sc;
     bool auto_restart;
-    bool panel_opened;
-    int base_width, base_height;
-    int base_controls_top, base_functions_button_height, base_sounds_top;
     QList<SoundPicker*> sounds;
 
-    void addSoundPicker(QString fname);
     void removeSoundPicker(SoundPicker* p);
-    void adjustSoundSizes();
+    void adjustSoundParams();
+    void addSoundPicker(QString file_name, QString function_name);
 };
 
 #endif // MAINWINDOW_H
