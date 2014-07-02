@@ -8,6 +8,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
     auto_restart = false;
     ui->setupUi(this);
+
+    left_drawer = new functionGraphicDrawer();
+    right_drawer = new functionGraphicDrawer();
+
+    ui->verticalLayout_drawers->addWidget(left_drawer);
+    ui->verticalLayout_drawers->addWidget(right_drawer);
+
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText("Перезапуск");
@@ -87,6 +94,10 @@ MainWindow::~MainWindow()
         }
     }
 
+    left_drawer->deleteLater();
+    right_drawer->deleteLater();
+    delete left_drawer;
+    delete right_drawer;
     delete ui;
 }
 
@@ -113,6 +124,11 @@ void MainWindow::sound_starting()
     sc->SetRFreq(ui->doubleSpinBox_freq_right->value());
     sc->SetFunctionsStr(ui->plainTextEdit_user_functions->document()->toPlainText());
 
+    left_drawer->setAmp(ui->doubleSpinBox_amp_left->value());
+    right_drawer->setAmp(ui->doubleSpinBox_amp_right->value());
+    left_drawer->setFreq(ui->doubleSpinBox_freq_left->value());
+    right_drawer->setFreq(ui->doubleSpinBox_freq_right->value());
+
     SoundPicker *picker;
     foreach(picker, sounds) {
         sc->AddSound(picker->getFilename(), picker->getFunctionname());
@@ -124,9 +140,13 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
+    left_drawer->stop();
+    right_drawer->stop();
     if (auto_restart) {
         auto_restart = false;
         sc->run();
+        left_drawer->run();
+        right_drawer->run();
     }
 }
 
@@ -135,6 +155,11 @@ void MainWindow::sound_started()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(true);
+
+    left_drawer->setGraphicFunction(sc->getLeftFunction());
+    right_drawer->setGraphicFunction(sc->getRightFunction());
+    left_drawer->run();
+    right_drawer->run();
 }
 
 void MainWindow::on_MainWindow_destroyed()
@@ -145,21 +170,25 @@ void MainWindow::on_MainWindow_destroyed()
 void MainWindow::on_doubleSpinBox_amp_left_valueChanged(double arg1)
 {
     sc->SetLAmp(arg1);
+    left_drawer->setAmp(arg1);
 }
 
 void MainWindow::on_doubleSpinBox_amp_right_valueChanged(double arg1)
 {
     sc->SetRAmp(arg1);
+    right_drawer->setAmp(arg1);
 }
 
 void MainWindow::on_doubleSpinBox_freq_left_valueChanged(double arg1)
 {
     sc->SetLFreq(arg1);
+    left_drawer->setFreq(arg1);
 }
 
 void MainWindow::on_doubleSpinBox_freq_right_valueChanged(double arg1)
 {
     sc->SetRFreq(arg1);
+    right_drawer->setFreq(arg1);
 }
 
 void MainWindow::addSoundPicker(QString file_name, QString function_name)

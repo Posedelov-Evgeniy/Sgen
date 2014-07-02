@@ -7,6 +7,7 @@
 #include <QPushButton>
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
+#include "widgets/functiongraphicdrawer.h"
 
 namespace Ui {
 class MainWindow;
@@ -54,6 +55,8 @@ private:
     SndController *sc;
     bool auto_restart;
     QList<SoundPicker*> sounds;
+    functionGraphicDrawer *left_drawer;
+    functionGraphicDrawer *right_drawer;
 
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();

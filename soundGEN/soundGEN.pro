@@ -31,12 +31,17 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     sndcontroller.cpp \
     widgets/soundpicker.cpp \
-    soundlist.cpp
+    soundlist.cpp \
+    widgets/functiongraphicdrawer.cpp \
+    widgets/graphicthread.cpp
 
 HEADERS  += soundlist.h \
     sndcontroller.h \
     mainwindow.h \
-    widgets/soundpicker.h
+    widgets/soundpicker.h \
+    widgets/functiongraphicdrawer.h \
+    widgets/graphicthread.h
 
 FORMS    += mainwindow.ui \
-    widgets/soundpicker.ui
+    widgets/soundpicker.ui \
+    widgets/functiongraphicdrawer.ui

@@ -23,6 +23,8 @@ struct GenSoundFunctions {
     GenSoundFunction right_channel_fct;
 };
 
+double base_play_sound(int i, unsigned int c, double t);
+
 class SndController : public QObject
 {
     Q_OBJECT
@@ -54,7 +56,6 @@ private:
     QString text_functions;
     QLibrary lib;
     QEventLoop loop;
-    QEventLoop loopStop;
     void ERRCHECK(FMOD_RESULT result);
 public:
     static SndController* Instance();
@@ -74,6 +75,8 @@ public:
     double getInstRFreq();
     double getInstLAmp();
     double getInstRAmp();
+    GenSoundFunction getLeftFunction();
+    GenSoundFunction getRightFunction();
     void AddSound(QString new_file, QString new_function);
 
 signals:

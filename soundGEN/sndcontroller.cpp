@@ -407,6 +407,16 @@ double SndController::getInstRAmp() {
     return r_ar;
 }
 
+GenSoundFunction SndController::getLeftFunction()
+{
+    return mfct.left_channel_fct;
+}
+
+GenSoundFunction SndController::getRightFunction()
+{
+    return mfct.right_channel_fct;
+}
+
 void SndController::AddSound(QString new_file, QString new_function)
 {
     baseSoundList->AddSound(new_file, new_function);

@@ -421,6 +421,9 @@
             </item>
            </layout>
           </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_drawers"/>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="functions_tab">
