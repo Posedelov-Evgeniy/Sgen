@@ -2,9 +2,9 @@
 #define FUNCTIONGRAPHICDRAWER_H
 
 #include <QWidget>
-#include <QGraphicsScene>
 #include "sndcontroller.h"
 #include "widgets/graphicthread.h"
+#include "widgets/mgraphicdrawsurface.h"
 
 namespace Ui {
 class functionGraphicDrawer;
@@ -13,7 +13,6 @@ class functionGraphicDrawer;
 class functionGraphicDrawer : public QWidget
 {
     Q_OBJECT
-
 public:
     explicit functionGraphicDrawer(QWidget *parent = 0);
     ~functionGraphicDrawer();
@@ -31,11 +30,8 @@ public:
 
 private:
     Ui::functionGraphicDrawer *ui;
-    GenSoundFunction graphicFunction;
-    double t, t0, amp, freq, dt, kt, kamp;
-    graphicThread *mThread;
-    QGraphicsScene *scene;
-
+    static graphicThread *mThread;
+    MGraphicDrawSurface *widget_drawer;
 public slots:
     void run();
     void stop();

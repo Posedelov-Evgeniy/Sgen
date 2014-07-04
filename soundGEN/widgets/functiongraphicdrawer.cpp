@@ -1,88 +1,85 @@
 #include "functiongraphicdrawer.h"
 #include "ui_functiongraphicdrawer.h"
 
+graphicThread* functionGraphicDrawer::mThread = 0;
+
 functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::functionGraphicDrawer)
 {
     ui->setupUi(this);
-    scene = new QGraphicsScene(ui->graphicsView);
-    ui->graphicsView->setScene(scene);
 
-    mThread = new graphicThread(this);
-    connect(mThread, SIGNAL(DrawStep()), this, SLOT(drawCycle()));
+    widget_drawer = new MGraphicDrawSurface();
+    widget_drawer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+    ui->verticalLayout->addWidget(widget_drawer);
 
-    t = t0 = 0;
-    amp = 1;
-    freq = 500;
-    dt = 1;
-    kamp = 1;
-    kt = 0.05;
-    graphicFunction = 0;
+    if (mThread==0) {
+        mThread = new graphicThread();
+    }
+
+    mThread->addGraphic(this);
+
+    widget_drawer->setT(0.001);
+    widget_drawer->setT0(0.001);
+    widget_drawer->setFreq(500);
+    widget_drawer->setAmp(1);
+    widget_drawer->setKt(0.005);
+    widget_drawer->setGraphicFunction(0);
+
+    on_durationSlider_valueChanged(ui->durationSlider->value());
+    on_ampSlider_valueChanged(ui->ampSlider->value());
 }
 
 functionGraphicDrawer::~functionGraphicDrawer()
 {
-    delete mThread;
+    mThread->removeGraphic();
+    if (mThread->getLinksCount()==0) {
+        delete mThread;
+        mThread = 0;
+    }
     delete ui;
 }
 
 void functionGraphicDrawer::setGraphicFunction(const GenSoundFunction &value)
 {
-    graphicFunction = value;
+    widget_drawer->setGraphicFunction(value);
 }
 
 double functionGraphicDrawer::getT0() const
 {
-    return t0;
+    return widget_drawer->getT0();
 }
 
 void functionGraphicDrawer::setT0(double value)
 {
-    t0 = value;
+    widget_drawer->setT0(value);
 }
 
 double functionGraphicDrawer::getAmp() const
 {
-    return amp;
+    return widget_drawer->getAmp();
 }
 
 void functionGraphicDrawer::setAmp(double value)
 {
-    amp = value;
+    widget_drawer->setAmp(value);
 }
 
 double functionGraphicDrawer::getFreq() const
 {
-    return freq;
+    return widget_drawer->getFreq();
 }
 
 void functionGraphicDrawer::setFreq(double value)
 {
-    freq = value;
+    widget_drawer->setFreq(value);
 }
 
 void functionGraphicDrawer::drawCycle()
 {
-    QPen pen(Qt::red);
-    int points_count = ui->graphicsView->width() / 2 - 1;
-    int height_center = ui->graphicsView->height() / 2;
-    double k_y_graphic = kamp * 0.375 * ui->graphicsView->height();
-    double k_t_graphic = dt/points_count;
-    int i;
-    double x0, y0, x1, y1;
-
-    scene->clear();
-    x1 = 0;
-    y1 = height_center - k_y_graphic*graphicFunction(t, amp, freq, base_play_sound);
-    for(i=1;i<points_count;i++) {
-        x0 = x1;
-        y0 = y1;
-        x1 = i*2;
-        y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, amp, freq, base_play_sound);
-        scene->addLine(x0,y0,x1,y1,pen);
-    }
-    t += kt*dt;
+    widget_drawer->incT();
+    widget_drawer->update();
+    ui->lcdNumber_t->display(widget_drawer->getT());
 }
 
 
@@ -100,10 +97,12 @@ void functionGraphicDrawer::stop()
 
 void functionGraphicDrawer::on_durationSlider_valueChanged(int value)
 {
-    dt = (double) 2*value / ui->durationSlider->maximum();
+    widget_drawer->setDt(0.1 * value / ui->durationSlider->maximum());
+    ui->lcdNumber_dur->display(widget_drawer->getDt());
 }
 
 void functionGraphicDrawer::on_ampSlider_valueChanged(int value)
 {
-    kamp = 1.0 + (double) 2*value / ui->durationSlider->maximum();
+    widget_drawer->setKamp(1.0 + (double) 2*value / ui->durationSlider->maximum());
+    ui->lcdNumber_koef->display(widget_drawer->getKamp());
 }

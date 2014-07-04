@@ -9,7 +9,12 @@ class graphicThread : public QThread
 public:
     explicit graphicThread(QObject *parent = 0);
     void run();
+    void addGraphic(QObject *graphicDrawer);
+    void removeGraphic();
     bool Stop;
+    int getLinksCount() const;
+private:
+    int linksCount;
 signals:
     void DrawStep();
 public slots:

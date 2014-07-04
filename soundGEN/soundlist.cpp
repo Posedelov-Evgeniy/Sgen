@@ -111,23 +111,26 @@ QString SoundList::getFunctionsText()
 double SoundList::playSound(int index, unsigned int channels, double t)
 {
     double result = 0;
-    GenSoundRecord *rec;
-    rec = baseSoundsList.data()[index];
 
-    if (rec->base_sound && rec->pcmData && rec->soundLenPcmBytes)
-    {
-        unsigned int offsetL = t*44100.0*2;
-        unsigned int offsetR = t*44100.0*2+1;
+    if (baseSoundsList.size()>index) {
+        GenSoundRecord *rec = baseSoundsList.data()[index];
 
-        if ((channels & 1) && offsetL<rec->soundLenPcmBytes) {
-            result += rec->pcmData[offsetL]/32767.0;
-        }
-        if ((channels & 2) && offsetR<rec->soundLenPcmBytes) {
-            result += rec->pcmData[offsetR]/32767.0;
-        }
-        if ((channels & 1) && (channels & 2) && offsetL<rec->soundLenPcmBytes && offsetR<rec->soundLenPcmBytes) {
-            result *= 0.5;
+        if (rec->base_sound && rec->pcmData && rec->soundLenPcmBytes)
+        {
+            unsigned int offsetL = t*44100.0*2;
+            unsigned int offsetR = t*44100.0*2+1;
+
+            if ((channels & 1) && offsetL<rec->soundLenPcmBytes) {
+                result += rec->pcmData[offsetL]/32767.0;
+            }
+            if ((channels & 2) && offsetR<rec->soundLenPcmBytes) {
+                result += rec->pcmData[offsetR]/32767.0;
+            }
+            if ((channels & 1) && (channels & 2) && offsetL<rec->soundLenPcmBytes && offsetR<rec->soundLenPcmBytes) {
+                result *= 0.5;
+            }
         }
     }
+
     return result;
 }

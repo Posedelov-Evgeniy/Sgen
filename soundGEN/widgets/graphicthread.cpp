@@ -6,6 +6,7 @@ graphicThread::graphicThread(QObject *parent) :
     QThread(parent)
 {
     Stop = false;
+    linksCount = 0;
 }
 
 void graphicThread::run()
@@ -15,3 +16,20 @@ void graphicThread::run()
         this->msleep(100);
     } while (!Stop);
 }
+
+void graphicThread::addGraphic(QObject *graphicDrawer)
+{
+    linksCount++;
+    connect(this, SIGNAL(DrawStep()), graphicDrawer, SLOT(drawCycle()));
+}
+
+void graphicThread::removeGraphic()
+{
+    if (linksCount>0) linksCount--;
+}
+
+int graphicThread::getLinksCount() const
+{
+    return linksCount;
+}
+

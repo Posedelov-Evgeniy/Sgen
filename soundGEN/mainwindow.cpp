@@ -140,13 +140,12 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
-    left_drawer->stop();
-    right_drawer->stop();
     if (auto_restart) {
         auto_restart = false;
         sc->run();
-        left_drawer->run();
-        right_drawer->run();
+    } else {
+        left_drawer->stop();
+        right_drawer->stop();
     }
 }
 
