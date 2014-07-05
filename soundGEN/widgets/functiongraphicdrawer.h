@@ -28,6 +28,10 @@ public:
     double getFreq() const;
     void setFreq(double value);
 
+    int getDtIntValue() const;
+    void setDtIntValue(int value);
+    int getKampIntValue() const;
+    void setKampIntValue(int value);
 private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;

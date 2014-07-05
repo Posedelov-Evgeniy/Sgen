@@ -75,6 +75,28 @@ void functionGraphicDrawer::setFreq(double value)
     widget_drawer->setFreq(value);
 }
 
+int functionGraphicDrawer::getDtIntValue() const
+{
+    return ui->durationSlider->value();
+}
+
+void functionGraphicDrawer::setDtIntValue(int value)
+{
+    ui->durationSlider->setValue(value);
+    on_durationSlider_valueChanged(value);
+}
+
+int functionGraphicDrawer::getKampIntValue() const
+{
+    return ui->ampSlider->value();
+}
+
+void functionGraphicDrawer::setKampIntValue(int value)
+{
+    ui->ampSlider->setValue(value);
+    on_ampSlider_valueChanged(value);
+}
+
 void functionGraphicDrawer::drawCycle()
 {
     widget_drawer->incT();
@@ -103,6 +125,6 @@ void functionGraphicDrawer::on_durationSlider_valueChanged(int value)
 
 void functionGraphicDrawer::on_ampSlider_valueChanged(int value)
 {
-    widget_drawer->setKamp(1.0 + (double) 2*value / ui->durationSlider->maximum());
+    widget_drawer->setKamp(1.0 + (double) 2*value / ui->ampSlider->maximum());
     ui->lcdNumber_koef->display(widget_drawer->getKamp());
 }

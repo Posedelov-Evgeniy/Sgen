@@ -47,3 +47,7 @@ HEADERS  += soundlist.h \
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
     widgets/functiongraphicdrawer.ui
+
+OTHER_FILES += \
+    config.cfg \
+    functions.cpp.cfg

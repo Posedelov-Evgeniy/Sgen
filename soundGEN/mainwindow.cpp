@@ -21,11 +21,11 @@ MainWindow::MainWindow(QWidget *parent) :
     sound_stopped();
     sc = SndController::Instance();
 
-    int length = settings.value("main/sounds_count", 1).toInt();
+    int length = settings.value("sounds/sounds_count", 1).toInt();
     if (length<1) length = 1;
     if (length>maxSounds) length = maxSounds;
     for (int i=1;i<=length;i++) {
-        addSoundPicker(settings.value("main/sound"+QString::number(i), "").toString(), settings.value("main/sound"+QString::number(i)+"_function", "").toString());
+        addSoundPicker(settings.value("sounds/sound"+QString::number(i), "").toString(), settings.value("sounds/sound"+QString::number(i)+"_function", "").toString());
     }
 
     ui->lineEdit_function_left->setText(settings.value("main/function_l", "sin(k*t)").toString());
@@ -35,12 +35,17 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
     ui->doubleSpinBox_freq_right->setValue(settings.value("main/freq_r", 500).toDouble());
 
+    left_drawer->setKampIntValue(settings.value("graphic/kamp_l", 0).toDouble());
+    right_drawer->setKampIntValue(settings.value("graphic/kamp_r", 0).toDouble());
+    left_drawer->setDtIntValue(settings.value("graphic/dt_l", 300).toDouble());
+    right_drawer->setDtIntValue(settings.value("graphic/dt_r", 300).toDouble());
+
     QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
     QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
 
-    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
+    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
     if(!file.exists()){
-        qDebug() << "Functions.cpp not exists";
+        qDebug() << "Functions.cpp.cfg not exists";
     }
     if (file.open(QIODevice::ReadOnly))
     {
@@ -60,15 +65,6 @@ MainWindow::~MainWindow()
 {
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
 
-    SoundPicker *picker;
-    settings.setValue("main/sounds_count", sounds.length());
-    int i = 1;
-    foreach(picker, sounds) {
-        settings.setValue("main/sound"+QString::number(i), picker->getFilename());
-        settings.setValue("main/sound"+QString::number(i)+"_function", picker->getFunctionname());
-        i++;
-    }
-
     settings.setValue("main/function_l", ui->lineEdit_function_left->text());
     settings.setValue("main/function_r", ui->lineEdit_function_right->text());
     settings.setValue("main/amp_l", ui->doubleSpinBox_amp_left->value());
@@ -76,13 +72,27 @@ MainWindow::~MainWindow()
     settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
     settings.setValue("main/freq_r", ui->doubleSpinBox_freq_right->value());
 
+    settings.setValue("graphic/kamp_l", left_drawer->getKampIntValue());
+    settings.setValue("graphic/kamp_r", right_drawer->getKampIntValue());
+    settings.setValue("graphic/dt_l", left_drawer->getDtIntValue());
+    settings.setValue("graphic/dt_r", right_drawer->getDtIntValue());
+
+    SoundPicker *picker;
+    settings.setValue("sounds/sounds_count", sounds.length());
+    int i = 1;
+    foreach(picker, sounds) {
+        settings.setValue("sounds/sound"+QString::number(i), picker->getFilename());
+        settings.setValue("sounds/sound"+QString::number(i)+"_function", picker->getFunctionname());
+        i++;
+    }
+
     QRect gg = this->geometry();
     settings.setValue("window/left", gg.left());
     settings.setValue("window/top", gg.top());
     settings.setValue("window/width", gg.width());
     settings.setValue("window/height", gg.height());
 
-    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp");
+    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
     if (file.open(QIODevice::WriteOnly))
     {
         QTextStream stream(&file);
@@ -90,7 +100,7 @@ MainWindow::~MainWindow()
         file.close();
         if (stream.status() != QTextStream::Ok)
         {
-            qDebug() << "Error writing functions.cpp";
+            qDebug() << "Error writing functions.cpp.cfg";
         }
     }
 

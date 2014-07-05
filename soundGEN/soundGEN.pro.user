@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.0.1, 2014-07-05T01:40:24. -->
+<!-- Written by QtCreator 3.0.1, 2014-07-05T12:42:11. -->
 <qtcreator>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -189,7 +189,7 @@
      </valuemap>
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.1">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{buildDir}/../soundGEN/functions.cpp&quot; &quot;%{buildDir}&quot;</value>
+      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{buildDir}/../soundGEN/functions.cpp.cfg&quot; &quot;%{buildDir}&quot;</value>
       <value type="QString" key="ProjectExplorer.ProcessStep.Command">cp</value>
       <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{buildDir}</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>
