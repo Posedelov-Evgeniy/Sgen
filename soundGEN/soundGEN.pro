@@ -33,16 +33,22 @@ SOURCES += main.cpp\
     widgets/soundpicker.cpp \
     soundlist.cpp \
     widgets/functiongraphicdrawer.cpp \
-    widgets/graphicthread.cpp \
-    widgets/mgraphicdrawsurface.cpp
+    classes/graphicthread.cpp \
+    widgets/mgraphicdrawsurface.cpp \
+    classes/highlighter.cpp \
+    classes/utextblockdata.cpp \
+    classes/utextedit.cpp
 
 HEADERS  += soundlist.h \
     sndcontroller.h \
     mainwindow.h \
     widgets/soundpicker.h \
     widgets/functiongraphicdrawer.h \
-    widgets/graphicthread.h \
-    widgets/mgraphicdrawsurface.h
+    classes/graphicthread.h \
+    widgets/mgraphicdrawsurface.h \
+    classes/highlighter.h \
+    classes/utextblockdata.h \
+    classes/utextedit.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \

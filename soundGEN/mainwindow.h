@@ -8,6 +8,7 @@
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
 #include "widgets/functiongraphicdrawer.h"
+#include "classes/utextedit.h"
 
 namespace Ui {
 class MainWindow;
@@ -57,6 +58,7 @@ private:
     QList<SoundPicker*> sounds;
     functionGraphicDrawer *left_drawer;
     functionGraphicDrawer *right_drawer;
+    UTextEdit *functions_text;
 
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();

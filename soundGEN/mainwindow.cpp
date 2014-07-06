@@ -15,6 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->verticalLayout_drawers->addWidget(left_drawer);
     ui->verticalLayout_drawers->addWidget(right_drawer);
 
+    functions_text = new UTextEdit();
+    ui->functions_tab->layout()->addWidget(functions_text);
+
+
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText("Перезапуск");
@@ -51,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         QTextStream stream(&file);
         QString funct_str = stream.readAll().toUtf8();
-        ui->plainTextEdit_user_functions->document()->setPlainText(funct_str);
+        functions_text->document()->setPlainText(funct_str);
     }
 
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
@@ -96,7 +100,7 @@ MainWindow::~MainWindow()
     if (file.open(QIODevice::WriteOnly))
     {
         QTextStream stream(&file);
-        stream << ui->plainTextEdit_user_functions->document()->toPlainText();
+        stream << functions_text->document()->toPlainText();
         file.close();
         if (stream.status() != QTextStream::Ok)
         {
@@ -106,8 +110,10 @@ MainWindow::~MainWindow()
 
     left_drawer->deleteLater();
     right_drawer->deleteLater();
+    functions_text->deleteLater();
     delete left_drawer;
     delete right_drawer;
+    delete functions_text;
     delete ui;
 }
 
@@ -132,7 +138,7 @@ void MainWindow::sound_starting()
     sc->SetRAmp(ui->doubleSpinBox_amp_right->value());
     sc->SetLFreq(ui->doubleSpinBox_freq_left->value());
     sc->SetRFreq(ui->doubleSpinBox_freq_right->value());
-    sc->SetFunctionsStr(ui->plainTextEdit_user_functions->document()->toPlainText());
+    sc->SetFunctionsStr(functions_text->document()->toPlainText());
 
     left_drawer->setAmp(ui->doubleSpinBox_amp_left->value());
     right_drawer->setAmp(ui->doubleSpinBox_amp_right->value());

@@ -3,7 +3,7 @@
 
 #include <QWidget>
 #include "sndcontroller.h"
-#include "widgets/graphicthread.h"
+#include "classes/graphicthread.h"
 #include "widgets/mgraphicdrawsurface.h"
 
 namespace Ui {
