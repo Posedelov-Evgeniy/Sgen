@@ -17,6 +17,8 @@ public:
     void createBracketsSelection(int position);
 protected:
     Highlighter *base_highlighter;
+    virtual void focusInEvent(QFocusEvent* e);
+    virtual void focusOutEvent(QFocusEvent *e);
 signals:
 
 public slots:

@@ -3,10 +3,8 @@
 UTextEdit::UTextEdit(QWidget *parent):
     QTextEdit(parent)
 {
-    connect(this, SIGNAL(cursorPositionChanged()),
-            this, SLOT(matchBrackets()));
+    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchBrackets()));
     base_highlighter = new Highlighter(this->document());
-
 }
 
 UTextEdit::~UTextEdit()
@@ -138,6 +136,7 @@ bool UTextEdit::matchRightBrackets(QTextBlock currentBlock, int index, int numbe
 /** Set brackets highlighter at pos **/
 void UTextEdit::createBracketsSelection(int position)
 {
+    if (!hasFocus()) return;
     QList <QTextEdit::ExtraSelection> listSelections = extraSelections();
 
     QTextEdit::ExtraSelection selection;
@@ -157,4 +156,16 @@ void UTextEdit::createBracketsSelection(int position)
     listSelections.append(selection);
 
     setExtraSelections(listSelections);
+}
+
+void UTextEdit::focusInEvent(QFocusEvent *e)
+{
+    QTextEdit::focusInEvent(e);
+    matchBrackets();
+}
+
+void UTextEdit::focusOutEvent(QFocusEvent *e)
+{
+    QTextEdit::focusOutEvent(e);
+    matchBrackets();
 }

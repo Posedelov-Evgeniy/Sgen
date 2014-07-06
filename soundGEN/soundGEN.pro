@@ -28,7 +28,7 @@ else:win32: PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodexL_vc.lib
 else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodexL64.so
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     sndcontroller.cpp \
     widgets/soundpicker.cpp \
     soundlist.cpp \
@@ -37,7 +37,8 @@ SOURCES += main.cpp\
     widgets/mgraphicdrawsurface.cpp \
     classes/highlighter.cpp \
     classes/utextblockdata.cpp \
-    classes/utextedit.cpp
+    classes/utextedit.cpp \
+    base_functions.cpp
 
 HEADERS  += soundlist.h \
     sndcontroller.h \

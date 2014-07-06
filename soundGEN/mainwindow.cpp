@@ -18,6 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
     functions_text = new UTextEdit();
     ui->functions_tab->layout()->addWidget(functions_text);
 
+    left_function = new UTextEdit();
+    ui->left_function_layout->addWidget(left_function);
+
+    right_function = new UTextEdit();
+    ui->right_function_layout->addWidget(right_function);
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
@@ -32,8 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
         addSoundPicker(settings.value("sounds/sound"+QString::number(i), "").toString(), settings.value("sounds/sound"+QString::number(i)+"_function", "").toString());
     }
 
-    ui->lineEdit_function_left->setText(settings.value("main/function_l", "sin(k*t)").toString());
-    ui->lineEdit_function_right->setText(settings.value("main/function_r", "cos(k*t)").toString());
+    left_function->document()->setPlainText(settings.value("main/function_l", "sin(k*t)").toString());
+    right_function->document()->setPlainText(settings.value("main/function_r", "cos(k*t)").toString());
     ui->doubleSpinBox_amp_left->setValue(settings.value("main/amp_l", 1).toDouble());
     ui->doubleSpinBox_amp_right->setValue(settings.value("main/amp_r", 1).toDouble());
     ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
@@ -69,8 +74,8 @@ MainWindow::~MainWindow()
 {
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
 
-    settings.setValue("main/function_l", ui->lineEdit_function_left->text());
-    settings.setValue("main/function_r", ui->lineEdit_function_right->text());
+    settings.setValue("main/function_l", left_function->document()->toPlainText());
+    settings.setValue("main/function_r", right_function->document()->toPlainText());
     settings.setValue("main/amp_l", ui->doubleSpinBox_amp_left->value());
     settings.setValue("main/amp_r", ui->doubleSpinBox_amp_right->value());
     settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
@@ -114,6 +119,8 @@ MainWindow::~MainWindow()
     delete left_drawer;
     delete right_drawer;
     delete functions_text;
+    delete left_function;
+    delete right_function;
     delete ui;
 }
 
@@ -132,8 +139,8 @@ void MainWindow::get_message(QString message)
 
 void MainWindow::sound_starting()
 {
-    sc->SetLFunctionStr(ui->lineEdit_function_left->text());
-    sc->SetRFunctionStr(ui->lineEdit_function_right->text());
+    sc->SetLFunctionStr(left_function->document()->toPlainText());
+    sc->SetRFunctionStr(right_function->document()->toPlainText());
     sc->SetLAmp(ui->doubleSpinBox_amp_left->value());
     sc->SetRAmp(ui->doubleSpinBox_amp_right->value());
     sc->SetLFreq(ui->doubleSpinBox_freq_left->value());

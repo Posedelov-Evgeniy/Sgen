@@ -59,6 +59,8 @@ private:
     functionGraphicDrawer *left_drawer;
     functionGraphicDrawer *right_drawer;
     UTextEdit *functions_text;
+    UTextEdit *left_function;
+    UTextEdit *right_function;
 
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();
