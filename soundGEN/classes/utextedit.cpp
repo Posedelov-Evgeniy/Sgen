@@ -3,6 +3,9 @@
 UTextEdit::UTextEdit(QWidget *parent):
     QTextEdit(parent)
 {
+    QFont font("Monospace");
+    font.setStyleHint(QFont::TypeWriter);
+    setFont(font);
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchBrackets()));
     base_highlighter = new Highlighter(this->document());
 }
@@ -158,6 +161,11 @@ void UTextEdit::createBracketsSelection(int position)
     setExtraSelections(listSelections);
 }
 
+void UTextEdit::insertFromMimeData(const QMimeData * source)
+{
+    insertPlainText(source->text());
+}
+
 void UTextEdit::focusInEvent(QFocusEvent *e)
 {
     QTextEdit::focusInEvent(e);
@@ -168,4 +176,75 @@ void UTextEdit::focusOutEvent(QFocusEvent *e)
 {
     QTextEdit::focusOutEvent(e);
     matchBrackets();
+}
+
+void UTextEdit::selectedShift(bool reversed)
+{
+    QTextCursor cur = textCursor();
+    int a = cur.anchor();
+    int p = cur.position();
+    if (a>p) {
+        int tmp = a;
+        a = p;
+        p = tmp;
+    }
+
+    cur.setPosition(a);
+    cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::MoveAnchor);
+    a = cur.position();
+    cur.setPosition(a);
+    cur.setPosition(p, QTextCursor::KeepAnchor);
+    QString str = cur.selection().toPlainText();
+    QStringList list = str.split("\n");
+
+    if (list.count()<=1)
+    {
+        insertPlainText("    ");
+    } else
+    {
+        for (int i = 0; i < list.count(); i++)
+        {
+            if (reversed) {
+                list[i].replace(QRegExp("^(\\s){,4}"), "");
+            } else {
+                list[i].insert(0,"    ");
+            }
+        }
+
+        str=list.join("\n");
+        cur.removeSelectedText();
+        cur.insertText(str);
+        cur.setPosition(a);
+        cur.setPosition(str.length(), QTextCursor::KeepAnchor);
+
+        setTextCursor(cur);
+    }
+}
+
+void UTextEdit::completeReturn()
+{
+    insertPlainText("\n");
+}
+
+bool UTextEdit::event(QEvent *e)
+{
+    if (e->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent*> (e);
+        if (keyEvent->key() == Qt::Key_Tab) {
+            selectedShift(false);
+            return true;
+        } else if(keyEvent->key() == Qt::Key_Backtab) {
+            selectedShift(true);
+            return true;
+        } else if(keyEvent->key() == Qt::Key_Return) {
+            completeReturn();
+            return true;
+        }
+    }
+    return QTextEdit::event(e);
+}
+
+void UTextEdit::keyPressEvent(QKeyEvent *e)
+{
+    QTextEdit::keyPressEvent(e);
 }

@@ -8,6 +8,9 @@
 class UTextEdit : public QTextEdit
 {
     Q_OBJECT
+private:
+    void selectedShift(bool reversed);
+    void completeReturn();
 public:
     explicit UTextEdit(QWidget *parent = 0);
     ~UTextEdit();
@@ -19,6 +22,9 @@ protected:
     Highlighter *base_highlighter;
     virtual void focusInEvent(QFocusEvent* e);
     virtual void focusOutEvent(QFocusEvent *e);
+    virtual bool event(QEvent *e);
+    virtual void keyPressEvent(QKeyEvent *e);
+    virtual void insertFromMimeData(const QMimeData *source);
 signals:
 
 public slots:
