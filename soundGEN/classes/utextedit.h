@@ -11,6 +11,7 @@ class UTextEdit : public QTextEdit
 private:
     void selectedShift(bool reversed);
     void completeReturn();
+    bool bracketIsPaired(QTextBlock textBlock, int currentPosition);
 public:
     explicit UTextEdit(QWidget *parent = 0);
     ~UTextEdit();
@@ -20,6 +21,7 @@ public:
     void createBracketsSelection(int position);
 protected:
     Highlighter *base_highlighter;
+
     virtual void focusInEvent(QFocusEvent* e);
     virtual void focusOutEvent(QFocusEvent *e);
     virtual bool event(QEvent *e);

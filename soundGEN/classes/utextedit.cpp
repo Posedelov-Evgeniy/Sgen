@@ -35,7 +35,7 @@ void UTextEdit::matchBrackets()
             int currentPosition = textCursor().position() - textBlock.position();
 
             // Clicked on a left brackets?
-            if (bracket->position == currentPosition - 1
+            if (bracket->position == currentPosition
                  && isLeftBrackets(bracket->character))
             {
                 if (matchLeftBrackets(textBlock, i + 1, 0))
@@ -51,6 +51,31 @@ void UTextEdit::matchBrackets()
             }
         }
     }
+}
+
+bool UTextEdit::bracketIsPaired(QTextBlock textBlock, int currentPosition) {
+    QList <QTextEdit::ExtraSelection> selections;
+    setExtraSelections(selections);
+
+    UTextBlockData *data = static_cast <UTextBlockData *> (textBlock.userData());
+
+    if(data)
+    {
+        QVector <UBracketInfo *> brackets = data->brackets();
+
+        for(int i = 0; i < brackets.size(); i++)
+        {
+            UBracketInfo *bracket = brackets.at(i);
+
+            if (bracket->position == currentPosition && isLeftBrackets(bracket->character)) {
+                if (matchLeftBrackets(textBlock, i + 1, 0)) return true;
+            }
+            if (bracket->position == currentPosition && isRightBrackets(bracket->character)) {
+                if (matchRightBrackets(textBlock, i - 1, 0)) return true;
+            }
+        }
+    }
+    return false;
 }
 
 /** Test left brackets match **/
@@ -73,8 +98,7 @@ bool UTextEdit::matchLeftBrackets(QTextBlock currentBlock, int index, int number
             continue;
         }
 
-        if (isRightBrackets(bracket->character)
-             && numberLeftBracket == 0)
+        if (isRightBrackets(bracket->character) && numberLeftBracket == 0)
         {
             createBracketsSelection(positionInDocument + bracket->position);
             return true;
@@ -110,8 +134,7 @@ bool UTextEdit::matchRightBrackets(QTextBlock currentBlock, int index, int numbe
             continue;
         }
 
-        if (isLeftBrackets(bracket->character)
-             && numberRightBracket == 0)
+        if (isLeftBrackets(bracket->character) && numberRightBracket == 0)
         {
             createBracketsSelection(positionInDocument + bracket->position);
             return true;
@@ -212,7 +235,6 @@ void UTextEdit::selectedShift(bool reversed)
         }
 
         str=list.join("\n");
-        cur.removeSelectedText();
         cur.insertText(str);
         cur.setPosition(a);
         cur.setPosition(str.length(), QTextCursor::KeepAnchor);
@@ -223,7 +245,59 @@ void UTextEdit::selectedShift(bool reversed)
 
 void UTextEdit::completeReturn()
 {
-    insertPlainText("\n");
+    QTextCursor cur = textCursor();
+    int a = cur.anchor();
+    int p = cur.position();
+
+    if (a!=p) {
+        cur.insertText("");
+        cur.setPosition(a);
+        setTextCursor(cur);
+    }
+
+    cur.movePosition(QTextCursor::StartOfBlock,QTextCursor::KeepAnchor);
+    QString str = cur.selection().toPlainText();
+    QTextBlock curBlock = cur.block();
+    QString result="\n";
+    QString dop_result="";
+
+    if (str.length()>0) {
+        int fst_s;
+        int lst_s;
+        for(fst_s=0;fst_s<str.length() && str.at(fst_s).isSpace();fst_s++);
+        for(lst_s=str.length()-1;lst_s>0 && str.at(lst_s).isSpace();lst_s--);
+
+        QChar last_c = str.at(lst_s);
+        cur.movePosition(QTextCursor::EndOfBlock,QTextCursor::KeepAnchor);
+        QString endofln = cur.selection().toPlainText().trimmed();
+
+        if (isLeftBrackets(last_c)) {
+            QChar close_c = (last_c=='(' ? ')' : (last_c=='{' ? '}' : ']'));
+            if (!bracketIsPaired(curBlock, lst_s))
+            {
+                cur.removeSelectedText();
+                dop_result.fill(' ', fst_s);
+                dop_result=endofln+"\n"+dop_result+close_c;
+                endofln = "";
+            }
+            fst_s += 4;
+        }
+
+        if (endofln.length()>0 && isRightBrackets(endofln.at(0)) && bracketIsPaired(curBlock, a-curBlock.position()+cur.selection().toPlainText().indexOf(endofln.at(0)))) {
+            fst_s = fst_s>=4 ? fst_s-4 : 0;
+        }
+
+        result.fill(' ', fst_s);
+        result="\n"+result+dop_result;
+    }
+
+    insertPlainText(result);
+
+    if (!dop_result.isEmpty()) {
+        cur.movePosition(QTextCursor::PreviousBlock, QTextCursor::MoveAnchor);
+        cur.movePosition(QTextCursor::EndOfBlock,QTextCursor::MoveAnchor);
+        setTextCursor(cur);
+    }
 }
 
 bool UTextEdit::event(QEvent *e)
@@ -246,5 +320,9 @@ bool UTextEdit::event(QEvent *e)
 
 void UTextEdit::keyPressEvent(QKeyEvent *e)
 {
+    if (e->key()==(Qt::Key_Control & Qt::Key_Z)) {
+        undo();
+        return;
+    }
     QTextEdit::keyPressEvent(e);
 }

@@ -5,7 +5,7 @@
 #include <QSyntaxHighlighter>
 #include "classes/utextblockdata.h"
 
-enum UBrackets { RoundBrackets, CurlyBraces, SquareBrackets };
+enum UBrackets { NoBrackets, RoundBrackets, CurlyBraces, SquareBrackets };
 
 class Highlighter : public QSyntaxHighlighter
 {
@@ -26,10 +26,8 @@ protected:
     QTextCharFormat keywordFormat, classFormat, singleLineCommentFormat, multiLineCommentFormat, quotationFormat, functionFormat, numberFormat;
 
     virtual void highlightBlock(const QString &text);
-    void insertBrackets(QChar leftChar, QChar rightChar,
-                            UTextBlockData *data, QString text);
-    void insertBrackets(UBrackets brackets,
-                            UTextBlockData *data, QString text);
+    void insertBrackets(QChar leftChar, QChar rightChar, UTextBlockData *data, QString text);
+    void insertBrackets(UBrackets brackets, UTextBlockData *data, QString text);
 };
 
 #endif // HIGHLIGHTER_H
