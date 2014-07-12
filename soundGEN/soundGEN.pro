@@ -38,7 +38,8 @@ SOURCES += main.cpp\
     classes/highlighter.cpp \
     classes/utextblockdata.cpp \
     classes/utextedit.cpp \
-    base_functions.cpp
+    base_functions.cpp \
+    widgets/dialogfunctions.cpp
 
 HEADERS  += soundlist.h \
     sndcontroller.h \
@@ -49,11 +50,13 @@ HEADERS  += soundlist.h \
     widgets/mgraphicdrawsurface.h \
     classes/highlighter.h \
     classes/utextblockdata.h \
-    classes/utextedit.h
+    classes/utextedit.h \
+    widgets/dialogfunctions.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
-    widgets/functiongraphicdrawer.ui
+    widgets/functiongraphicdrawer.ui \
+    widgets/dialogfunctions.ui
 
 OTHER_FILES += \
     config.cfg \

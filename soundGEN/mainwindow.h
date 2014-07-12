@@ -8,6 +8,7 @@
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
 #include "widgets/functiongraphicdrawer.h"
+#include "widgets/dialogfunctions.h"
 #include "classes/utextedit.h"
 
 namespace Ui {
@@ -50,9 +51,14 @@ private slots:
 
     void on_buttonBox_clicked(QAbstractButton *button);
 
+    void on_left_dialog_functions_btn_clicked();
+
+    void on_right_dialog_functions_btn_clicked();
+
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
+    DialogFunctions *dialog_functions;
     SndController *sc;
     bool auto_restart;
     QList<SoundPicker*> sounds;

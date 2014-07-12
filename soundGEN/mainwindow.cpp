@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
     auto_restart = false;
     ui->setupUi(this);
 
+    dialog_functions = new DialogFunctions(this);
+
     left_drawer = new functionGraphicDrawer();
     right_drawer = new functionGraphicDrawer();
 
@@ -19,10 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->functions_tab->layout()->addWidget(functions_text);
 
     left_function = new UTextEdit();
-    ui->left_function_layout->addWidget(left_function);
+    ui->left_function_layout->insertWidget(1, left_function);
 
     right_function = new UTextEdit();
-    ui->right_function_layout->addWidget(right_function);
+    ui->right_function_layout->insertWidget(1, right_function);
 
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
@@ -121,6 +123,7 @@ MainWindow::~MainWindow()
     delete functions_text;
     delete left_function;
     delete right_function;
+    delete dialog_functions;
     delete ui;
 }
 
@@ -292,4 +295,14 @@ void MainWindow::on_buttonBox_clicked(QAbstractButton *button)
     } else {
         sc->stop();
     }
+}
+
+void MainWindow::on_left_dialog_functions_btn_clicked()
+{
+    dialog_functions->exec();
+}
+
+void MainWindow::on_right_dialog_functions_btn_clicked()
+{
+    dialog_functions->exec();
 }
