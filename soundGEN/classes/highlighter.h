@@ -3,7 +3,7 @@
 
 #include <QtGui>
 #include <QSyntaxHighlighter>
-#include "classes/utextblockdata.h"
+#include "./utextblockdata.h"
 
 enum UBrackets { NoBrackets, RoundBrackets, CurlyBraces, SquareBrackets };
 

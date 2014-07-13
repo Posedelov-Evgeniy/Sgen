@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <QString>
 #include <QVector>
-#include "fmod.hpp"
-#include "fmod_errors.h"
+#include <fmod.hpp>
+#include <fmod_errors.h>
 
 struct GenSoundRecord {
     QString sound_file;

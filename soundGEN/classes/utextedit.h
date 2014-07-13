@@ -2,8 +2,8 @@
 #define UTEXTEDIT_H
 
 #include <QTextEdit>
-#include "classes/utextblockdata.h"
-#include "classes/highlighter.h"
+#include "./utextblockdata.h"
+#include "./highlighter.h"
 
 class UTextEdit : public QTextEdit
 {

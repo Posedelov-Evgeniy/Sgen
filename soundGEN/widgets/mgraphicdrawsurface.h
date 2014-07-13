@@ -3,7 +3,9 @@
 
 #include <QWidget>
 #include <QPainter>
-#include "sndcontroller.h"
+#include <math.h>
+#include "../base_functions.h"
+#include "../sndcontroller.h"
 
 class MGraphicDrawSurface : public QWidget
 {

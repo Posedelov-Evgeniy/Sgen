@@ -1,5 +1,18 @@
+#ifndef BASE_FUNCTIONS_CPP
+#define BASE_FUNCTIONS_CPP
+
 #include <math.h>
 #include <stdarg.h>
+#include "base_functions.h"
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+
+double round(double t)
+{
+    return floor(t + 0.5);
+}
+
+#endif
 
 /*
     {{sin(t)}}
@@ -132,3 +145,5 @@ double mix(int n, ...)
     va_end(vl);
     return result/n;
 }
+
+#endif // BASE_FUNCTIONS_CPP

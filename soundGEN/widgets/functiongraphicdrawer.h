@@ -2,9 +2,9 @@
 #define FUNCTIONGRAPHICDRAWER_H
 
 #include <QWidget>
-#include "sndcontroller.h"
-#include "classes/graphicthread.h"
-#include "widgets/mgraphicdrawsurface.h"
+#include "../sndcontroller.h"
+#include "../classes/graphicthread.h"
+#include "./mgraphicdrawsurface.h"
 
 namespace Ui {
 class functionGraphicDrawer;

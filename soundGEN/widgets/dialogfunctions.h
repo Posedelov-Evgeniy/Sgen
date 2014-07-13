@@ -7,7 +7,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QFile>
-#include "widgets/functiongraphicdrawer.h"
+#include "./functiongraphicdrawer.h"
 
 namespace Ui {
 class DialogFunctions;

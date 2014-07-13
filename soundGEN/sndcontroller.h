@@ -4,14 +4,15 @@
 #include <QObject>
 #include <QApplication>
 #include <QTimer>
-#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <QtGui>
 #include <QtCore/QCoreApplication>
 #include <QProcess>
-#include "fmod.hpp"
-#include "fmod_errors.h"
+#include <math.h>
+#include "base_functions.h"
+#include <fmod.hpp>
+#include <fmod_errors.h>
 #include "soundlist.h"
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);

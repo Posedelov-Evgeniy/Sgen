@@ -124,12 +124,17 @@ bool SndController::parseFunctions()
     QDir dir(app->applicationDirPath());
     dir.mkdir("efr");
 
-    if (QFile::exists(app->applicationDirPath()+"/base_functions.cpp")) {
+    if (QFile::exists(app->applicationDirPath()+"/base_functions.h")) {
         if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.cpp"))
         {
             QFile::remove(app->applicationDirPath()+"/efr/base_functions.cpp");
         }
         QFile::copy(app->applicationDirPath()+"/base_functions.cpp", app->applicationDirPath()+"/efr/base_functions.cpp");
+        if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.h"))
+        {
+            QFile::remove(app->applicationDirPath()+"/efr/base_functions.h");
+        }
+        QFile::copy(app->applicationDirPath()+"/base_functions.h", app->applicationDirPath()+"/efr/base_functions.h");
         add_base_functions = true;
     }
 
@@ -148,7 +153,7 @@ bool SndController::parseFunctions()
     out2 << "#include <string.h>\r\n";
     out2 << "#include <stdio.h>\r\n";
     out2 << "#include \"main.h\"\r\n";
-    if (add_base_functions) out2 << "#include \"base_functions.cpp\"\r\n";
+    if (add_base_functions) out2 << "#include \"base_functions.h\"\r\n";
     out2 << text_functions + "\r\n\r\n";
     out2 << "PlaySoundFunction BaseSoundFunction;\r\n\r\n";
     out2 << baseSoundList->getFunctionsText() + "\r\n";
