@@ -5,12 +5,10 @@
 #include <stdarg.h>
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-double round(double t);
+    #ifndef M_PI
+        #define M_PI 3.14159265358979323846
+    #endif
+    double round(double t);
 #endif
 
 double sqr(double a);
@@ -22,4 +20,4 @@ double mmax(int n, ...);
 double mmin(int n, ...);
 double mix(int n, ...);
 
-#endif // BASE_FUNCTIONS_CPP
+#endif // BASE_FUNCTIONS_H

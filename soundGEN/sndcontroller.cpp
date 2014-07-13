@@ -124,17 +124,17 @@ bool SndController::parseFunctions()
     QDir dir(app->applicationDirPath());
     dir.mkdir("efr");
 
-    if (QFile::exists(app->applicationDirPath()+"/base_functions.hpp")) {
+    if (QFile::exists(app->applicationDirPath()+"/base_functions.h")) {
         if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.cpp"))
         {
             QFile::remove(app->applicationDirPath()+"/efr/base_functions.cpp");
         }
         QFile::copy(app->applicationDirPath()+"/base_functions.cpp", app->applicationDirPath()+"/efr/base_functions.cpp");
-        if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.hpp"))
+        if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.h"))
         {
-            QFile::remove(app->applicationDirPath()+"/efr/base_functions.hpp");
+            QFile::remove(app->applicationDirPath()+"/efr/base_functions.h");
         }
-        QFile::copy(app->applicationDirPath()+"/base_functions.hpp", app->applicationDirPath()+"/efr/base_functions.hpp");
+        QFile::copy(app->applicationDirPath()+"/base_functions.h", app->applicationDirPath()+"/efr/base_functions.h");
         add_base_functions = true;
     }
 
@@ -142,7 +142,7 @@ bool SndController::parseFunctions()
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
 
-        QFile file(app->applicationDirPath()+"/efr/main.hpp");
+        QFile file(app->applicationDirPath()+"/efr/main.h");
         file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out(&file);
         out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
@@ -156,8 +156,8 @@ bool SndController::parseFunctions()
         out2 << "#include <math.h>\n";
         out2 << "#include <string.h>\n";
         out2 << "#include <stdio.h>\n";
-        out2 << "#include \"main.hpp\"\n";
-        if (add_base_functions) out2 << "#include \"base_functions.hpp\"\n";
+        out2 << "#include \"main.h\"\n";
+        if (add_base_functions) out2 << "#include \"base_functions.h\"\n";
         out2 << "using namespace std;\n";
         out2 << "\n" + text_functions + "\n";
         out2 << "PlaySoundFunction BaseSoundFunction;\n";
@@ -199,22 +199,22 @@ bool SndController::parseFunctions()
             tcmd = "cl.exe /LD main.cpp /link /DLL";
         }
     #else
-        QFile file(app->applicationDirPath()+"/efr/main.hpp");
+        QFile file(app->applicationDirPath()+"/efr/main.h");
         file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out(&file);
+        out << "#include <math.h>\n";
+        out << "#include <string.h>\n";
+        out << "#include <stdio.h>\n";
+        if (add_base_functions) out << "#include \"base_functions.h\"\n";
         out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
         out << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\n";
         out << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\n";
         file.close();
 
-        QFile file2(app->applicationDirPath()+"/efr/main.cpp");
+        QFile file2(app->applicationDirPath()+"/efr/main.c");
         file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out2(&file2);
-        out2 << "#include <math.h>\n";
-        out2 << "#include <string.h>\n";
-        out2 << "#include <stdio.h>\n";
-        out2 << "#include \"main.hpp\"\n";
-        if (add_base_functions) out2 << "#include \"base_functions.hpp\"\n";
+        out2 << "#include \"main.h\"\n";
         out2 << "\n" + text_functions + "\n";
         out2 << "PlaySoundFunction BaseSoundFunction;\n";
         out2 << baseSoundList->getFunctionsText() + "\n";
@@ -226,11 +226,20 @@ bool SndController::parseFunctions()
         QFile file3(app->applicationDirPath()+"/efr/Makefile");
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);
-        out3 << "x64: main.c\r\n";
-        out3 << "	g++ -m64 -Wall -fPIC -c main.cpp\n";
-        out3 << "	g++ -shared -o main.so main.o\n";
+
+        out3 << "CC = g++\n";
+        out3 << "MODULES= main.o base_functions.o\n";
+        out3 << "OBJECTS=\n";
+        out3 << "RCLOBJECTS= main.c main.h base_functions.cpp base_functions.h\n";
+        out3 << "all: main.so\n";
+        out3 << "main.so:$(MODULES)\n";
+        out3 << "	$(CC) -shared $(MODULES) -o main.so\n";
+        out3 << "base_functions.o: $(RCLOBJECTS)\n";
+        out3 << "	g++ -m64 -Wall -fPIC -c base_functions.cpp -o base_functions.o\n";
+        out3 << "main.o: $(RCLOBJECTS)\n";
+        out3 << "	g++ -m64 -Wall -fPIC -c main.c -o main.o\n";
         out3 << "clean:\n";
-        out3 << "	rm -f main.o\n";
+        out3 << "	rm -f *.o\n";
         out3 << "	rm -f main.so\n";
         file3.close();
 

@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QPainter>
 #include <math.h>
-#include "../base_functions.hpp"
+#include "../base_functions.h"
 #include "../sndcontroller.h"
 
 class MGraphicDrawSurface : public QWidget

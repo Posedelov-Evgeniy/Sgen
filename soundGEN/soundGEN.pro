@@ -37,7 +37,7 @@ SOURCES += main.cpp\
     classes/utextedit.cpp \
     widgets/dialogfunctions.cpp
 
-HEADERS  += base_functions.hpp \
+HEADERS  += base_functions.h \
     soundlist.h \
     sndcontroller.h \
     mainwindow.h \
