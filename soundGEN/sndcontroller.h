@@ -10,7 +10,7 @@
 #include <QtCore/QCoreApplication>
 #include <QProcess>
 #include <math.h>
-#include "base_functions.h"
+#include "base_functions.hpp"
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include "soundlist.h"

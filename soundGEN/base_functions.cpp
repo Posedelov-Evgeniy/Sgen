@@ -3,7 +3,9 @@
 
 #include <math.h>
 #include <stdarg.h>
-#include "base_functions.h"
+#include "base_functions.hpp"
+
+using namespace std;
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
 

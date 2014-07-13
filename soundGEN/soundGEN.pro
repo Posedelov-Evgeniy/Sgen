@@ -37,7 +37,7 @@ SOURCES += main.cpp\
     classes/utextedit.cpp \
     widgets/dialogfunctions.cpp
 
-HEADERS  += base_functions.h \
+HEADERS  += base_functions.hpp \
     soundlist.h \
     sndcontroller.h \
     mainwindow.h \
@@ -57,4 +57,5 @@ FORMS    += mainwindow.ui \
 
 OTHER_FILES += \
     config.cfg \
-    functions.cpp.cfg
+    functions.cpp.cfg \
+    win_deploy.bat

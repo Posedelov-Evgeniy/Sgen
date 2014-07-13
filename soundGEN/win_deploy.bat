@@ -2,7 +2,7 @@
 IF "%~2"=="" EXIT
 SETLOCAL
 copy .\base_functions.cpp %2
-copy .\base_functions.h %2
+copy .\base_functions.hpp %2
 copy .\config.cfg %2
 copy .\functions.cpp.cfg %2
 copy .\api\windows\fmodex.dll %2
