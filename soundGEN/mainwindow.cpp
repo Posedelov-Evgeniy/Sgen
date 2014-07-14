@@ -26,9 +26,9 @@ MainWindow::MainWindow(QWidget *parent) :
     right_function = new UTextEdit();
     ui->right_function_layout->insertWidget(1, right_function);
 
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText("Запуск");
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText("Стоп");
-    ui->buttonBox->button(QDialogButtonBox::Retry)->setText("Перезапуск");
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(" Запуск ");
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(" Стоп ");
+    ui->buttonBox->button(QDialogButtonBox::Retry)->setText(" Перезапуск ");
     sound_stopped();
     sc = SndController::Instance();
 

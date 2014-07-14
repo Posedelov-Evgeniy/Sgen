@@ -121,7 +121,8 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
     QPainter painter(this);
 
     painter.setBackground(QBrush(Qt::white));
-    painter.eraseRect(rect());
+    painter.setPen(Qt::black);
+    painter.drawRect(rect().left(),rect().top(),rect().right()-1,rect().bottom()-1);
     if (!graphicFunction) return;
 
     int points_count = width() - 1;
@@ -137,7 +138,6 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
     double next_t = t+dt;
 
 
-    painter.setPen(Qt::black);
     painter.drawLine(0,height_center,points_count,height_center);
 
     do {

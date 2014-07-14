@@ -141,32 +141,41 @@ bool SndController::parseFunctions()
     QProcess* pConsoleProc = new QProcess;
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+        QString main_file_name = "main.cpp";
+        QString spec_func_pref = "extern \"C\" __declspec(dllexport)";
+        QString spec_namespace = "using namespace std;\n";
+    #else
+        QString main_file_name = "main.c";
+        QString spec_func_pref = "extern \"C\"";
+        QString spec_namespace = "";
+    #endif
 
-        QFile file(app->applicationDirPath()+"/efr/main.h");
-        file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-        QTextStream out(&file);
-        out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-        out << "extern \"C\" __declspec(dllexport) double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\n";
-        out << "extern \"C\" __declspec(dllexport) double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\n";
-        file.close();
+    QFile file(app->applicationDirPath()+"/efr/main.h");
+    file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+    QTextStream out(&file);
+    out << "#include <math.h>\n";
+    out << "#include <string.h>\n";
+    out << "#include <stdio.h>\n";
+    if (add_base_functions) out << "#include \"base_functions.h\"\n";
+    out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
+    out << spec_func_pref << " double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\n";
+    out << spec_func_pref << " double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\n";
+    file.close();
 
-        QFile file2(app->applicationDirPath()+"/efr/main.cpp");
-        file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-        QTextStream out2(&file2);
-        out2 << "#include <math.h>\n";
-        out2 << "#include <string.h>\n";
-        out2 << "#include <stdio.h>\n";
-        out2 << "#include \"main.h\"\n";
-        if (add_base_functions) out2 << "#include \"base_functions.h\"\n";
-        out2 << "using namespace std;\n";
-        out2 << "\n" + text_functions + "\n";
-        out2 << "PlaySoundFunction BaseSoundFunction;\n";
-        out2 << baseSoundList->getFunctionsText() + "\n";
-        out2 << "double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\n";
-        out2 << "double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\n";
-        out2 << "int main() {return 0;};\n";
-        file2.close();
+    QFile file2(app->applicationDirPath()+"/efr/"+main_file_name);
+    file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+    QTextStream out2(&file2);
+    out2 << "#include \"main.h\"\n";
+    out2 << spec_namespace;
+    out2 << "\n" + text_functions + "\n";
+    out2 << "PlaySoundFunction BaseSoundFunction;\n";
+    out2 << baseSoundList->getFunctionsText() + "\n";
+    out2 << spec_func_pref << "double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\n";
+    out2 << spec_func_pref << "double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\n";
+    out2 << "int main() {return 0;};\n";
+    file2.close();
 
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
         QString tcmd;
 
         QStringList env_list(QProcess::systemEnvironment());
@@ -199,30 +208,6 @@ bool SndController::parseFunctions()
             tcmd = "cl.exe /LD main.cpp /link /DLL";
         }
     #else
-        QFile file(app->applicationDirPath()+"/efr/main.h");
-        file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-        QTextStream out(&file);
-        out << "#include <math.h>\n";
-        out << "#include <string.h>\n";
-        out << "#include <stdio.h>\n";
-        if (add_base_functions) out << "#include \"base_functions.h\"\n";
-        out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-        out << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\n";
-        out << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\n";
-        file.close();
-
-        QFile file2(app->applicationDirPath()+"/efr/main.c");
-        file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-        QTextStream out2(&file2);
-        out2 << "#include \"main.h\"\n";
-        out2 << "\n" + text_functions + "\n";
-        out2 << "PlaySoundFunction BaseSoundFunction;\n";
-        out2 << baseSoundList->getFunctionsText() + "\n";
-        out2 << "extern \"C\" double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\n";
-        out2 << "extern \"C\" double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\n";
-        out2 << "int main() {return 0;};\n";
-        file2.close();
-
         QFile file3(app->applicationDirPath()+"/efr/Makefile");
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);

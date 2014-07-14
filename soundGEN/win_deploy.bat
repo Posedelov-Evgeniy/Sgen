@@ -1,5 +1,6 @@
 @echo off
 IF "%~2"=="" EXIT
+IF EXIST %2\functions.cpp.cfg EXIT
 SETLOCAL
 copy .\base_functions.cpp %2
 copy .\base_functions.h %2

@@ -475,8 +475,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>798</width>
-               <height>346</height>
+               <width>788</width>
+               <height>337</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4"/>
@@ -501,8 +501,13 @@
           <height>40</height>
          </size>
         </property>
+        <property name="font">
+         <font>
+          <family>Courier</family>
+         </font>
+        </property>
         <property name="layoutDirection">
-         <enum>Qt::RightToLeft</enum>
+         <enum>Qt::LeftToRight</enum>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -530,7 +535,7 @@
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
