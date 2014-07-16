@@ -27,6 +27,13 @@
 */
 
 /*
+    {{tan(t)}}
+    Категория: сигналы.
+    Возвращает тангенс аргумента t.
+    При генерации сигнала заданной частоты должен использоваться как cos(k*t)
+*/
+
+/*
     {{sqr(a)}}
     Категория: другие функции.
     Возвращает квадрат аргумента a.
@@ -142,6 +149,23 @@ double mix(int n, ...)
     for (int i=0;i<n;i++) result+=va_arg(vl,double);
     va_end(vl);
     return result/n;
+}
+
+base_function_def newDef(base_function_signal sifn, std::string sinm) {
+    base_function_def rdef;
+    rdef.name = sinm;
+    rdef.function = sifn;
+    return rdef;
+}
+
+void getBaseFunctions(std::vector<base_function_def>* base_f) {
+    base_f->push_back(newDef(sin,"sin"));
+    base_f->push_back(newDef(cos,"cos"));
+    base_f->push_back(newDef(tan,"tan"));
+    base_f->push_back(newDef(rect,"rect"));
+    base_f->push_back(newDef(sawtooth,"sawtooth"));
+    base_f->push_back(newDef(tri,"tri"));
+    return;
 }
 
 #endif // BASE_FUNCTIONS_CPP

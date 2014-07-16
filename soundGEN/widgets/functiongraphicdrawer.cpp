@@ -24,7 +24,7 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     widget_drawer->setFreq(500);
     widget_drawer->setAmp(1);
     widget_drawer->setKt(0.005);
-    widget_drawer->setGraphicFunction(0);
+    widget_drawer->resetGraphicFunctions();
 
     on_durationSlider_valueChanged(ui->durationSlider->value());
     on_ampSlider_valueChanged(ui->ampSlider->value());

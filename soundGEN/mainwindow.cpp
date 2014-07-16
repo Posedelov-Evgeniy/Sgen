@@ -29,6 +29,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(" Запуск ");
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(" Стоп ");
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText(" Перезапуск ");
+
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+    ui->buttonBox->setLayoutDirection(Qt::LeftToRight);
+    #endif
+
     sound_stopped();
     sc = SndController::Instance();
 
@@ -65,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
         functions_text->document()->setPlainText(funct_str);
     }
 
+    QObject::connect(dialog_functions, SIGNAL(accepted()), this, SLOT(paste_function_accepted()));
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
     QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
@@ -299,10 +305,20 @@ void MainWindow::on_buttonBox_clicked(QAbstractButton *button)
 
 void MainWindow::on_left_dialog_functions_btn_clicked()
 {
-    dialog_functions->exec();
+    dialog_for_edit = left_function;
+    dialog_functions->open();
 }
 
 void MainWindow::on_right_dialog_functions_btn_clicked()
 {
-    dialog_functions->exec();
+    dialog_for_edit = right_function;
+    dialog_functions->open();
+}
+
+void MainWindow::paste_function_accepted()
+{
+    if (dialog_for_edit && !dialog_functions->getPickedFunction().isEmpty()) {
+        dialog_for_edit->textCursor().insertText(dialog_functions->getPickedFunction());
+    }
+    dialog_for_edit = 0;
 }

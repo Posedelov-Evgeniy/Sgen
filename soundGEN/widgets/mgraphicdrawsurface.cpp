@@ -85,6 +85,19 @@ void MGraphicDrawSurface::incT()
 void MGraphicDrawSurface::setGraphicFunction(const GenSoundFunction &value)
 {
     graphicFunction = value;
+    graphicTFunction = 0;
+}
+
+void MGraphicDrawSurface::setGraphicFunctionT(const base_function_signal &value)
+{
+    graphicTFunction = value;
+    graphicFunction = 0;
+}
+
+void MGraphicDrawSurface::resetGraphicFunctions()
+{
+    graphicTFunction = 0;
+    graphicFunction = 0;
 }
 
 MGraphicDrawSurface::MGraphicDrawSurface() :
@@ -118,16 +131,17 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 {
     QWidget::paintEvent(e);
 
-    QPainter painter(this);
+    if (this->isHidden()) return;
 
+    QPainter painter(this);
     painter.setBackground(QBrush(Qt::white));
     painter.setPen(Qt::black);
     painter.drawRect(rect().left(),rect().top(),rect().right()-1,rect().bottom()-1);
-    if (!graphicFunction) return;
+    if (!graphicFunction && !graphicTFunction) return;
 
     int points_count = width() - 1;
     int height_center = height() / 2;
-    double k_y_graphic = kamp * amp * 0.375 * height();
+    double k_y_graphic = kamp * amp * 0.4 * height();
     double k_t_graphic = dt/points_count;
     double kFreq = freq*2.0*M_PI;
 
@@ -150,12 +164,20 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
     painter.setPen(QPen(QBrush(Qt::red), 2));
 
     x1 = 0;
-    y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq, base_play_sound);
+    if (graphicFunction)
+        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq, base_play_sound);
+    else
+        y1 = height_center - k_y_graphic*graphicTFunction(kFreq*t);
+
     for(i=1;i<points_count;i++) {
         x0 = x1;
         y0 = y1;
         x1 = i;
-        y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound);
+
+        if (graphicFunction)
+            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound);
+        else
+            y1 = height_center - k_y_graphic*graphicTFunction((t+i*k_t_graphic)*kFreq);
         painter.drawLine(x0,y0,x1,y1);
     }
 }

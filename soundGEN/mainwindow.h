@@ -39,6 +39,8 @@ private slots:
 
     void get_message(QString message);
 
+    void paste_function_accepted();
+
     void on_MainWindow_destroyed();
 
     void on_doubleSpinBox_amp_left_valueChanged(double arg1);
@@ -54,7 +56,6 @@ private slots:
     void on_left_dialog_functions_btn_clicked();
 
     void on_right_dialog_functions_btn_clicked();
-
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
@@ -67,6 +68,7 @@ private:
     UTextEdit *functions_text;
     UTextEdit *left_function;
     UTextEdit *right_function;
+    UTextEdit *dialog_for_edit;
 
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();
