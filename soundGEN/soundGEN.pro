@@ -58,6 +58,7 @@ FORMS    += mainwindow.ui \
 OTHER_FILES += \
     config.cfg \
     functions.cpp.cfg \
-    win_deploy.bat
+    win_deploy.bat \
+    lin_deploy.sh
 
 TRANSLATIONS += translations/soundGEN_ru_RU.ts

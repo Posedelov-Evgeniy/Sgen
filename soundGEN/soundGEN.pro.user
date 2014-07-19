@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.0.1, 2014-07-16T23:46:33. -->
+<!-- Written by QtCreator 3.0.1, 2014-07-20T00:19:27. -->
 <qtcreator>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -180,41 +180,14 @@
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{sourceDir}/config.cfg&quot; &quot;%{buildDir}&quot;</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Command">cp</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{buildDir}</value>
+      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">&quot;%{sourceDir}&quot; &quot;%{buildDir}&quot;</value>
+      <value type="QString" key="ProjectExplorer.ProcessStep.Command">lin_deploy.sh</value>
+      <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{sourceDir}</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.ProcessStep</value>
      </valuemap>
-     <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.1">
-      <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{sourceDir}/functions.cpp.cfg&quot; &quot;%{buildDir}&quot;</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Command">cp</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{buildDir}</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.ProcessStep</value>
-     </valuemap>
-     <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.2">
-      <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{sourceDir}/base_functions.cpp&quot; &quot;%{buildDir}&quot;</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Command">cp</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{buildDir}</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.ProcessStep</value>
-     </valuemap>
-     <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.3">
-      <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">-n &quot;%{sourceDir}/base_functions.h&quot; &quot;%{buildDir}&quot;</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Command">cp</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{buildDir}</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.ProcessStep</value>
-     </valuemap>
-     <value type="int" key="ProjectExplorer.BuildStepList.StepsCount">4</value>
+     <value type="int" key="ProjectExplorer.BuildStepList.StepsCount">1</value>
      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Deploy</value>
      <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
      <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">ProjectExplorer.BuildSteps.Deploy</value>
