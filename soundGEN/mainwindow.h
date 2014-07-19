@@ -61,7 +61,7 @@ private:
     Ui::MainWindow *ui;
     DialogFunctions *dialog_functions;
     SndController *sc;
-    bool auto_restart;
+    bool auto_restart, close_on_stop;
     QList<SoundPicker*> sounds;
     functionGraphicDrawer *left_drawer;
     functionGraphicDrawer *right_drawer;
@@ -73,6 +73,8 @@ private:
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();
     void addSoundPicker(QString file_name, QString function_name);
+    void closeEvent(QCloseEvent *event);
+    void save_settings();
 };
 
 #endif // MAINWINDOW_H

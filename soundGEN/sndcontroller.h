@@ -42,7 +42,7 @@ private:
 
     int doprocess();
     void resetParams();
-    bool is_stopped;
+    bool is_stopping, is_running;
 
     double freq_l, freq_r, kL, kR;
     double amp_l, amp_r;
@@ -79,7 +79,7 @@ public:
     GenSoundFunction getLeftFunction();
     GenSoundFunction getRightFunction();
     void AddSound(QString new_file, QString new_function);
-
+    bool running();
 signals:
     void starting();
     void started();

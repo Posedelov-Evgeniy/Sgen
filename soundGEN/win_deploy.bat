@@ -17,4 +17,7 @@ IF "%~4"=="dllcopy" (
         for /F %%A in ('dir /b "%~1\*d.dll"') do copy %~1\%%A %2
     )
 )
+
+md %2\translations
+copy .\translations\*.qm %2\translations
 ENDLOCAL

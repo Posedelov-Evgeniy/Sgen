@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
     auto_restart = false;
+    close_on_stop = false;
     ui->setupUi(this);
 
     dialog_functions = new DialogFunctions(this);
@@ -26,9 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
     right_function = new UTextEdit();
     ui->right_function_layout->insertWidget(1, right_function);
 
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(" Запуск ");
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(" Стоп ");
-    ui->buttonBox->button(QDialogButtonBox::Retry)->setText(" Перезапуск ");
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Run"));
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Stop"));
+    ui->buttonBox->button(QDialogButtonBox::Retry)->setText(tr("Restart"));
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
     ui->buttonBox->setLayoutDirection(Qt::LeftToRight);
@@ -61,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
     if(!file.exists()){
-        qDebug() << "Functions.cpp.cfg not exists";
+        qDebug() << tr("Functions.cpp.cfg not exists");
     }
     if (file.open(QIODevice::ReadOnly))
     {
@@ -80,47 +81,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
-
-    settings.setValue("main/function_l", left_function->document()->toPlainText());
-    settings.setValue("main/function_r", right_function->document()->toPlainText());
-    settings.setValue("main/amp_l", ui->doubleSpinBox_amp_left->value());
-    settings.setValue("main/amp_r", ui->doubleSpinBox_amp_right->value());
-    settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
-    settings.setValue("main/freq_r", ui->doubleSpinBox_freq_right->value());
-
-    settings.setValue("graphic/kamp_l", left_drawer->getKampIntValue());
-    settings.setValue("graphic/kamp_r", right_drawer->getKampIntValue());
-    settings.setValue("graphic/dt_l", left_drawer->getDtIntValue());
-    settings.setValue("graphic/dt_r", right_drawer->getDtIntValue());
-
-    SoundPicker *picker;
-    settings.setValue("sounds/sounds_count", sounds.length());
-    int i = 1;
-    foreach(picker, sounds) {
-        settings.setValue("sounds/sound"+QString::number(i), picker->getFilename());
-        settings.setValue("sounds/sound"+QString::number(i)+"_function", picker->getFunctionname());
-        i++;
-    }
-
-    QRect gg = this->geometry();
-    settings.setValue("window/left", gg.left());
-    settings.setValue("window/top", gg.top());
-    settings.setValue("window/width", gg.width());
-    settings.setValue("window/height", gg.height());
-
-    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
-    if (file.open(QIODevice::WriteOnly))
-    {
-        QTextStream stream(&file);
-        stream << functions_text->document()->toPlainText();
-        file.close();
-        if (stream.status() != QTextStream::Ok)
-        {
-            qDebug() << "Error writing functions.cpp.cfg";
-        }
-    }
-
     left_drawer->deleteLater();
     right_drawer->deleteLater();
     functions_text->deleteLater();
@@ -172,12 +132,18 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
-    if (auto_restart) {
+
+    if (auto_restart && !close_on_stop) {
         auto_restart = false;
         sc->run();
     } else {
         left_drawer->stop();
         right_drawer->stop();
+    }
+
+    if (close_on_stop) {
+        this->close();
+        return;
     }
 }
 
@@ -241,6 +207,62 @@ void MainWindow::addSoundPicker(QString file_name, QString function_name)
         QObject::connect(picker, SIGNAL(remove_item(SoundPicker*)), this, SLOT(remove_sound(SoundPicker*)));
         sounds.append(picker);
         adjustSoundParams();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    sc->stop();
+    save_settings();
+    if (sc->running()) {
+        close_on_stop = true;
+        event->ignore();
+    } else {
+        event->accept();
+    }
+}
+
+void MainWindow::save_settings()
+{
+    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
+
+    settings.setValue("main/function_l", left_function->document()->toPlainText());
+    settings.setValue("main/function_r", right_function->document()->toPlainText());
+    settings.setValue("main/amp_l", ui->doubleSpinBox_amp_left->value());
+    settings.setValue("main/amp_r", ui->doubleSpinBox_amp_right->value());
+    settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
+    settings.setValue("main/freq_r", ui->doubleSpinBox_freq_right->value());
+
+    settings.setValue("graphic/kamp_l", left_drawer->getKampIntValue());
+    settings.setValue("graphic/kamp_r", right_drawer->getKampIntValue());
+    settings.setValue("graphic/dt_l", left_drawer->getDtIntValue());
+    settings.setValue("graphic/dt_r", right_drawer->getDtIntValue());
+
+    SoundPicker *picker;
+    settings.setValue("sounds/sounds_count", sounds.length());
+    int i = 1;
+    foreach(picker, sounds) {
+        settings.setValue("sounds/sound"+QString::number(i), picker->getFilename());
+        settings.setValue("sounds/sound"+QString::number(i)+"_function", picker->getFunctionname());
+        i++;
+    }
+
+    QRect gg = this->geometry();
+    settings.setValue("window/left", gg.left());
+    settings.setValue("window/top", gg.top());
+    settings.setValue("window/width", gg.width());
+    settings.setValue("window/height", gg.height());
+
+    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
+    if (file.open(QIODevice::WriteOnly))
+    {
+        QTextStream stream(&file);
+        stream << functions_text->document()->toPlainText();
+        file.close();
+        if (stream.status() != QTextStream::Ok)
+        {
+            qDebug() << tr("Error writing functions.cpp.cfg");
+        }
     }
 }
 

@@ -165,10 +165,10 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Длительность (с)</string>
+          <string>Duration (s)</string>
          </property>
          <property name="text">
-          <string>Dt (с):</string>
+          <string>Dt (s):</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -243,7 +243,7 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Усиление</string>
+          <string>Amplification</string>
          </property>
          <property name="text">
           <string>Kamp:</string>
@@ -321,10 +321,10 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Время (с)</string>
+          <string>Time (sec)</string>
          </property>
          <property name="text">
-          <string>t (с):</string>
+          <string>t (s):</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

@@ -60,7 +60,7 @@
         </property>
         <widget class="QWidget" name="main_tab">
          <attribute name="title">
-          <string>Основное</string>
+          <string>Main</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="sizeConstraint">
@@ -97,7 +97,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Левый канал</string>
+                 <string>Left channel</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -138,7 +138,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Амплитуда</string>
+                     <string>Amplitude</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -202,7 +202,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Частота (Гц)</string>
+                     <string>Frequency (Hz)</string>
                     </property>
                    </widget>
                   </item>
@@ -282,7 +282,7 @@
                  </font>
                 </property>
                 <property name="text">
-                 <string>Правый канал</string>
+                 <string>Right channel</string>
                 </property>
                 <property name="alignment">
                  <set>Qt::AlignCenter</set>
@@ -320,7 +320,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Амплитуда</string>
+                     <string>Amplitude</string>
                     </property>
                    </widget>
                   </item>
@@ -378,7 +378,7 @@
                      </size>
                     </property>
                     <property name="text">
-                     <string>Частота (Гц)</string>
+                     <string>Frequency (Hz)</string>
                     </property>
                    </widget>
                   </item>
@@ -441,13 +441,13 @@
         </widget>
         <widget class="QWidget" name="functions_tab">
          <attribute name="title">
-          <string>Пользовательские функции</string>
+          <string>Custom functions</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_5"/>
         </widget>
         <widget class="QWidget" name="sounds_tab">
          <attribute name="title">
-          <string>Звуковые файлы</string>
+          <string>Sound files</string>
          </attribute>
          <layout class="QVBoxLayout" name="vertLayout">
           <property name="sizeConstraint">
@@ -475,8 +475,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>798</width>
-               <height>346</height>
+               <width>788</width>
+               <height>337</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4"/>
@@ -503,7 +503,10 @@
         </property>
         <property name="font">
          <font>
-          <family>Courier</family>
+          <family>Cambria</family>
+          <weight>50</weight>
+          <bold>false</bold>
+          <kerning>false</kerning>
          </font>
         </property>
         <property name="layoutDirection">
@@ -535,7 +538,7 @@
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>

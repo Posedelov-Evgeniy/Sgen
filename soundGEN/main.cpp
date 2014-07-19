@@ -1,12 +1,20 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QTranslator>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
+    QApplication app(argc, argv);
 
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
+
+    QTranslator myappTranslator;
+    myappTranslator.load(QCoreApplication::applicationDirPath()+"/translations/soundGEN_" + QLocale::system().name());
+    app.installTranslator(&myappTranslator);
+
+    MainWindow w;
     w.show();
-    
-    return a.exec();
+    return app.exec();
 }

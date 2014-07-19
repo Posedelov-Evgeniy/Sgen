@@ -32,11 +32,12 @@ void DialogFunctions::initRecords()
     QString funct_str;
     QFile file(QCoreApplication::applicationDirPath()+"/base_functions.cpp");
     if(!file.exists()){
-        qDebug() << "base_functions.cpp not exists";
+        qDebug() << tr("base_functions.cpp not exists");
     }
     if (file.open(QIODevice::ReadOnly))
     {
         QTextStream stream(&file);
+        stream.setCodec("UTF-8");
         funct_str = stream.readAll();
     }
     if (funct_str.isEmpty()) return;
@@ -54,7 +55,7 @@ void DialogFunctions::initRecords()
         DialogFunctionRecord rec;
         QString base_str = QString(rx.cap(1));
         QStringList base_recs = QStringList(base_str.split('\n'));
-        if (base_recs.length() && base_recs.first().isEmpty()) base_recs.removeFirst();
+        while (base_recs.length() && base_recs.first().trimmed().isEmpty()) base_recs.removeFirst();
 
         rec.function = 0;
 
@@ -75,7 +76,6 @@ void DialogFunctions::initRecords()
                     break;
                 }
             }
-
         }
 
         if (base_recs.length()>=2) {
@@ -83,7 +83,7 @@ void DialogFunctions::initRecords()
             base_recs[1] = "";
         }
 
-        base_recs.filter(QRegExp("^(?){1,}$"));
+        while (base_recs.length() && base_recs.first().isEmpty()) base_recs.removeFirst();
         rec.description = base_recs.join('\n');
 
         records->append(rec);
@@ -91,7 +91,6 @@ void DialogFunctions::initRecords()
 
         pos += rx.matchedLength();
     }
-
 
     if (ui->functions_listWidget->count()>0) {
         ui->functions_listWidget->item(0)->setSelected(true);

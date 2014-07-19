@@ -25,10 +25,13 @@ SndController::SndController(QObject *parent) :
     QObject(parent)
 {
     baseSoundList = new SoundList();
+    is_running = false;
 }
 
 SndController::~SndController()
 {
+    mfct.left_channel_fct = 0;
+    mfct.right_channel_fct = 0;
     baseSoundList->clearSounds();
     delete baseSoundList;
 }
@@ -196,6 +199,11 @@ bool SndController::parseFunctions()
         pConsoleProc->setWorkingDirectory(app->applicationDirPath()+"/efr");
         qDebug() << pConsoleProc->workingDirectory() << endl;
 
+        if (QFile::exists(app->applicationDirPath()+"/efr/main.dll"))
+        {
+            QFile::remove(app->applicationDirPath()+"/efr/main.dll");
+        }
+
         if (add_base_functions) {
             pConsoleProc->start("cl.exe /c /EHsc base_functions.cpp");
             pConsoleProc->waitForFinished();
@@ -208,6 +216,11 @@ bool SndController::parseFunctions()
             tcmd = "cl.exe /LD main.cpp /link /DLL";
         }
     #else
+        if (QFile::exists(app->applicationDirPath()+"/efr/main.so"))
+        {
+            QFile::remove(app->applicationDirPath()+"/efr/main.so");
+        }
+
         QFile file3(app->applicationDirPath()+"/efr/Makefile");
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);
@@ -291,24 +304,25 @@ int SndController::doprocess() {
     int                     channels = 2;
     FMOD_CREATESOUNDEXINFO  createsoundexinfo;
     unsigned int            version;
+    QTextStream             console(stdout);
 
-    is_stopped = false;
+    is_stopping = false;
     resetParams();
 
     emit starting();
 
-    emit write_message("Initialization...");
-    printf("Starting with: \r");
-    printf("Function L: %s\r", qPrintable(text_l));
-    printf("Function R: %s\r", qPrintable(text_r));
-    printf("Amp L: %f\r", amp_l);
-    printf("Amp R: %f\r", amp_r);
-    printf("Freq L: %f\r", freq_l);
-    printf("Freq R: %f\r", freq_r);
-    fflush(stdout);
+    emit write_message(tr("Initialization..."));
+
+    console << tr("Starting with:") << " " << endl;
+    console << tr("Function L:") << " " << text_l << endl;
+    console << tr("Function R:") << " " << text_r << endl;
+    console << tr("Amp L:") << " " << amp_l << endl;
+    console << tr("Amp R:") << " " << amp_r << endl;
+    console << tr("Freq L:") << " " << freq_l << endl;
+    console << tr("Freq R:") << " " << freq_r << endl;
 
     if (!parseFunctions()) {
-        emit write_message("Error in functions!");
+        emit write_message(tr("Error in functions!"));
         return 0;
     }
 
@@ -356,8 +370,9 @@ int SndController::doprocess() {
     result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
     ERRCHECK(result);
 
-    emit write_message("Playing");
+    emit write_message(tr("Playing"));
 
+    is_running = true;
     /*
         Main loop.
     */
@@ -398,7 +413,7 @@ int SndController::doprocess() {
                 ERRCHECK(result);
             }
 
-            printf("Time %02d:%02d:%02d/%02d:%02d:%02d : %s\r", ms / 1000 / 60, ms / 1000 % 60, ms / 10 % 100, lenms / 1000 / 60, lenms / 1000 % 60, lenms / 10 % 100, paused ? "Paused " : playing ? "Playing" : "Stopped");
+            printf("Time %02d:%02d:%02d/%02d:%02d:%02d : %s\n", ms / 1000 / 60, ms / 1000 % 60, ms / 10 % 100, lenms / 1000 / 60, lenms / 1000 % 60, lenms / 10 % 100, paused ? "Paused " : playing ? "Playing" : "Stopped");
             fflush(stdout);
         }
 
@@ -406,7 +421,7 @@ int SndController::doprocess() {
         QTimer::singleShot(2000, &loop, SLOT(quit()));
         loop.exec();
 
-    } while (!is_stopped);
+    } while (!is_stopping);
 
     printf("\n");
 
@@ -425,9 +440,10 @@ int SndController::doprocess() {
     result = system->release();
     ERRCHECK(result);
 
-    is_stopped = false;
+    is_stopping = false;
+    is_running = false;
 
-    emit write_message("Stopped");
+    emit write_message(tr("Stopped"));
 
     return 0;
 }
@@ -438,7 +454,7 @@ void SndController::run() {
 }
 
 void SndController::stop() {
-    is_stopped = true;
+    is_stopping = true;
     loop.exit();
 }
 
@@ -498,4 +514,9 @@ GenSoundFunction SndController::getRightFunction()
 void SndController::AddSound(QString new_file, QString new_function)
 {
     baseSoundList->AddSound(new_file, new_function);
+}
+
+bool SndController::running()
+{
+    return is_running;
 }

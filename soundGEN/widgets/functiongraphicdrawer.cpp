@@ -34,6 +34,8 @@ functionGraphicDrawer::~functionGraphicDrawer()
 {
     mThread->removeGraphic();
     if (mThread->getLinksCount()==0) {
+        mThread->Stop = true;
+        mThread->quit();
         delete mThread;
         mThread = 0;
     }

@@ -59,3 +59,5 @@ OTHER_FILES += \
     config.cfg \
     functions.cpp.cfg \
     win_deploy.bat
+
+TRANSLATIONS += translations/soundGEN_ru_RU.ts

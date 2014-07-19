@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Доступные функции</string>
+   <string>Available functions</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>false</bool>
