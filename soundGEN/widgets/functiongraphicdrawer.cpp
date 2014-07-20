@@ -123,10 +123,12 @@ void functionGraphicDrawer::on_durationSlider_valueChanged(int value)
 {
     widget_drawer->setDt(0.1 * value / ui->durationSlider->maximum());
     ui->lcdNumber_dur->display(widget_drawer->getDt());
+    emit changed();
 }
 
 void functionGraphicDrawer::on_ampSlider_valueChanged(int value)
 {
     widget_drawer->setKamp(1.0 + (double) 2*value / ui->ampSlider->maximum());
     ui->lcdNumber_koef->display(widget_drawer->getKamp());
+    emit changed();
 }

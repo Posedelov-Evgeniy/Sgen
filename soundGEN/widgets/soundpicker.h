@@ -24,13 +24,15 @@ public:
 signals:
     void remove_item(SoundPicker *p);
     void add_new(SoundPicker *p);
-
+    void changed();
 private slots:
     void on_pushButton_sound_clicked();
 
     void on_pushButton_sound_remove_clicked();
 
     void on_pushButton_sound_add_clicked();
+
+    void params_changed();
 
 private:
     Ui::SoundPicker *ui;

@@ -20,4 +20,7 @@ IF "%~4"=="dllcopy" (
 
 md %2\translations
 copy .\translations\*.qm %2\translations
+
+md %2\examples
+copy .\examples\*.* %2\examples
 ENDLOCAL

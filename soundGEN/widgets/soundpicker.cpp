@@ -8,6 +8,8 @@ SoundPicker::SoundPicker(QWidget *parent, bool add_button, bool remove_button) :
     ui->setupUi(this);
     ui->pushButton_sound_add->setEnabled(add_button);
     ui->pushButton_sound_remove->setEnabled(remove_button);
+    QObject::connect(ui->lineEdit_sound, SIGNAL(textChanged(QString)), this, SLOT(params_changed()));
+    QObject::connect(ui->lineEdit_function, SIGNAL(textChanged(QString)), this, SLOT(params_changed()));
 }
 
 SoundPicker::~SoundPicker()
@@ -60,3 +62,9 @@ void SoundPicker::on_pushButton_sound_add_clicked()
 {
     emit add_new(this);
 }
+
+void SoundPicker::params_changed()
+{
+    emit changed();
+}
+

@@ -7,6 +7,7 @@ UTextEdit::UTextEdit(QWidget *parent):
     font.setStyleHint(QFont::TypeWriter);
     setFont(font);
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(matchBrackets()));
+    connect(this, SIGNAL(textChanged()), this, SLOT(baseTextChanged()));
     base_highlighter = new Highlighter(this->document());
 }
 
@@ -50,6 +51,14 @@ void UTextEdit::matchBrackets()
                     createBracketsSelection(position + bracket->position);
             }
         }
+    }
+}
+
+void UTextEdit::baseTextChanged()
+{
+    if (plain_text_old!=this->document()->toPlainText()) {
+        emit textChangedC();
+        plain_text_old = this->document()->toPlainText();
     }
 }
 

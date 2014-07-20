@@ -5,11 +5,16 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
+    /* initial params */
+    default_save_path = QCoreApplication::applicationDirPath()+"/config.cfg";
+    default_functions_path = QCoreApplication::applicationDirPath()+"/config.cfg";
     auto_restart = false;
     close_on_stop = false;
+    current_file_changed = false;
     ui->setupUi(this);
+    base_title = windowTitle();
 
+    /* adding widgets */
     dialog_functions = new DialogFunctions(this);
 
     left_drawer = new functionGraphicDrawer();
@@ -27,10 +32,11 @@ MainWindow::MainWindow(QWidget *parent) :
     right_function = new UTextEdit();
     ui->right_function_layout->insertWidget(1, right_function);
 
+
+    /* setting options */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Run"));
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Stop"));
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText(tr("Restart"));
-
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
     ui->buttonBox->setLayoutDirection(Qt::LeftToRight);
     #endif
@@ -38,45 +44,26 @@ MainWindow::MainWindow(QWidget *parent) :
     sound_stopped();
     sc = SndController::Instance();
 
-    int length = settings.value("sounds/sounds_count", 1).toInt();
-    if (length<1) length = 1;
-    if (length>maxSounds) length = maxSounds;
-    for (int i=1;i<=length;i++) {
-        addSoundPicker(settings.value("sounds/sound"+QString::number(i), "").toString(), settings.value("sounds/sound"+QString::number(i)+"_function", "").toString());
-    }
+    /* loading settings */
+    load_settings(default_save_path, true);
 
-    left_function->document()->setPlainText(settings.value("main/function_l", "sin(k*t)").toString());
-    right_function->document()->setPlainText(settings.value("main/function_r", "cos(k*t)").toString());
-    ui->doubleSpinBox_amp_left->setValue(settings.value("main/amp_l", 1).toDouble());
-    ui->doubleSpinBox_amp_right->setValue(settings.value("main/amp_r", 1).toDouble());
-    ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
-    ui->doubleSpinBox_freq_right->setValue(settings.value("main/freq_r", 500).toDouble());
-
-    left_drawer->setKampIntValue(settings.value("graphic/kamp_l", 0).toDouble());
-    right_drawer->setKampIntValue(settings.value("graphic/kamp_r", 0).toDouble());
-    left_drawer->setDtIntValue(settings.value("graphic/dt_l", 300).toDouble());
-    right_drawer->setDtIntValue(settings.value("graphic/dt_r", 300).toDouble());
-
-    QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
-    QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
-
-    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
-    if(!file.exists()){
-        qDebug() << tr("Functions.cpp.cfg not exists");
-    }
-    if (file.open(QIODevice::ReadOnly))
-    {
-        QTextStream stream(&file);
-        QString funct_str = stream.readAll().toUtf8();
-        functions_text->document()->setPlainText(funct_str);
-    }
-
+    /* creating signal-slot connections */
     QObject::connect(dialog_functions, SIGNAL(accepted()), this, SLOT(paste_function_accepted()));
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
     QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
     QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));
     QObject::connect(sc, SIGNAL(write_message(QString)), this, SLOT(get_message(QString)));
+
+    QObject::connect(functions_text, SIGNAL(textChangedC()), this, SLOT(options_changing()));
+    QObject::connect(left_function, SIGNAL(textChangedC()), this, SLOT(options_changing()));
+    QObject::connect(right_function, SIGNAL(textChangedC()), this, SLOT(options_changing()));
+    QObject::connect(ui->doubleSpinBox_amp_left, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
+    QObject::connect(ui->doubleSpinBox_freq_left, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
+    QObject::connect(ui->doubleSpinBox_amp_right, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
+    QObject::connect(ui->doubleSpinBox_freq_right, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
+    QObject::connect(left_drawer, SIGNAL(changed()), this, SLOT(options_changing()));
+    QObject::connect(right_drawer, SIGNAL(changed()), this, SLOT(options_changing()));
 }
 
 MainWindow::~MainWindow()
@@ -205,6 +192,9 @@ void MainWindow::addSoundPicker(QString file_name, QString function_name)
         picker->setFunctionname(function_name);
         QObject::connect(picker, SIGNAL(add_new(SoundPicker*)), this, SLOT(add_sound(SoundPicker*)));
         QObject::connect(picker, SIGNAL(remove_item(SoundPicker*)), this, SLOT(remove_sound(SoundPicker*)));
+        QObject::connect(picker, SIGNAL(changed()), this, SLOT(options_changing()));
+        QObject::connect(picker, SIGNAL(add_new(SoundPicker*)), this, SLOT(options_changing()));
+        QObject::connect(picker, SIGNAL(remove_item(SoundPicker*)), this, SLOT(options_changing()));
         sounds.append(picker);
         adjustSoundParams();
     }
@@ -213,7 +203,13 @@ void MainWindow::addSoundPicker(QString file_name, QString function_name)
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     sc->stop();
-    save_settings();
+
+    if (!saveMessageBox()) {
+        event->ignore();
+        return;
+    }
+
+    save_settings(default_save_path);
     if (sc->running()) {
         close_on_stop = true;
         event->ignore();
@@ -222,9 +218,31 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 }
 
-void MainWindow::save_settings()
+void MainWindow::setActionEnabled(int index, bool enabled)
 {
-    QSettings settings(QCoreApplication::applicationDirPath()+"/config.cfg", QSettings::IniFormat);
+    QList<QAction*> actionList = ui->menu->actions();
+    if (!actionList.isEmpty() && actionList.length()>index) {
+        actionList.at(index)->setEnabled(enabled);
+    }
+}
+
+bool MainWindow::saveMessageBox()
+{
+    if (!current_file.isEmpty() && current_file_changed) {
+        QMessageBox::StandardButton rbutton;
+        rbutton = QMessageBox::question(this,tr("Save"),tr("Do you want to save current changes before close?"), QMessageBox::StandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel), QMessageBox::Cancel);
+        if (rbutton == QMessageBox::Yes) {
+            save_settings(current_file, false);
+        } else if (rbutton == QMessageBox::Cancel) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void MainWindow::save_settings(QString filename, bool base_settings)
+{
+    QSettings settings(filename, QSettings::IniFormat);
 
     settings.setValue("main/function_l", left_function->document()->toPlainText());
     settings.setValue("main/function_r", right_function->document()->toPlainText());
@@ -247,34 +265,107 @@ void MainWindow::save_settings()
         i++;
     }
 
-    QRect gg = this->geometry();
-    settings.setValue("window/left", gg.left());
-    settings.setValue("window/top", gg.top());
-    settings.setValue("window/width", gg.width());
-    settings.setValue("window/height", gg.height());
+    if (base_settings) {
+        QRect gg = this->geometry();
+        settings.setValue("window/left", gg.left());
+        settings.setValue("window/top", gg.top());
+        settings.setValue("window/width", gg.width());
+        settings.setValue("window/height", gg.height());
 
-    QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
-    if (file.open(QIODevice::WriteOnly))
-    {
-        QTextStream stream(&file);
-        stream << functions_text->document()->toPlainText();
-        file.close();
-        if (stream.status() != QTextStream::Ok)
+        settings.setValue("main/opened_file", current_file);
+        settings.setValue("main/opened_file_changed", current_file_changed);
+
+        QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
+        if (file.open(QIODevice::WriteOnly))
         {
-            qDebug() << tr("Error writing functions.cpp.cfg");
+            QTextStream stream(&file);
+            stream << functions_text->document()->toPlainText();
+            file.close();
+            if (stream.status() != QTextStream::Ok)
+            {
+                qDebug() << tr("Error writing functions.cpp.cfg");
+            }
         }
+    } else {
+        settings.setValue("main/user_functions", functions_text->document()->toPlainText());
+        current_file = filename;
+        current_file_changed = false;
+        setWindowTitle(base_title+": "+filename);
+        setActionEnabled(4, true);
+    }
+}
+
+void MainWindow::load_settings(QString filename, bool base_settings)
+{
+    QSettings settings(filename, QSettings::IniFormat);
+
+    SoundPicker *picker;
+    foreach(picker, sounds) removeSoundPicker(picker);
+
+    int length = settings.value("sounds/sounds_count", 1).toInt();
+    if (length<1) length = 1;
+    if (length>maxSounds) length = maxSounds;
+    for (int i=1;i<=length;i++) {
+        addSoundPicker(settings.value("sounds/sound"+QString::number(i), "").toString(), settings.value("sounds/sound"+QString::number(i)+"_function", "").toString());
+    }
+
+    left_function->document()->setPlainText(settings.value("main/function_l", "sin(k*t)").toString());
+    right_function->document()->setPlainText(settings.value("main/function_r", "cos(k*t)").toString());
+    ui->doubleSpinBox_amp_left->setValue(settings.value("main/amp_l", 1).toDouble());
+    ui->doubleSpinBox_amp_right->setValue(settings.value("main/amp_r", 1).toDouble());
+    ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
+    ui->doubleSpinBox_freq_right->setValue(settings.value("main/freq_r", 500).toDouble());
+
+    left_drawer->setKampIntValue(settings.value("graphic/kamp_l", 0).toDouble());
+    right_drawer->setKampIntValue(settings.value("graphic/kamp_r", 0).toDouble());
+    left_drawer->setDtIntValue(settings.value("graphic/dt_l", 300).toDouble());
+    right_drawer->setDtIntValue(settings.value("graphic/dt_r", 300).toDouble());
+
+    if (base_settings) {
+        QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
+        QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
+
+        QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
+        if(!file.exists()){
+            qDebug() << tr("Functions.cpp.cfg not exists");
+        }
+        if (file.open(QIODevice::ReadOnly))
+        {
+            QTextStream stream(&file);
+            QString funct_str = stream.readAll().toUtf8();
+            functions_text->document()->setPlainText(funct_str);
+        }
+
+        current_file = settings.value("main/opened_file", "").toString();
+        if (!QFile::exists(current_file)) {
+            current_file = "";
+        } else {
+            current_file_changed = settings.value("main/opened_file_changed", false).toBool();
+        }
+    } else {
+        functions_text->document()->setPlainText(settings.value("main/user_functions", "").toString());
+        current_file = filename;
+        current_file_changed = false;
+    }
+
+    if (!current_file.isEmpty()) {
+        setWindowTitle(base_title+": "+current_file);
+        setActionEnabled(4, true);
+    } else {
+        this->setWindowTitle(base_title);
+        setActionEnabled(4, false);
     }
 }
 
 void MainWindow::removeSoundPicker(SoundPicker *p)
 {
-    if (sounds.length()>1) {
-        if (int pos = sounds.indexOf(p)) {
-            sounds.at(pos)->deleteLater();
-            delete sounds.at(pos);
-            sounds.removeAt(pos);
-            adjustSoundParams();
-        }
+    int pos = sounds.indexOf(p);
+    if (pos>=0) {
+        ui->sound_container->layout()->removeWidget(p);
+        sounds.at(pos)->deleteLater();
+        delete sounds.at(pos);
+        sounds.removeAt(pos);
+        adjustSoundParams();
     }
 }
 
@@ -344,3 +435,51 @@ void MainWindow::paste_function_accepted()
     }
     dialog_for_edit = 0;
 }
+
+void MainWindow::on_actionOpen_triggered()
+{
+    if (!saveMessageBox()) return;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "./examples", tr("SNDGEN options file (*.sndgopt)"));
+    if (!fileName.isEmpty()) {
+        load_settings(fileName, false);
+    }
+}
+
+void MainWindow::on_actionSave_triggered()
+{
+    if (current_file.isEmpty() || !QFile::exists(current_file)) {
+        on_actionSave_as_triggered();
+    } else {
+        save_settings(current_file, false);
+    }
+}
+
+void MainWindow::on_actionSave_as_triggered()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "./examples", tr("SNDGEN options file (*.sndgopt)"));
+    if (!fileName.isEmpty()) {
+        if (fileName.indexOf(".sndgopt")<0) fileName = fileName + ".sndgopt";
+        save_settings(fileName, false);
+    }
+}
+
+
+void MainWindow::on_actionClose_triggered()
+{
+    if (!saveMessageBox()) return;
+    current_file = "";
+    current_file_changed = false;
+    setActionEnabled(4, false);
+    this->setWindowTitle(base_title);
+}
+
+void MainWindow::options_changing()
+{
+    current_file_changed = true;
+}
+
+void MainWindow::on_actionExit_triggered()
+{
+    close();
+}
+

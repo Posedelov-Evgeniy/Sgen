@@ -5,6 +5,7 @@
 #include <QSettings>
 #include <QFileDialog>
 #include <QPushButton>
+#include <QMessageBox>
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
 #include "widgets/functiongraphicdrawer.h"
@@ -56,12 +57,28 @@ private slots:
     void on_left_dialog_functions_btn_clicked();
 
     void on_right_dialog_functions_btn_clicked();
+
+    void on_actionOpen_triggered();
+
+    void on_actionSave_triggered();
+
+    void on_actionSave_as_triggered();
+
+    void on_actionExit_triggered();
+
+    void on_actionClose_triggered();
+
+    void options_changing();
+
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
     DialogFunctions *dialog_functions;
     SndController *sc;
-    bool auto_restart, close_on_stop;
+    bool auto_restart, close_on_stop, current_file_changed;
+    QString default_save_path, default_functions_path;
+    QString base_title;
+    QString current_file;
     QList<SoundPicker*> sounds;
     functionGraphicDrawer *left_drawer;
     functionGraphicDrawer *right_drawer;
@@ -74,7 +91,11 @@ private:
     void adjustSoundParams();
     void addSoundPicker(QString file_name, QString function_name);
     void closeEvent(QCloseEvent *event);
-    void save_settings();
+    void setActionEnabled(int index, bool enabled = false);
+    bool saveMessageBox();
+
+    void save_settings(QString filename, bool base_settings = true);
+    void load_settings(QString filename, bool base_settings = true);
 };
 
 #endif // MAINWINDOW_H

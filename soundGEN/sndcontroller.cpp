@@ -170,9 +170,9 @@ bool SndController::parseFunctions()
     QTextStream out2(&file2);
     out2 << "#include \"main.h\"\n";
     out2 << spec_namespace;
+    out2 << "\nPlaySoundFunction BaseSoundFunction;\n";
+    out2 << "\n" + baseSoundList->getFunctionsText() + "\n";
     out2 << "\n" + text_functions + "\n";
-    out2 << "PlaySoundFunction BaseSoundFunction;\n";
-    out2 << baseSoundList->getFunctionsText() + "\n";
     out2 << spec_func_pref << "double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\n";
     out2 << spec_func_pref << "double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\n";
     out2 << "int main() {return 0;};\n";

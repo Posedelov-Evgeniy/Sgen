@@ -18,5 +18,7 @@ cp $sourceDir/base_functions.cpp $buildDir
 cp $sourceDir/base_functions.h $buildDir
 
 mkdir -p $buildDir/translations
-
 cp $sourceDir/translations/*.qm $buildDir/translations
+
+mkdir -p $buildDir/examples
+cp $sourceDir/examples/*.* $buildDir/examples

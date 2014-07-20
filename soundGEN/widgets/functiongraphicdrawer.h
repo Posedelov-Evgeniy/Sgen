@@ -36,6 +36,8 @@ private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;
     MGraphicDrawSurface *widget_drawer;
+signals:
+    void changed();
 public slots:
     void run();
     void stop();
