@@ -74,6 +74,46 @@
         <source>Main</source>
         <translation>Основное</translation>
     </message>
+    <message>
+        <source>File</source>
+        <translation>Файл</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Открыть</translation>
+    </message>
+    <message>
+        <source>Save</source>
+        <translation>Сохранить</translation>
+    </message>
+    <message>
+        <source>Save as...</source>
+        <translation>Сохранить как</translation>
+    </message>
+    <message>
+        <source>Exit</source>
+        <translation>Выход</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Закрыть</translation>
+    </message>
+    <message>
+        <source>Do you want to save current changes before close?</source>
+        <translation>Сохранить изменения?</translation>
+    </message>
+    <message>
+        <source>Open File</source>
+        <translation>Открыть файл</translation>
+    </message>
+    <message>
+        <source>SNDGEN options file (*.sndgopt)</source>
+        <translation>Файлы настроек SNDGEN (*.sndgopt)</translation>
+    </message>
+    <message>
+        <source>Save File</source>
+        <translation>Сохранить файл</translation>
+    </message>
 </context>
 <context>
     <name>SndController</name>
@@ -94,32 +134,32 @@
         <translation>Остановлено</translation>
     </message>
     <message>
-        <source>Starting with: </source>
-        <translation type="unfinished"></translation>
+        <source>Starting with:</source>
+        <translation>Начало с:</translation>
     </message>
     <message>
-        <source>Function L: %s</source>
-        <translation type="unfinished"></translation>
+        <source>Function L:</source>
+        <translation>Функция левого канала:</translation>
     </message>
     <message>
-        <source>Function R: %s</source>
-        <translation type="unfinished"></translation>
+        <source>Function R:</source>
+        <translation>Функция правого канала:</translation>
     </message>
     <message>
-        <source>Amp L: %f</source>
-        <translation type="unfinished"></translation>
+        <source>Amp L:</source>
+        <translation>Амплитуда левого канала:</translation>
     </message>
     <message>
-        <source>Amp R: %f</source>
-        <translation type="unfinished"></translation>
+        <source>Amp R:</source>
+        <translation>Амплитуда правого канала:</translation>
     </message>
     <message>
-        <source>Freq L: %f</source>
-        <translation type="unfinished"></translation>
+        <source>Freq L:</source>
+        <translation>Частота левого канала:</translation>
     </message>
     <message>
-        <source>Freq R: %f</source>
-        <translation type="unfinished"></translation>
+        <source>Freq R:</source>
+        <translation>Частота правого канала:</translation>
     </message>
 </context>
 <context>
