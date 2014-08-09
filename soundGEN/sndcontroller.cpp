@@ -26,19 +26,43 @@ SndController::SndController(QObject *parent) :
 {
     baseSoundList = new SoundList();
     is_running = false;
+
+    unsigned int            version;
+    /*
+        Create a System object and initialize.
+    */
+    result = FMOD::System_Create(&system);
+    ERRCHECK(result);
+
+    result = system->getVersion(&version);
+    ERRCHECK(result);
+
+    if (version < FMOD_VERSION)
+    {
+        printf("Error!  You are using an old version of FMOD %08x.  This program requires %08x\n", version, FMOD_VERSION);
+        exit(-1);
+    }
+
+    result = system->init(32, FMOD_INIT_NORMAL, 0);
+    ERRCHECK(result);
 }
 
 SndController::~SndController()
 {
+    result = system->close();
+    ERRCHECK(result);
+    result = system->release();
+    ERRCHECK(result);
+
     mfct.left_channel_fct = 0;
     mfct.right_channel_fct = 0;
     baseSoundList->clearSounds();
     delete baseSoundList;
 }
 
-void SndController::ERRCHECK(FMOD_RESULT result)
+void SndController::ERRCHECK(FMOD_RESULT op_result)
 {
-    if (result != FMOD_OK)
+    if (op_result != FMOD_OK)
     {
         printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
         exit(-1);
@@ -296,14 +320,11 @@ double SndController::getRResult()
 }
 
 int SndController::doprocess() {
-    FMOD::System           *system;
     FMOD::Sound            *sound;
     FMOD::Channel          *channel = 0;
-    FMOD_RESULT             result;
     FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
     int                     channels = 2;
     FMOD_CREATESOUNDEXINFO  createsoundexinfo;
-    unsigned int            version;
     QTextStream             console(stdout);
 
     is_stopping = false;
@@ -326,25 +347,7 @@ int SndController::doprocess() {
         return 0;
     }
 
-    /*
-        Create a System object and initialize.
-    */
-    result = FMOD::System_Create(&system);
-    ERRCHECK(result);
-
-    result = system->getVersion(&version);
-    ERRCHECK(result);
-
-    if (version < FMOD_VERSION)
-    {
-        printf("Error!  You are using an old version of FMOD %08x.  This program requires %08x\n", version, FMOD_VERSION);
-        return 0;
-    }
-
     emit started();
-
-    result = system->init(32, FMOD_INIT_NORMAL, 0);
-    ERRCHECK(result);
 
     mode |= FMOD_CREATESTREAM;
 
@@ -435,10 +438,6 @@ int SndController::doprocess() {
     result = sound->release();
     ERRCHECK(result);
     baseSoundList->clearSounds();
-    result = system->close();
-    ERRCHECK(result);
-    result = system->release();
-    ERRCHECK(result);
 
     is_stopping = false;
     is_running = false;
@@ -509,6 +508,11 @@ GenSoundFunction SndController::getLeftFunction()
 GenSoundFunction SndController::getRightFunction()
 {
     return mfct.right_channel_fct;
+}
+
+FMOD::System *SndController::getFmodSystem()
+{
+    return system;
 }
 
 void SndController::AddSound(QString new_file, QString new_function)

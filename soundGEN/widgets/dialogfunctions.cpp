@@ -8,7 +8,7 @@ DialogFunctions::DialogFunctions(QWidget *parent) :
     ui->setupUi(this);
 
     widget_drawer = new MGraphicDrawSurface();
-    widget_drawer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+    widget_drawer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::MinimumExpanding);
     ui->description_layout->addWidget(widget_drawer);
     widget_drawer->setT(0);
     widget_drawer->setT0(0);
@@ -18,8 +18,11 @@ DialogFunctions::DialogFunctions(QWidget *parent) :
     widget_drawer->setKt(0.05);
     widget_drawer->setDt(0.008);
     widget_drawer->resetGraphicFunctions();
-    widget_drawer->setMinimumHeight(130);
+    widget_drawer->setMinimumHeight(115);
 
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+    ui->buttonBox->setLayoutDirection(Qt::LeftToRight);
+    #endif
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Add"));
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
 

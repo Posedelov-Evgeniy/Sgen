@@ -11,6 +11,22 @@
         <source>base_functions.cpp not exists</source>
         <translation>base_functions.cpp не найден</translation>
     </message>
+    <message>
+        <source>Category:</source>
+        <translation>Категория:</translation>
+    </message>
+    <message>
+        <source>All</source>
+        <translation>Всё</translation>
+    </message>
+    <message>
+        <source>Add</source>
+        <translation>Добавить</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отменить</translation>
+    </message>
 </context>
 <context>
     <name>MainWindow</name>
@@ -195,6 +211,26 @@
     <message>
         <source>Sound file:</source>
         <translation>Звуковой файл:</translation>
+    </message>
+    <message>
+        <source>Not loaded</source>
+        <translation>Не загружен</translation>
+    </message>
+    <message>
+        <source>Length: </source>
+        <translation>Длительность: </translation>
+    </message>
+    <message>
+        <source>Incorrect file</source>
+        <translation>Некорректный файл</translation>
+    </message>
+    <message>
+        <source>File &quot;%filename%&quot; is incorrect or not exists.</source>
+        <translation>Файл &quot;%filename%&quot; некорректный или не существует.</translation>
+    </message>
+    <message>
+        <source>s</source>
+        <translation> сек</translation>
     </message>
 </context>
 <context>

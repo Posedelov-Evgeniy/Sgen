@@ -365,7 +365,11 @@ void MainWindow::removeSoundPicker(SoundPicker *p)
         sounds.at(pos)->deleteLater();
         delete sounds.at(pos);
         sounds.removeAt(pos);
-        adjustSoundParams();
+        if (sounds.length()==0) {
+            addSoundPicker("", "");
+        } else {
+            adjustSoundParams();
+        }
     }
 }
 
@@ -380,7 +384,7 @@ void MainWindow::adjustSoundParams()
     int last = sounds.length()-1;
     foreach(picker, sounds) {
         picker->setAddButtonEnabled(i==last);
-        picker->setRemoveButtonEnabled(last>0);
+        picker->setRemoveButtonEnabled(true);
 
         current_func_name = picker->getFunctionname();
         if (current_func_name.isEmpty() || current_func_name.indexOf(' ')>-1 || func_names.indexOf(current_func_name)>=0)

@@ -57,7 +57,10 @@ private:
     QString text_functions;
     QLibrary lib;
     QEventLoop loop;
-    void ERRCHECK(FMOD_RESULT result);
+
+    FMOD::System *system;
+    FMOD_RESULT result;
+    void ERRCHECK(FMOD_RESULT op_result);
 public:
     static SndController* Instance();
     static bool DeleteInstance();
@@ -78,6 +81,7 @@ public:
     double getInstRAmp();
     GenSoundFunction getLeftFunction();
     GenSoundFunction getRightFunction();
+    FMOD::System *getFmodSystem();
     void AddSound(QString new_file, QString new_function);
     bool running();
 signals:

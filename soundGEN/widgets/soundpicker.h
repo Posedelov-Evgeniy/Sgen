@@ -3,6 +3,10 @@
 
 #include <QWidget>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <fmod.hpp>
+#include <fmod_errors.h>
+#include "../sndcontroller.h"
 
 namespace Ui {
 class SoundPicker;
@@ -17,7 +21,7 @@ public:
     ~SoundPicker();
     void setAddButtonEnabled(bool enabled);
     void setRemoveButtonEnabled(bool enabled);
-    void setFilename(QString filename);
+    void setFilename(QString filename, bool show_warnings = false);
     void setFunctionname(QString functionname);
     QString getFilename();
     QString getFunctionname();
@@ -37,6 +41,8 @@ private slots:
 private:
     Ui::SoundPicker *ui;
     int self_index;
+
+    void checkSound(bool show_warnings);
 };
 
 #endif // SOUNDPICKER_H
