@@ -6,6 +6,7 @@
 #include <QAbstractButton>
 #include <QFileDialog>
 #include <QTextStream>
+#include <QPushButton>
 #include <QFile>
 #include "./functiongraphicdrawer.h"
 #include "../base_functions.h"
@@ -34,6 +35,8 @@ private slots:
     void on_functions_listWidget_currentRowChanged(int currentRow);
     void on_DialogFunctions_finished(int result);
     void on_functions_listWidget_activated(const QModelIndex &index);
+
+    void on_category_comboBox_currentIndexChanged(int index);
 
 private:
     Ui::DialogFunctions *ui;

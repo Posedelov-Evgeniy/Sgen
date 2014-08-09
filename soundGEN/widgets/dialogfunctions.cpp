@@ -20,6 +20,9 @@ DialogFunctions::DialogFunctions(QWidget *parent) :
     widget_drawer->resetGraphicFunctions();
     widget_drawer->setMinimumHeight(130);
 
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Add"));
+    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
+
     initRecords();
 }
 
@@ -80,6 +83,9 @@ void DialogFunctions::initRecords()
 
         if (base_recs.length()>=2) {
             rec.category = base_recs.at(1);
+            rec.category = rec.category.replace(QRegExp("^(\\s){0,}Категория:(\\s){0,}"), "");
+            rec.category = rec.category.replace(QRegExp(".(\\s){0,}$"), "");
+            rec.category = rec.category.left(1).toUpper()+rec.category.mid(1);
             base_recs[1] = "";
         }
 
@@ -89,11 +95,16 @@ void DialogFunctions::initRecords()
         records->append(rec);
         ui->functions_listWidget->addItem(rec.name);
 
+        if (ui->category_comboBox->findText(rec.category)<0) {
+            ui->category_comboBox->addItem(rec.category);
+        }
+
         pos += rx.matchedLength();
     }
 
     if (ui->functions_listWidget->count()>0) {
         ui->functions_listWidget->item(0)->setSelected(true);
+        on_functions_listWidget_currentRowChanged(0);
     }
 }
 
@@ -143,4 +154,25 @@ void DialogFunctions::on_functions_listWidget_activated(const QModelIndex &index
 {
     last_picked_row = index.row();
     accept();
+}
+
+void DialogFunctions::on_category_comboBox_currentIndexChanged(int index)
+{
+    last_picked_row = -1;
+    if (records->length()>0) {
+        int first_vis = -1;
+        for (int i=0; i<records->length(); i++)
+        {
+            if (index==0 || records->at(i).category==ui->category_comboBox->itemText(index)) {
+                if (first_vis<0) first_vis = i;
+                ui->functions_listWidget->item(i)->setHidden(false);
+            } else {
+                ui->functions_listWidget->item(i)->setHidden(true);
+            }
+        }
+        if (first_vis>=0) {
+            ui->functions_listWidget->item(first_vis)->setSelected(true);
+            on_functions_listWidget_currentRowChanged(first_vis);
+        }
+    }
 }
