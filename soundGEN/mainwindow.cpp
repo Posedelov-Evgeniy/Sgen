@@ -28,34 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     sound_stopped();
     sc = SndController::Instance();
-
-
-
-    /*
-     * TODO: do it right
-    */
-    sc->setChannelsCount(2);
-
-    ChannelSettings *chset1 = new ChannelSettings(0, 0);
-    ChannelSettings *chset2 = new ChannelSettings(0, 1);
-    ui->verticalLayout_channels->addWidget(chset1);
-    ui->verticalLayout_channels->addWidget(chset2);
-
-    QObject::connect(this, SIGNAL(fill_params()), chset1, SLOT(init_snd_channel_params()));
-    QObject::connect(this, SIGNAL(run_channel_graphics()), chset1, SLOT(run_graphic()));
-    QObject::connect(this, SIGNAL(stop_channel_graphics()), chset1, SLOT(stop_graphic()));
-    QObject::connect(chset1, SIGNAL(options_changed()), this, SLOT(options_changing()));
-
-    QObject::connect(this, SIGNAL(fill_params()), chset2, SLOT(init_snd_channel_params()));
-    QObject::connect(this, SIGNAL(run_channel_graphics()), chset2, SLOT(run_graphic()));
-    QObject::connect(this, SIGNAL(stop_channel_graphics()), chset2, SLOT(stop_graphic()));
-    QObject::connect(chset2, SIGNAL(options_changed()), this, SLOT(options_changing()));
-
-    channels.append(chset1);
-    channels.append(chset2);
-
-
-
+    pickChannelsCount(2);
 
     /* loading settings */
     load_settings(default_save_path, true);
@@ -99,6 +72,14 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
 
+    ui->action1_Mono->setEnabled(true);
+    ui->action2_Stereo->setEnabled(true);
+    ui->action4_Quadro->setEnabled(true);
+    ui->action6->setEnabled(true);
+    ui->action8->setEnabled(true);
+
+    ui->actionOpen->setEnabled(true);
+
     if (auto_restart && !close_on_stop) {
         auto_restart = false;
         sc->run();
@@ -117,6 +98,14 @@ void MainWindow::sound_started()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(true);
+
+    ui->action1_Mono->setEnabled(false);
+    ui->action2_Stereo->setEnabled(false);
+    ui->action4_Quadro->setEnabled(false);
+    ui->action6->setEnabled(false);
+    ui->action8->setEnabled(false);
+
+    ui->actionOpen->setEnabled(false);
 
     emit run_channel_graphics();
 }
@@ -261,7 +250,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
 
     int channels_cnt = settings.value("main/channels_count", 2).toInt();
     if (channels_cnt<=0 || channels_cnt>8) channels_cnt=2;
-    sc->setChannelsCount(channels_cnt);
+    pickChannelsCount(channels_cnt);
 
     for(i=0; i<sc->getChannelsCount(); i++) {
         channels.at(i)->setFunction(settings.value("main/function_"+QString::number(i), "sin(k*t)").toString());
@@ -417,3 +406,61 @@ void MainWindow::on_actionExit_triggered()
     close();
 }
 
+void MainWindow::setChannelsCount(unsigned int count)
+{
+    if (count<channels.length()) {
+        while (count>=0 && count<channels.length()) {
+            ui->verticalLayout_channels->removeWidget(channels.last());
+            channels.last()->deleteLater();
+            delete channels.last();
+            channels.removeLast();
+        }
+    } else if (count>channels.length()) {
+        while (count>channels.length()) {
+            ChannelSettings *chset = new ChannelSettings(0, channels.length());
+            ui->verticalLayout_channels->addWidget(chset);
+            QObject::connect(this, SIGNAL(fill_params()), chset, SLOT(init_snd_channel_params()));
+            QObject::connect(this, SIGNAL(run_channel_graphics()), chset, SLOT(run_graphic()));
+            QObject::connect(this, SIGNAL(stop_channel_graphics()), chset, SLOT(stop_graphic()));
+            QObject::connect(chset, SIGNAL(options_changed()), this, SLOT(options_changing()));
+            channels.append(chset);
+        }
+    }
+
+    sc->setChannelsCount(count);
+}
+
+void MainWindow::pickChannelsCount(unsigned int count)
+{
+    ui->action1_Mono->setChecked(count==1);
+    ui->action2_Stereo->setChecked(count==2);
+    ui->action4_Quadro->setChecked(count==4);
+    ui->action6->setChecked(count==6);
+    ui->action8->setChecked(count==8);
+    setChannelsCount(count);
+}
+
+void MainWindow::on_action1_Mono_triggered()
+{
+    pickChannelsCount(1);
+}
+
+void MainWindow::on_action2_Stereo_triggered()
+{
+    pickChannelsCount(2);
+}
+
+void MainWindow::on_action4_Quadro_triggered()
+{
+    pickChannelsCount(4);
+}
+
+void MainWindow::on_action6_triggered()
+{
+    pickChannelsCount(6);
+}
+
+void MainWindow::on_action8_triggered()
+{
+    pickChannelsCount(8);
+}

@@ -11,6 +11,7 @@ ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_inde
     sc = SndController::Instance();
 
     function_edit = new UTextEdit();
+    function_edit->document()->setPlainText("sin(k*t)");
     ui->function_layout->insertWidget(1, function_edit);
     channel_drawer = new functionGraphicDrawer();
     ui->settings_base_horizontal_layout->addWidget(channel_drawer);

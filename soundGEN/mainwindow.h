@@ -58,6 +58,16 @@ private slots:
 
     void options_changing();
 
+    void on_action1_Mono_triggered();
+
+    void on_action2_Stereo_triggered();
+
+    void on_action4_Quadro_triggered();
+
+    void on_action6_triggered();
+
+    void on_action8_triggered();
+
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
@@ -80,6 +90,8 @@ private:
 
     void save_settings(QString filename, bool base_settings = true);
     void load_settings(QString filename, bool base_settings = true);
+    void pickChannelsCount(unsigned int count);
+    void setChannelsCount(unsigned int count);
 };
 
 #endif // MAINWINDOW_H

@@ -1,16 +1,17 @@
 [graphic]
-dt_l=56
-dt_r=76
-kamp_l=8
-kamp_r=-2
+dt_0=56
+dt_1=76
+kamp_0=8
+kamp_1=-2
 
 [main]
-amp_l=1
-amp_r=1
-freq_l=200
-freq_r=201
-function_l=sin(k*t)*cos(2*t*M_PI)
-function_r=sin(k*t)*cos(2*t*M_PI)
+channels_count=2
+function_0=sin(k*t)*cos(2*t*M_PI)
+function_1=sin(k*t)*cos(2*t*M_PI)
+amp_0=1.0
+amp_1=1.0
+freq_0=200
+freq_1=201
 user_functions=
 
 [sounds]

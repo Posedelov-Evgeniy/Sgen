@@ -422,6 +422,7 @@ int SndController::doprocess()
         system->update();
 
         emit cycle_start();
+        emit write_message(tr("Time: %sec%s").replace("%sec%",QString::number(t, 'f', 1)));
 
         if (channel)
         {
@@ -453,9 +454,6 @@ int SndController::doprocess()
             {
                 ERRCHECK(result);
             }
-
-            printf("Time %02d:%02d:%02d/%02d:%02d:%02d : %s\n", ms / 1000 / 60, ms / 1000 % 60, ms / 10 % 100, lenms / 1000 / 60, lenms / 1000 % 60, lenms / 10 % 100, paused ? "Paused " : playing ? "Playing" : "Stopped");
-            fflush(stdout);
         }
 
         //Sleep(20);
