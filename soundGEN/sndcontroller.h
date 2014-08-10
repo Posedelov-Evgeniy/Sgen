@@ -9,6 +9,7 @@
 #include <QtGui>
 #include <QtCore/QCoreApplication>
 #include <QProcess>
+#include <QVector>
 #include <math.h>
 #include "base_functions.h"
 #include <fmod.hpp>
@@ -19,9 +20,14 @@ typedef double (*PlaySoundFunction) (int,unsigned int,double);
 
 typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction);
 
-struct GenSoundFunctions {
-    GenSoundFunction left_channel_fct;
-    GenSoundFunction right_channel_fct;
+struct GenSoundChannelInfo {
+    double freq;
+    double k;
+    double amp;
+    double fr;
+    double ar;
+    QString function_text;
+    GenSoundFunction channel_fct;
 };
 
 double base_play_sound(int i, unsigned int c, double t);
@@ -37,23 +43,18 @@ private:
     Q_DISABLE_COPY(SndController);
 
     bool parseFunctions();
-    double getLResult();
-    double getRResult();
+    double getResult(unsigned int channel, double current_t);
 
     int doprocess();
     void resetParams();
     bool is_stopping, is_running;
-
-    double freq_l, freq_r, kL, kR;
-    double amp_l, amp_r;
     double t;
-    double l_fr, r_fr;
-    double l_ar, r_ar;
+    bool all_functions_loaded;
+    unsigned int channels_count;
 
-    GenSoundFunctions mfct;
+    QVector<GenSoundChannelInfo*> channels;
+
     SoundList *baseSoundList;
-    QString text_l;
-    QString text_r;
     QString text_functions;
     QLibrary lib;
     QEventLoop loop;
@@ -68,21 +69,20 @@ public:
     void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
     double playSound(int index, unsigned int channel, double t);
 
-    void SetLFunctionStr(QString new_text_l);
-    void SetRFunctionStr(QString new_text_r);
-    void SetFunctionsStr(QString new_f);
-    void SetLAmp(double new_amp_l);
-    void SetRAmp(double new_amp_r);
-    void SetLFreq(double new_freq_l);
-    void SetRFreq(double new_freq_r);
-    double getInstLFreq();
-    double getInstRFreq();
-    double getInstLAmp();
-    double getInstRAmp();
-    GenSoundFunction getLeftFunction();
-    GenSoundFunction getRightFunction();
+    void setChannelsCount(unsigned int count);
+    unsigned int getChannelsCount();
+
+    void setFunctionsStr(QString new_f);
+    void setFunctionStr(unsigned int channel, QString new_text);
+    void setAmp(unsigned int channel, double new_amp);
+    void setFreq(unsigned int channel, double new_freq);
+
+    double getInstFreq(unsigned int channel);
+    double getInstAmp(unsigned int channel);
+    GenSoundFunction getChannelFunction(unsigned int channel);
+
     FMOD::System *getFmodSystem();
-    void AddSound(QString new_file, QString new_function);
+    void addSound(QString new_file, QString new_function);
     bool running();
 signals:
     void starting();

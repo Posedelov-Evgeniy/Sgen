@@ -32,6 +32,7 @@ SOURCES += main.cpp\
     widgets/functiongraphicdrawer.cpp \
     classes/graphicthread.cpp \
     widgets/mgraphicdrawsurface.cpp \
+    widgets/channelsettings.cpp \
     classes/highlighter.cpp \
     classes/utextblockdata.cpp \
     classes/utextedit.cpp \
@@ -45,6 +46,7 @@ HEADERS  += base_functions.h \
     widgets/functiongraphicdrawer.h \
     classes/graphicthread.h \
     widgets/mgraphicdrawsurface.h \
+    widgets/channelsettings.h \
     classes/highlighter.h \
     classes/utextblockdata.h \
     classes/utextedit.h \
@@ -53,6 +55,7 @@ HEADERS  += base_functions.h \
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
     widgets/functiongraphicdrawer.ui \
+    widgets/channelsettings.ui \
     widgets/dialogfunctions.ui
 
 OTHER_FILES += \

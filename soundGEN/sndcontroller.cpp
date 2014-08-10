@@ -26,6 +26,8 @@ SndController::SndController(QObject *parent) :
 {
     baseSoundList = new SoundList();
     is_running = false;
+    all_functions_loaded = false;
+    channels_count = 0;
 
     unsigned int            version;
     /*
@@ -45,17 +47,19 @@ SndController::SndController(QObject *parent) :
 
     result = system->init(32, FMOD_INIT_NORMAL, 0);
     ERRCHECK(result);
+
+    setChannelsCount(2);
 }
 
 SndController::~SndController()
 {
+    setChannelsCount(0);
+
     result = system->close();
     ERRCHECK(result);
     result = system->release();
     ERRCHECK(result);
 
-    mfct.left_channel_fct = 0;
-    mfct.right_channel_fct = 0;
     baseSoundList->clearSounds();
     delete baseSoundList;
 }
@@ -94,47 +98,72 @@ double SndController::playSound(int index, unsigned int channel, double t)
     return baseSoundList->playSound(index, channel, t);
 }
 
+void SndController::setChannelsCount(unsigned int count)
+{
+    if (count<channels.length()) {
+        while (count>=0 && count<channels.length()) {
+            delete channels.last();
+            channels.removeLast();
+        }
+    } else if (count>channels.length()) {
+        while (count>channels.length()) {
+            GenSoundChannelInfo *info = new GenSoundChannelInfo();
+            info->amp = 1;
+            info->freq = 500;
+            info->channel_fct = 0;
+            info->function_text = "sin(k*t)";
+            info->k = info->freq*2.0*M_PI;
+            info->fr = 0;
+            info->ar = 0;
+            channels.append(info);
+        }
+    }
+
+    channels_count = count;
+}
+
+unsigned int SndController::getChannelsCount()
+{
+    return channels_count;
+}
+
 void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
     unsigned int  count;
-    signed short *stereo16bitbuffer = (signed short *)data;
+    signed short *buffer16bit = (signed short *)data;
 
-    datalen = datalen>>2;  // >>2 = 16bit stereo (4 bytes per sample)
+    datalen = datalen/(channels_count*sizeof(signed short));
 
-    if (mfct.left_channel_fct && mfct.right_channel_fct) {
-
-        double l_pprev=0, r_pprev=0, l_prev=0, r_prev=0, l_curr=0, r_curr=0, l_cnt=0, r_cnt=0, l_a = 0, r_a = 0;
-
-        for (count=0; count<datalen; count++)
+    if (all_functions_loaded)
+    {
+        for(int i=0; i<channels_count; i++)
         {
-            l_curr = getLResult();
-            r_curr = getRResult();
-            *(stereo16bitbuffer++) = (signed short)(l_curr * 32767.0);   // left channel
-            *(stereo16bitbuffer++) = (signed short)(r_curr * 32767.0);   // right channel
-            t += 1.0/44100.0;
+            double curr = 0;
+            double pprev = 0;
+            double prev = 0;
+            double cnt = 0;
+            double amp = 0;
 
-            l_curr = fabs(l_curr);
-            r_curr = fabs(r_curr);
+            for (count=0; count<datalen; count++)
+            {
+                curr = getResult(i, t+count/44100.0);
+                buffer16bit[count*channels_count + i] = (signed short)(curr * 32767.0);
+                curr = fabs(curr);
 
-            if (l_pprev>0 || r_pprev>0) {
-                if (l_prev>l_curr && l_prev>l_pprev) l_cnt++;
-                if (r_prev>r_curr && r_prev>r_pprev) r_cnt++;
+                if (pprev>0 && prev>curr && prev>pprev) {
+                    cnt++;
+                }
+
+                if (amp<curr) amp = curr;
+
+                pprev = prev;
+                prev = curr;
             }
-
-            if (l_a<l_curr) l_a = l_curr;
-            if (r_a<r_curr) r_a = r_curr;
-
-            l_pprev = l_prev;
-            r_pprev = r_prev;
-            l_prev = l_curr;
-            r_prev = r_curr;
+            channels.at(i)->fr = 0.5 * cnt/(datalen/44100.0);
+            channels.at(i)->ar = amp<=1.0 ? amp : 1.0;
         }
 
-        l_fr = 0.5 * l_cnt/(datalen/44100.0);
-        r_fr = 0.5 * r_cnt/(datalen/44100.0);
-
-        l_ar = l_a<=1.0 ? l_a : 1.0;
-        r_ar = r_a<=1.0 ? r_a : 1.0;
+        t += datalen/44100.0;
     }
 }
 
@@ -143,6 +172,9 @@ bool SndController::parseFunctions()
     QCoreApplication *app = QCoreApplication::instance();
     QString error = "";
     bool add_base_functions = false;
+    all_functions_loaded = false;
+    int i;
+    GenSoundChannelInfo *info;
 
     if (lib.isLoaded()) {
         lib.unload();
@@ -185,8 +217,9 @@ bool SndController::parseFunctions()
     out << "#include <stdio.h>\n";
     if (add_base_functions) out << "#include \"base_functions.h\"\n";
     out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-    out << spec_func_pref << " double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction);\n";
-    out << spec_func_pref << " double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction);\n";
+    for(i=0;i<channels_count;i++) {
+        out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction);\n";
+    }
     file.close();
 
     QFile file2(app->applicationDirPath()+"/efr/"+main_file_name);
@@ -197,8 +230,9 @@ bool SndController::parseFunctions()
     out2 << "\nPlaySoundFunction BaseSoundFunction;\n";
     out2 << "\n" + baseSoundList->getFunctionsText() + "\n";
     out2 << "\n" + text_functions + "\n";
-    out2 << spec_func_pref << "double sound_func_l(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_l+"); };\n";
-    out2 << spec_func_pref << "double sound_func_r(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+text_r+"); };\n";
+    for(i=0;i<channels_count;i++) {
+        out2 << spec_func_pref << "double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+channels.at(i)->function_text+"); };\n";
+    }
     out2 << "int main() {return 0;};\n";
     file2.close();
 
@@ -287,45 +321,49 @@ bool SndController::parseFunctions()
     if (error.isEmpty()) {
         lib.setFileName(app->applicationDirPath()+"/efr/main");
         lib.load();
-        mfct.left_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_l"));
-        mfct.right_channel_fct = (GenSoundFunction)(lib.resolve("sound_func_r"));
+        all_functions_loaded = true;
+        for(i=0;i<channels_count;i++) {
+            channels.at(i)->channel_fct = (GenSoundFunction)(lib.resolve(qPrintable("sound_func_"+QString::number(i))));
+            all_functions_loaded = all_functions_loaded && channels.at(i)->channel_fct;
+        }
     } else {
-        mfct.left_channel_fct = 0;
-        mfct.right_channel_fct = 0;
+        for(i=0;i<channels_count;i++) {
+            channels.at(i)->channel_fct = 0;
+        }
     }
 
-    return mfct.left_channel_fct && mfct.right_channel_fct;
+    return all_functions_loaded;
 }
 
-void SndController::resetParams() {
-    text_l = "sin(k*t)";
-    text_r = "cos(k*t)";
-    freq_l = freq_r = 500;
-    kL = kR = freq_l*2.0*M_PI;
-    amp_l = amp_r = 1.0;
-    l_fr = r_fr = 0;
-    l_ar = r_ar = 0;
+double SndController::getResult(unsigned int channel, double current_t)
+{
+    GenSoundChannelInfo *info = channels.at(channel);
+    return info->amp * info->channel_fct(current_t, info->k, info->freq, base_play_sound);
+}
+
+void SndController::resetParams()
+{
+    for(int i=0; i<channels_count; i++) {
+        GenSoundChannelInfo *info = channels.at(i);
+        info->amp = 1;
+        info->freq = 500;
+        info->k = info->freq*2.0*M_PI;
+        info->ar = 0;
+        info->fr = 0;
+        info->function_text = "sin(k*t)";
+    }
     t = 0.0;
     baseSoundList->clearSounds();
 }
 
-double SndController::getLResult()
+int SndController::doprocess()
 {
-    return amp_l * mfct.left_channel_fct(t, kL, freq_l, base_play_sound);
-}
-
-double SndController::getRResult()
-{
-    return amp_r * mfct.right_channel_fct(t, kR, freq_r, base_play_sound);
-}
-
-int SndController::doprocess() {
     FMOD::Sound            *sound;
     FMOD::Channel          *channel = 0;
     FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
-    int                     channels = 2;
     FMOD_CREATESOUNDEXINFO  createsoundexinfo;
     QTextStream             console(stdout);
+    GenSoundChannelInfo    *info;
 
     is_stopping = false;
     resetParams();
@@ -335,12 +373,12 @@ int SndController::doprocess() {
     emit write_message(tr("Initialization..."));
 
     console << tr("Starting with:") << " " << endl;
-    console << tr("Function L:") << " " << text_l << endl;
-    console << tr("Function R:") << " " << text_r << endl;
-    console << tr("Amp L:") << " " << amp_l << endl;
-    console << tr("Amp R:") << " " << amp_r << endl;
-    console << tr("Freq L:") << " " << freq_l << endl;
-    console << tr("Freq R:") << " " << freq_r << endl;
+    for(int i=0; i<channels_count; i++) {
+        info = channels.at(i);
+        console << tr("Function %num%:").replace("%num%",QString::number(i)) << " " << info->function_text << endl;
+        console << tr("Amp %num%:").replace("%num%",QString::number(i)) << " " << info->amp << endl;
+        console << tr("Freq %num%:").replace("%num%",QString::number(i)) << " " << info->freq << endl;
+    }
 
     if (!parseFunctions()) {
         emit write_message(tr("Error in functions!"));
@@ -352,14 +390,14 @@ int SndController::doprocess() {
     mode |= FMOD_CREATESTREAM;
 
     memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
-    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);              /* required. */
-    createsoundexinfo.decodebuffersize  = 44100;                                       /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo.length            = 44100 * channels * sizeof(signed short) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
-    createsoundexinfo.numchannels       = channels;                                    /* Number of channels in the sound. */
-    createsoundexinfo.defaultfrequency  = 44100;                                       /* Default playback rate of sound. */
-    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;                     /* Data format of sound. */
-    createsoundexinfo.pcmreadcallback   = pcmreadcallback;                             /* User callback for reading. */
-    createsoundexinfo.pcmsetposcallback = pcmsetposcallback;                           /* User callback for seeking. */
+    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);                       /* required. */
+    createsoundexinfo.decodebuffersize  = 44100;                                                /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
+    createsoundexinfo.length            = 44100 * channels_count * sizeof(signed short) * 2;    /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo.numchannels       = channels_count;                                       /* Number of channels in the sound. */
+    createsoundexinfo.defaultfrequency  = 44100;                                                /* Default playback rate of sound. */
+    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;                              /* Data format of sound. */
+    createsoundexinfo.pcmreadcallback   = pcmreadcallback;                                      /* User callback for reading. */
+    createsoundexinfo.pcmsetposcallback = pcmsetposcallback;                                    /* User callback for seeking. */
 
     result = system->createSound(0, mode, &createsoundexinfo, &sound);
     ERRCHECK(result);
@@ -457,57 +495,39 @@ void SndController::stop() {
     loop.exit();
 }
 
-void SndController::SetLFunctionStr(QString new_text_l) {
-    text_l = new_text_l;
-}
-
-void SndController::SetRFunctionStr(QString new_text_r) {
-    text_r = new_text_r;
-}
-
-void SndController::SetFunctionsStr(QString new_f) {
+void SndController::setFunctionsStr(QString new_f) {
     text_functions = new_f;
 }
 
-void SndController::SetLAmp(double new_amp_l) {
-    amp_l = new_amp_l;
-}
-
-void SndController::SetRAmp(double new_amp_r) {
-    amp_r = new_amp_r;
-}
-
-void SndController::SetLFreq(double new_freq_l) {
-    freq_l = new_freq_l;
-    kL = freq_l*2.0*M_PI;
-}
-
-void SndController::SetRFreq(double new_freq_r) {
-    freq_r = new_freq_r;
-    kR = freq_r*2.0*M_PI;
-}
-
-double SndController::getInstLFreq() {
-    return l_fr;
-}
-double SndController::getInstRFreq() {
-    return r_fr;
-}
-double SndController::getInstLAmp() {
-    return l_ar;
-}
-double SndController::getInstRAmp() {
-    return r_ar;
-}
-
-GenSoundFunction SndController::getLeftFunction()
+void SndController::setFunctionStr(unsigned int channel, QString new_text)
 {
-    return mfct.left_channel_fct;
+    channels.at(channel)->function_text = new_text;
 }
 
-GenSoundFunction SndController::getRightFunction()
+void SndController::setAmp(unsigned int channel, double new_amp)
 {
-    return mfct.right_channel_fct;
+    channels.at(channel)->amp = new_amp;
+}
+
+void SndController::setFreq(unsigned int channel, double new_freq)
+{
+    channels.at(channel)->freq = new_freq;
+    channels.at(channel)->k = new_freq*2.0*M_PI;
+}
+
+double SndController::getInstFreq(unsigned int channel)
+{
+    return channels.at(channel)->fr;
+}
+
+double SndController::getInstAmp(unsigned int channel)
+{
+    return channels.at(channel)->ar;
+}
+
+GenSoundFunction SndController::getChannelFunction(unsigned int channel)
+{
+    return channels.at(channel)->channel_fct;
 }
 
 FMOD::System *SndController::getFmodSystem()
@@ -515,7 +535,7 @@ FMOD::System *SndController::getFmodSystem()
     return system;
 }
 
-void SndController::AddSound(QString new_file, QString new_function)
+void SndController::addSound(QString new_file, QString new_function)
 {
     baseSoundList->AddSound(new_file, new_function);
 }

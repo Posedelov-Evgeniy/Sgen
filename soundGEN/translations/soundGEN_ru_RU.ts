@@ -2,6 +2,33 @@
 <!DOCTYPE TS>
 <TS version="2.1">
 <context>
+    <name>ChannelSettings</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Channel</source>
+        <translation>Канал</translation>
+    </message>
+    <message>
+        <source>f(t) =</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Amplitude</source>
+        <translation>Амплитуда</translation>
+    </message>
+    <message>
+        <source>Frequency (Hz)</source>
+        <translation>Частота (Гц)</translation>
+    </message>
+</context>
+<context>
     <name>DialogFunctions</name>
     <message>
         <source>Available functions</source>
@@ -35,14 +62,6 @@
         <translation>SndGEN</translation>
     </message>
     <message>
-        <source>f(t) =</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Run</source>
         <translation>Запуск</translation>
     </message>
@@ -56,19 +75,19 @@
     </message>
     <message>
         <source>Left channel</source>
-        <translation>Левый канал</translation>
+        <translation type="vanished">Левый канал</translation>
     </message>
     <message>
         <source>Amplitude</source>
-        <translation>Амплитуда</translation>
+        <translation type="vanished">Амплитуда</translation>
     </message>
     <message>
         <source>Frequency (Hz)</source>
-        <translation>Частота (Гц)</translation>
+        <translation type="vanished">Частота (Гц)</translation>
     </message>
     <message>
         <source>Right channel</source>
-        <translation>Правый канал</translation>
+        <translation type="vanished">Правый канал</translation>
     </message>
     <message>
         <source>Custom functions</source>
@@ -154,28 +173,16 @@
         <translation>Начало с:</translation>
     </message>
     <message>
-        <source>Function L:</source>
-        <translation>Функция левого канала:</translation>
+        <source>Function %num%:</source>
+        <translation>Функция %num%:</translation>
     </message>
     <message>
-        <source>Function R:</source>
-        <translation>Функция правого канала:</translation>
+        <source>Amp %num%:</source>
+        <translation>Амплитуда %num%:</translation>
     </message>
     <message>
-        <source>Amp L:</source>
-        <translation>Амплитуда левого канала:</translation>
-    </message>
-    <message>
-        <source>Amp R:</source>
-        <translation>Амплитуда правого канала:</translation>
-    </message>
-    <message>
-        <source>Freq L:</source>
-        <translation>Частота левого канала:</translation>
-    </message>
-    <message>
-        <source>Freq R:</source>
-        <translation>Частота правого канала:</translation>
+        <source>Freq %num%:</source>
+        <translation>Частота %num%:</translation>
     </message>
 </context>
 <context>

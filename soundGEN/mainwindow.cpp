@@ -15,23 +15,8 @@ MainWindow::MainWindow(QWidget *parent) :
     base_title = windowTitle();
 
     /* adding widgets */
-    dialog_functions = new DialogFunctions(this);
-
-    left_drawer = new functionGraphicDrawer();
-    right_drawer = new functionGraphicDrawer();
-
-    ui->verticalLayout_drawers->addWidget(left_drawer);
-    ui->verticalLayout_drawers->addWidget(right_drawer);
-
     functions_text = new UTextEdit();
     ui->functions_tab->layout()->addWidget(functions_text);
-
-    left_function = new UTextEdit();
-    ui->left_function_layout->insertWidget(1, left_function);
-
-    right_function = new UTextEdit();
-    ui->right_function_layout->insertWidget(1, right_function);
-
 
     /* setting options */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Run"));
@@ -44,48 +29,51 @@ MainWindow::MainWindow(QWidget *parent) :
     sound_stopped();
     sc = SndController::Instance();
 
+
+
+    /*
+     * TODO: do it right
+    */
+    sc->setChannelsCount(2);
+
+    ChannelSettings *chset1 = new ChannelSettings(0, 0);
+    ChannelSettings *chset2 = new ChannelSettings(0, 1);
+    ui->verticalLayout_channels->addWidget(chset1);
+    ui->verticalLayout_channels->addWidget(chset2);
+
+    QObject::connect(this, SIGNAL(fill_params()), chset1, SLOT(init_snd_channel_params()));
+    QObject::connect(this, SIGNAL(run_channel_graphics()), chset1, SLOT(run_graphic()));
+    QObject::connect(this, SIGNAL(stop_channel_graphics()), chset1, SLOT(stop_graphic()));
+    QObject::connect(chset1, SIGNAL(options_changed()), this, SLOT(options_changing()));
+
+    QObject::connect(this, SIGNAL(fill_params()), chset2, SLOT(init_snd_channel_params()));
+    QObject::connect(this, SIGNAL(run_channel_graphics()), chset2, SLOT(run_graphic()));
+    QObject::connect(this, SIGNAL(stop_channel_graphics()), chset2, SLOT(stop_graphic()));
+    QObject::connect(chset2, SIGNAL(options_changed()), this, SLOT(options_changing()));
+
+    channels.append(chset1);
+    channels.append(chset2);
+
+
+
+
     /* loading settings */
     load_settings(default_save_path, true);
 
     /* creating signal-slot connections */
-    QObject::connect(dialog_functions, SIGNAL(accepted()), this, SLOT(paste_function_accepted()));
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
     QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
-    QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));
     QObject::connect(sc, SIGNAL(write_message(QString)), this, SLOT(get_message(QString)));
 
     QObject::connect(functions_text, SIGNAL(textChangedC()), this, SLOT(options_changing()));
-    QObject::connect(left_function, SIGNAL(textChangedC()), this, SLOT(options_changing()));
-    QObject::connect(right_function, SIGNAL(textChangedC()), this, SLOT(options_changing()));
-    QObject::connect(ui->doubleSpinBox_amp_left, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
-    QObject::connect(ui->doubleSpinBox_freq_left, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
-    QObject::connect(ui->doubleSpinBox_amp_right, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
-    QObject::connect(ui->doubleSpinBox_freq_right, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
-    QObject::connect(left_drawer, SIGNAL(changed()), this, SLOT(options_changing()));
-    QObject::connect(right_drawer, SIGNAL(changed()), this, SLOT(options_changing()));
 }
 
 MainWindow::~MainWindow()
 {
-    left_drawer->deleteLater();
-    right_drawer->deleteLater();
     functions_text->deleteLater();
-    delete left_drawer;
-    delete right_drawer;
     delete functions_text;
-    delete left_function;
-    delete right_function;
-    delete dialog_functions;
     delete ui;
-}
-
-void MainWindow::cycle_starting()
-{
-    ui->lcdNumber_freq_left->display(sc->getInstLFreq());
-    ui->lcdNumber_freq_right->display(sc->getInstRFreq());
-    ui->lcdNumber_amp_left->display(sc->getInstLAmp());
-    ui->lcdNumber_amp_right->display(sc->getInstRAmp());
 }
 
 void MainWindow::get_message(QString message)
@@ -95,22 +83,13 @@ void MainWindow::get_message(QString message)
 
 void MainWindow::sound_starting()
 {
-    sc->SetLFunctionStr(left_function->document()->toPlainText());
-    sc->SetRFunctionStr(right_function->document()->toPlainText());
-    sc->SetLAmp(ui->doubleSpinBox_amp_left->value());
-    sc->SetRAmp(ui->doubleSpinBox_amp_right->value());
-    sc->SetLFreq(ui->doubleSpinBox_freq_left->value());
-    sc->SetRFreq(ui->doubleSpinBox_freq_right->value());
-    sc->SetFunctionsStr(functions_text->document()->toPlainText());
+    emit fill_params();
 
-    left_drawer->setAmp(ui->doubleSpinBox_amp_left->value());
-    right_drawer->setAmp(ui->doubleSpinBox_amp_right->value());
-    left_drawer->setFreq(ui->doubleSpinBox_freq_left->value());
-    right_drawer->setFreq(ui->doubleSpinBox_freq_right->value());
+    sc->setFunctionsStr(functions_text->document()->toPlainText());
 
     SoundPicker *picker;
     foreach(picker, sounds) {
-        sc->AddSound(picker->getFilename(), picker->getFunctionname());
+        sc->addSound(picker->getFilename(), picker->getFunctionname());
     }
 }
 
@@ -124,8 +103,7 @@ void MainWindow::sound_stopped()
         auto_restart = false;
         sc->run();
     } else {
-        left_drawer->stop();
-        right_drawer->stop();
+        emit stop_channel_graphics();
     }
 
     if (close_on_stop) {
@@ -140,39 +118,12 @@ void MainWindow::sound_started()
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(true);
 
-    left_drawer->setGraphicFunction(sc->getLeftFunction());
-    right_drawer->setGraphicFunction(sc->getRightFunction());
-    left_drawer->run();
-    right_drawer->run();
+    emit run_channel_graphics();
 }
 
 void MainWindow::on_MainWindow_destroyed()
 {
     sc->stop();
-}
-
-void MainWindow::on_doubleSpinBox_amp_left_valueChanged(double arg1)
-{
-    sc->SetLAmp(arg1);
-    left_drawer->setAmp(arg1);
-}
-
-void MainWindow::on_doubleSpinBox_amp_right_valueChanged(double arg1)
-{
-    sc->SetRAmp(arg1);
-    right_drawer->setAmp(arg1);
-}
-
-void MainWindow::on_doubleSpinBox_freq_left_valueChanged(double arg1)
-{
-    sc->SetLFreq(arg1);
-    left_drawer->setFreq(arg1);
-}
-
-void MainWindow::on_doubleSpinBox_freq_right_valueChanged(double arg1)
-{
-    sc->SetRFreq(arg1);
-    right_drawer->setFreq(arg1);
 }
 
 void MainWindow::addSoundPicker(QString file_name, QString function_name)
@@ -243,22 +194,20 @@ bool MainWindow::saveMessageBox()
 void MainWindow::save_settings(QString filename, bool base_settings)
 {
     QSettings settings(filename, QSettings::IniFormat);
+    int i;
 
-    settings.setValue("main/function_l", left_function->document()->toPlainText());
-    settings.setValue("main/function_r", right_function->document()->toPlainText());
-    settings.setValue("main/amp_l", ui->doubleSpinBox_amp_left->value());
-    settings.setValue("main/amp_r", ui->doubleSpinBox_amp_right->value());
-    settings.setValue("main/freq_l", ui->doubleSpinBox_freq_left->value());
-    settings.setValue("main/freq_r", ui->doubleSpinBox_freq_right->value());
-
-    settings.setValue("graphic/kamp_l", left_drawer->getKampIntValue());
-    settings.setValue("graphic/kamp_r", right_drawer->getKampIntValue());
-    settings.setValue("graphic/dt_l", left_drawer->getDtIntValue());
-    settings.setValue("graphic/dt_r", right_drawer->getDtIntValue());
+    settings.setValue("main/channels_count", sc->getChannelsCount());
+    for(i=0; i<sc->getChannelsCount(); i++) {
+        settings.setValue("main/function_"+QString::number(i), channels.at(i)->getFunction());
+        settings.setValue("main/amp_"+QString::number(i), channels.at(i)->getAmp());
+        settings.setValue("main/freq_"+QString::number(i), channels.at(i)->getFreq());
+        settings.setValue("graphic/kamp_"+QString::number(i), channels.at(i)->getDrawer()->getKampIntValue());
+        settings.setValue("graphic/dt_"+QString::number(i), channels.at(i)->getDrawer()->getDtIntValue());
+    }
 
     SoundPicker *picker;
     settings.setValue("sounds/sounds_count", sounds.length());
-    int i = 1;
+    i = 1;
     foreach(picker, sounds) {
         settings.setValue("sounds/sound"+QString::number(i), picker->getFilename());
         settings.setValue("sounds/sound"+QString::number(i)+"_function", picker->getFunctionname());
@@ -298,6 +247,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
 void MainWindow::load_settings(QString filename, bool base_settings)
 {
     QSettings settings(filename, QSettings::IniFormat);
+    int i;
 
     SoundPicker *picker;
     foreach(picker, sounds) removeSoundPicker(picker);
@@ -305,21 +255,21 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     int length = settings.value("sounds/sounds_count", 1).toInt();
     if (length<1) length = 1;
     if (length>maxSounds) length = maxSounds;
-    for (int i=1;i<=length;i++) {
+    for (i=1;i<=length;i++) {
         addSoundPicker(settings.value("sounds/sound"+QString::number(i), "").toString(), settings.value("sounds/sound"+QString::number(i)+"_function", "").toString());
     }
 
-    left_function->document()->setPlainText(settings.value("main/function_l", "sin(k*t)").toString());
-    right_function->document()->setPlainText(settings.value("main/function_r", "cos(k*t)").toString());
-    ui->doubleSpinBox_amp_left->setValue(settings.value("main/amp_l", 1).toDouble());
-    ui->doubleSpinBox_amp_right->setValue(settings.value("main/amp_r", 1).toDouble());
-    ui->doubleSpinBox_freq_left->setValue(settings.value("main/freq_l", 500).toDouble());
-    ui->doubleSpinBox_freq_right->setValue(settings.value("main/freq_r", 500).toDouble());
+    int channels_cnt = settings.value("main/channels_count", 2).toInt();
+    if (channels_cnt<=0 || channels_cnt>8) channels_cnt=2;
+    sc->setChannelsCount(channels_cnt);
 
-    left_drawer->setKampIntValue(settings.value("graphic/kamp_l", 0).toDouble());
-    right_drawer->setKampIntValue(settings.value("graphic/kamp_r", 0).toDouble());
-    left_drawer->setDtIntValue(settings.value("graphic/dt_l", 300).toDouble());
-    right_drawer->setDtIntValue(settings.value("graphic/dt_r", 300).toDouble());
+    for(i=0; i<sc->getChannelsCount(); i++) {
+        channels.at(i)->setFunction(settings.value("main/function_"+QString::number(i), "sin(k*t)").toString());
+        channels.at(i)->setAmp(settings.value("main/amp_"+QString::number(i), 1).toDouble());
+        channels.at(i)->setFreq(settings.value("main/freq_"+QString::number(i), 500).toDouble());
+        channels.at(i)->getDrawer()->setKampIntValue(settings.value("graphic/kamp_"+QString::number(i), 0).toDouble());
+        channels.at(i)->getDrawer()->setDtIntValue(settings.value("graphic/dt_"+QString::number(i), 300).toDouble());
+    }
 
     if (base_settings) {
         QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
@@ -418,26 +368,6 @@ void MainWindow::on_buttonBox_clicked(QAbstractButton *button)
     } else {
         sc->stop();
     }
-}
-
-void MainWindow::on_left_dialog_functions_btn_clicked()
-{
-    dialog_for_edit = left_function;
-    dialog_functions->open();
-}
-
-void MainWindow::on_right_dialog_functions_btn_clicked()
-{
-    dialog_for_edit = right_function;
-    dialog_functions->open();
-}
-
-void MainWindow::paste_function_accepted()
-{
-    if (dialog_for_edit && !dialog_functions->getPickedFunction().isEmpty()) {
-        dialog_for_edit->textCursor().insertText(dialog_functions->getPickedFunction());
-    }
-    dialog_for_edit = 0;
 }
 
 void MainWindow::on_actionOpen_triggered()

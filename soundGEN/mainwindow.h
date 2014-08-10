@@ -8,8 +8,7 @@
 #include <QMessageBox>
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
-#include "widgets/functiongraphicdrawer.h"
-#include "widgets/dialogfunctions.h"
+#include "widgets/channelsettings.h"
 #include "classes/utextedit.h"
 
 namespace Ui {
@@ -24,6 +23,11 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+signals:
+    void fill_params();
+    void run_channel_graphics();
+    void stop_channel_graphics();
+
 private slots:
 
     void sound_stopped();
@@ -32,31 +36,15 @@ private slots:
 
     void sound_starting();
 
-    void cycle_starting();
-
     void add_sound(SoundPicker* p);
 
     void remove_sound(SoundPicker* p);
 
     void get_message(QString message);
 
-    void paste_function_accepted();
-
     void on_MainWindow_destroyed();
 
-    void on_doubleSpinBox_amp_left_valueChanged(double arg1);
-
-    void on_doubleSpinBox_amp_right_valueChanged(double arg1);
-
-    void on_doubleSpinBox_freq_left_valueChanged(double arg1);
-
-    void on_doubleSpinBox_freq_right_valueChanged(double arg1);
-
     void on_buttonBox_clicked(QAbstractButton *button);
-
-    void on_left_dialog_functions_btn_clicked();
-
-    void on_right_dialog_functions_btn_clicked();
 
     void on_actionOpen_triggered();
 
@@ -73,18 +61,14 @@ private slots:
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
-    DialogFunctions *dialog_functions;
     SndController *sc;
     bool auto_restart, close_on_stop, current_file_changed;
     QString default_save_path, default_functions_path;
     QString base_title;
     QString current_file;
     QList<SoundPicker*> sounds;
-    functionGraphicDrawer *left_drawer;
-    functionGraphicDrawer *right_drawer;
+    QList<ChannelSettings*> channels;
     UTextEdit *functions_text;
-    UTextEdit *left_function;
-    UTextEdit *right_function;
     UTextEdit *dialog_for_edit;
 
     void removeSoundPicker(SoundPicker* p);
