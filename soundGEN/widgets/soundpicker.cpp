@@ -90,6 +90,7 @@ void SoundPicker::checkSound(bool show_warnings)
             if (sound)
             {
                 unsigned int length;
+
                 if (sound->getLength(&length, FMOD_TIMEUNIT_MS) == FMOD_OK) {
                     ui->label_length->setText(tr("Length: ") + QString::number(length/1000.0)+ tr("s"));
                     result = true;

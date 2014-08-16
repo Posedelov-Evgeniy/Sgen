@@ -49,6 +49,72 @@ void SoundList::AddSound(QString new_file, QString new_function)
     baseSoundsList.append(rec);
 }
 
+void SoundList::ConvertSoundBuffer(void *buf, int length, int bits_count, int channels_count, float frequency, void **outbuf, unsigned int *outlength)
+{
+    *outlength = 0;
+    if (bits_count>32 || bits_count<8) return;
+    if (frequency<10000 || frequency>200000) return;
+    if (channels_count<1 || channels_count>20) return;
+    if (length<=0) return;
+    if (!buf) return;
+
+    int bytes_count = bits_count >> 3;
+    int buf_elements = length/bytes_count;
+    float seconds_len = buf_elements/(channels_count*frequency);
+
+    int out_channels = 2;
+    int out_bits_count = 16;
+    int out_bytes_count = out_bits_count >> 3;
+    float out_frequency = 44100;
+    unsigned int outbuf_length = out_bytes_count*out_channels*((unsigned int) out_frequency*seconds_len);
+
+    void *mainbuff;
+    qint32 *maxbuff = new qint32[buf_elements];
+    unsigned int i, j, k;
+
+    /* Формируем массив maxbuff с 32-битным представлением данных */
+    if (bytes_count==4) {
+        memcpy(maxbuff,buf,length);
+    } else {
+        qint32 interm_check = 1 << (bits_count - 1);
+        qint32 interm_mask = -(1 << bits_count);
+        double max_cval = interm_check;
+        double max32bitval = std::numeric_limits<qint32>::max();
+
+        for(i=0;i<buf_elements;i++) {
+            qint32 intermediate = 0;
+            for(j=0;j<bytes_count;j++) {
+                intermediate |= ((quint8*) buf)[i*bytes_count+j] << (j << 3);
+            }
+            if (intermediate & interm_check) {
+                intermediate |= interm_mask;
+            }
+            maxbuff[i] = (qint32) (intermediate/max_cval)*max32bitval;
+        }
+    }
+    /* maxbuff сформирован */
+
+
+
+
+
+
+    if (bytes_count==4) {
+        mainbuff = maxbuff;
+    } else {
+        mainbuff = new qint8[outbuf_length];
+
+
+
+
+        delete maxbuff;
+    }
+
+
+    *outbuf = mainbuff;
+    *outlength = outbuf_length;
+}
+
 void SoundList::InitSounds()
 {
     if (!system) return;
@@ -70,19 +136,35 @@ void SoundList::InitSounds()
 
             if (!rec->pcmData)
             {
+                FMOD_SOUND_TYPE stype;
+                FMOD_SOUND_FORMAT sformat;
+                int channels_count;
+                int bits_count;
+                float freq;
+                float volume;
+                float pan;
+                int priority;
+
+                rec->base_sound->getDefaults(&freq, &volume, &pan, &priority);
+                rec->base_sound->getFormat(&stype, &sformat, &channels_count, &bits_count);
+
+                /*qDebug() << freq << " " << volume << " " << pan << " " << priority << " ";
+                qDebug() << stype << " " << sformat << " " << channels_count << " " << bits_count << " ";*/
+
                 rec->base_sound->getLength(&(rec->soundLenPcmBytes), FMOD_TIMEUNIT_PCMBYTES);
                 rec->base_sound->seekData(0);
 
-                printf("PCM BYTES: %d\r", rec->soundLenPcmBytes);
-
-                rec->pcmData = new signed short[rec->soundLenPcmBytes];
-                rec->base_sound->readData(rec->pcmData, rec->soundLenPcmBytes, &read);
-                if (read<rec->soundLenPcmBytes) {
-                    rec->soundLenPcmBytes = read;
+                qint8 *soundbuf = new qint8[rec->soundLenPcmBytes];
+                rec->base_sound->readData((void*)soundbuf, rec->soundLenPcmBytes, &read);
+                if (read>0) {
+                    void *pcmData;
+                    ConvertSoundBuffer(soundbuf,read,bits_count,channels_count,freq,&pcmData,&read);
+                    if (read>0) {
+                        rec->soundLenPcmBytes = read;
+                        rec->pcmData = (qint16*) pcmData;
+                    }
                 }
-
-                printf("READ: %d\r", rec->soundLenPcmBytes);
-                fflush(stdout);
+                delete soundbuf;
             }
         }
     }

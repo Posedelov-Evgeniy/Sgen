@@ -130,9 +130,9 @@ unsigned int SndController::getChannelsCount()
 void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
     unsigned int  count;
-    signed short *buffer16bit = (signed short *)data;
+    qint16 *buffer16bit = (qint16*)data;
 
-    datalen = datalen/(channels_count*sizeof(signed short));
+    datalen = datalen/(channels_count*sizeof(qint16));
 
     if (all_functions_loaded)
     {
@@ -147,7 +147,7 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
             for (count=0; count<datalen; count++)
             {
                 curr = getResult(i, t+count/44100.0);
-                buffer16bit[count*channels_count + i] = (signed short)(curr * 32767.0);
+                buffer16bit[count*channels_count + i] = (qint16)(curr * 32767.0);
                 curr = fabs(curr);
 
                 if (pprev>0 && prev>curr && prev>pprev) {
@@ -392,7 +392,7 @@ int SndController::doprocess()
     memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
     createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);                       /* required. */
     createsoundexinfo.decodebuffersize  = 44100;                                                /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo.length            = 44100 * channels_count * sizeof(signed short) * 2;    /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo.length            = 44100 * channels_count * sizeof(qint16) * 2;    /* Length of PCM data in bytes of whole song (for Sound::getLength) */
     createsoundexinfo.numchannels       = channels_count;                                       /* Number of channels in the sound. */
     createsoundexinfo.defaultfrequency  = 44100;                                                /* Default playback rate of sound. */
     createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;                              /* Data format of sound. */
