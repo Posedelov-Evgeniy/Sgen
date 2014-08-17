@@ -25,6 +25,7 @@ else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodexL64.so
 
 SOURCES += main.cpp\
     base_functions.cpp \
+    abstractsndcontroller.cpp \
     mainwindow.cpp \
     sndcontroller.cpp \
     widgets/soundpicker.cpp \
@@ -39,6 +40,7 @@ SOURCES += main.cpp\
     widgets/dialogfunctions.cpp
 
 HEADERS  += base_functions.h \
+    abstractsndcontroller.h \
     soundlist.h \
     sndcontroller.h \
     mainwindow.h \

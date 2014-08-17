@@ -8,7 +8,7 @@ ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_inde
     channel_index = base_channel_index;
     ui->setupUi(this);
     dialog_functions = new DialogFunctions(parent);
-    sc = SndController::Instance();
+    sc = (SndController*) SndController::Instance();
 
     function_edit = new UTextEdit();
     function_edit->document()->setPlainText("sin(k*t)");

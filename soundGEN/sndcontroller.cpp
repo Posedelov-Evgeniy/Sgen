@@ -24,10 +24,11 @@ double base_play_sound(int i, unsigned int c, double t) {
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
-    baseSoundList = new SoundList();
+    baseSoundList = new SoundList(this);
     is_running = false;
     all_functions_loaded = false;
     channels_count = 0;
+    frequency = 0;
 
     unsigned int            version;
     /*
@@ -48,7 +49,15 @@ SndController::SndController(QObject *parent) :
     result = system->init(32, FMOD_INIT_NORMAL, 0);
     ERRCHECK(result);
 
+    memset(&createsoundexinfo_sound, 0, sizeof(FMOD_CREATESOUNDEXINFO));
+    createsoundexinfo_sound.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO); /* required. */
+    createsoundexinfo_sound.format            = FMOD_SOUND_FORMAT_PCM32;        /* Data format of sound. */
+    createsoundexinfo_gen = createsoundexinfo_sound;
+    createsoundexinfo_gen.pcmreadcallback   = pcmreadcallback;                  /* User callback for reading. */
+    createsoundexinfo_gen.pcmsetposcallback = pcmsetposcallback;                /* User callback for seeking. */
+
     setChannelsCount(2);
+    setFrequency(44100.0);
 }
 
 SndController::~SndController()
@@ -62,15 +71,6 @@ SndController::~SndController()
 
     baseSoundList->clearSounds();
     delete baseSoundList;
-}
-
-void SndController::ERRCHECK(FMOD_RESULT op_result)
-{
-    if (op_result != FMOD_OK)
-    {
-        printf("FMOD error! (%d) %s\n", result, FMOD_ErrorString(result));
-        exit(-1);
-    }
 }
 
 SndController *SndController::Instance()
@@ -120,6 +120,11 @@ void SndController::setChannelsCount(unsigned int count)
     }
 
     channels_count = count;
+
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_sound.numchannels       = channels_count;                                                   /* Number of channels in the sound. */
+    createsoundexinfo_gen.length = createsoundexinfo_sound.length;
+    createsoundexinfo_gen.numchannels = createsoundexinfo_sound.numchannels;
 }
 
 unsigned int SndController::getChannelsCount()
@@ -130,13 +135,14 @@ unsigned int SndController::getChannelsCount()
 void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
     unsigned int  count;
-    qint16 *buffer16bit = (qint16*)data;
+    qint32 *buffer = (qint32*)data;
+    qint32 max_val = std::numeric_limits<qint32>::max();
 
-    datalen = datalen/(channels_count*sizeof(qint16));
+    datalen = datalen/(channels_count*sizeof(qint32));
 
     if (all_functions_loaded)
     {
-        for(int i=0; i<channels_count; i++)
+        for(unsigned int i=0; i<channels_count; i++)
         {
             double curr = 0;
             double pprev = 0;
@@ -146,8 +152,8 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
 
             for (count=0; count<datalen; count++)
             {
-                curr = getResult(i, t+count/44100.0);
-                buffer16bit[count*channels_count + i] = (qint16)(curr * 32767.0);
+                curr = getResult(i, t+count/frequency);
+                buffer[count*channels_count + i] = (qint32)(curr * max_val);
                 curr = fabs(curr);
 
                 if (pprev>0 && prev>curr && prev>pprev) {
@@ -159,11 +165,11 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
                 pprev = prev;
                 prev = curr;
             }
-            channels.at(i)->fr = 0.5 * cnt/(datalen/44100.0);
+            channels.at(i)->fr = 0.5 * cnt/(datalen/frequency);
             channels.at(i)->ar = amp<=1.0 ? amp : 1.0;
         }
 
-        t += datalen/44100.0;
+        t += datalen/frequency;
     }
 }
 
@@ -173,8 +179,7 @@ bool SndController::parseFunctions()
     QString error = "";
     bool add_base_functions = false;
     all_functions_loaded = false;
-    int i;
-    GenSoundChannelInfo *info;
+    unsigned int i;
 
     if (lib.isLoaded()) {
         lib.unload();
@@ -343,7 +348,7 @@ double SndController::getResult(unsigned int channel, double current_t)
 
 void SndController::resetParams()
 {
-    for(int i=0; i<channels_count; i++) {
+    for(unsigned int i=0; i<channels_count; i++) {
         GenSoundChannelInfo *info = channels.at(i);
         info->amp = 1;
         info->freq = 500;
@@ -355,13 +360,27 @@ void SndController::resetParams()
     t = 0.0;
     baseSoundList->clearSounds();
 }
+double SndController::getFrequency() const
+{
+    return frequency;
+}
+
+void SndController::setFrequency(double value)
+{
+    frequency = value;
+    createsoundexinfo_sound.decodebuffersize  = (unsigned int) frequency;                                         /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                         /* Default playback rate of sound. */
+    createsoundexinfo_gen.decodebuffersize = createsoundexinfo_sound.decodebuffersize;
+    createsoundexinfo_gen.length = createsoundexinfo_sound.length;
+    createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
+}
 
 int SndController::doprocess()
 {
     FMOD::Sound            *sound;
     FMOD::Channel          *channel = 0;
     FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
-    FMOD_CREATESOUNDEXINFO  createsoundexinfo;
     QTextStream             console(stdout);
     GenSoundChannelInfo    *info;
 
@@ -373,7 +392,7 @@ int SndController::doprocess()
     emit write_message(tr("Initialization..."));
 
     console << tr("Starting with:") << " " << endl;
-    for(int i=0; i<channels_count; i++) {
+    for(unsigned int i=0; i<channels_count; i++) {
         info = channels.at(i);
         console << tr("Function %num%:").replace("%num%",QString::number(i)) << " " << info->function_text << endl;
         console << tr("Amp %num%:").replace("%num%",QString::number(i)) << " " << info->amp << endl;
@@ -389,20 +408,9 @@ int SndController::doprocess()
 
     mode |= FMOD_CREATESTREAM;
 
-    memset(&createsoundexinfo, 0, sizeof(FMOD_CREATESOUNDEXINFO));
-    createsoundexinfo.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO);                       /* required. */
-    createsoundexinfo.decodebuffersize  = 44100;                                                /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo.length            = 44100 * channels_count * sizeof(qint16) * 2;    /* Length of PCM data in bytes of whole song (for Sound::getLength) */
-    createsoundexinfo.numchannels       = channels_count;                                       /* Number of channels in the sound. */
-    createsoundexinfo.defaultfrequency  = 44100;                                                /* Default playback rate of sound. */
-    createsoundexinfo.format            = FMOD_SOUND_FORMAT_PCM16;                              /* Data format of sound. */
-    createsoundexinfo.pcmreadcallback   = pcmreadcallback;                                      /* User callback for reading. */
-    createsoundexinfo.pcmsetposcallback = pcmsetposcallback;                                    /* User callback for seeking. */
-
-    result = system->createSound(0, mode, &createsoundexinfo, &sound);
+    result = system->createSound(0, mode, &createsoundexinfo_gen, &sound);
     ERRCHECK(result);
 
-    baseSoundList->setSystem(system);
     baseSoundList->InitSounds();
 
     /*
@@ -531,6 +539,11 @@ GenSoundFunction SndController::getChannelFunction(unsigned int channel)
 FMOD::System *SndController::getFmodSystem()
 {
     return system;
+}
+
+FMOD_CREATESOUNDEXINFO SndController::getFmodSoundCreateInfo()
+{
+    return createsoundexinfo_sound;
 }
 
 void SndController::addSound(QString new_file, QString new_function)

@@ -9,29 +9,31 @@
 #include <QDebug>
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "abstractsndcontroller.h"
 
 struct GenSoundRecord {
     QString sound_file;
     QString sound_function;
     FMOD::Sound *base_sound;
     unsigned int soundLenPcmBytes;
-    qint16 *pcmData;
+    unsigned int soundLen;
+    unsigned int channels_count;
+    double frequency;
+    qint32 *pcmData;
 };
 
 class SoundList
 {
 private:
     QVector<GenSoundRecord*> baseSoundsList;
-    FMOD::System* system;
-    void ERRCHECK(FMOD_RESULT result);
-    void ConvertSoundBuffer(void *buf, int length, int bits_count, int channels_count, float frequency, void **outbuf, unsigned int *outlength);
+    AbstractSndController *sc;
+    void ConvertSoundBuffer(void *buf, int length, int bits_count, void **outbuf, unsigned int *outlength);
 public:
-    SoundList();
+    SoundList(AbstractSndController* base_controller);
     void clearSounds();
-    void setSystem(FMOD::System* new_system);
     void AddSound(QString new_file, QString new_function);
     QString getFunctionsText();
-    double playSound(int index, unsigned int channels, double t);
+    double playSound(int index, unsigned int channel, double t);
     void InitSounds();
 };
 

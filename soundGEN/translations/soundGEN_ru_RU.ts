@@ -74,22 +74,6 @@
         <translation>Перезапуск</translation>
     </message>
     <message>
-        <source>Left channel</source>
-        <translation type="vanished">Левый канал</translation>
-    </message>
-    <message>
-        <source>Amplitude</source>
-        <translation type="vanished">Амплитуда</translation>
-    </message>
-    <message>
-        <source>Frequency (Hz)</source>
-        <translation type="vanished">Частота (Гц)</translation>
-    </message>
-    <message>
-        <source>Right channel</source>
-        <translation type="vanished">Правый канал</translation>
-    </message>
-    <message>
         <source>Custom functions</source>
         <translation>Пользовательские функции</translation>
     </message>
@@ -149,6 +133,30 @@
         <source>Save File</source>
         <translation>Сохранить файл</translation>
     </message>
+    <message>
+        <source>Channels</source>
+        <translation>Каналы</translation>
+    </message>
+    <message>
+        <source>1 (Mono)</source>
+        <translation>1 (Моно)</translation>
+    </message>
+    <message>
+        <source>2 (Stereo)</source>
+        <translation>2 (Стерео)</translation>
+    </message>
+    <message>
+        <source>4 (Quadro)</source>
+        <translation>4 (Квадро)</translation>
+    </message>
+    <message>
+        <source>6 (5.1)</source>
+        <translation>6 (5.1)</translation>
+    </message>
+    <message>
+        <source>8 (7.1)</source>
+        <translation>8 (7.1)</translation>
+    </message>
 </context>
 <context>
     <name>SndController</name>
@@ -183,6 +191,10 @@
     <message>
         <source>Freq %num%:</source>
         <translation>Частота %num%:</translation>
+    </message>
+    <message>
+        <source>Time: %sec%s</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

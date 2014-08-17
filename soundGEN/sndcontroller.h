@@ -1,11 +1,8 @@
 #ifndef SNDCONTROLLER_H
 #define SNDCONTROLLER_H
 
-#include <QObject>
 #include <QApplication>
 #include <QTimer>
-#include <string.h>
-#include <stdio.h>
 #include <QtGui>
 #include <QtCore/QCoreApplication>
 #include <QProcess>
@@ -14,25 +11,12 @@
 #include "base_functions.h"
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "abstractsndcontroller.h"
 #include "soundlist.h"
-
-typedef double (*PlaySoundFunction) (int,unsigned int,double);
-
-typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction);
-
-struct GenSoundChannelInfo {
-    double freq;
-    double k;
-    double amp;
-    double fr;
-    double ar;
-    QString function_text;
-    GenSoundFunction channel_fct;
-};
 
 double base_play_sound(int i, unsigned int c, double t);
 
-class SndController : public QObject
+class SndController : public QObject, public AbstractSndController
 {
     Q_OBJECT
 private:
@@ -51,6 +35,7 @@ private:
     double t;
     bool all_functions_loaded;
     unsigned int channels_count;
+    double frequency;
 
     QVector<GenSoundChannelInfo*> channels;
 
@@ -60,8 +45,8 @@ private:
     QEventLoop loop;
 
     FMOD::System *system;
+    FMOD_CREATESOUNDEXINFO  createsoundexinfo_gen, createsoundexinfo_sound;
     FMOD_RESULT result;
-    void ERRCHECK(FMOD_RESULT op_result);
 public:
     static SndController* Instance();
     static bool DeleteInstance();
@@ -71,6 +56,9 @@ public:
 
     void setChannelsCount(unsigned int count);
     unsigned int getChannelsCount();
+
+    double getFrequency() const;
+    void setFrequency(double value);
 
     void setFunctionsStr(QString new_f);
     void setFunctionStr(unsigned int channel, QString new_text);
@@ -82,6 +70,7 @@ public:
     GenSoundFunction getChannelFunction(unsigned int channel);
 
     FMOD::System *getFmodSystem();
+    FMOD_CREATESOUNDEXINFO getFmodSoundCreateInfo();
     void addSound(QString new_file, QString new_function);
     bool running();
 signals:
