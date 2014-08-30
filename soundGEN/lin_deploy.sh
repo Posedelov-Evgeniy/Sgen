@@ -1,6 +1,7 @@
 #!/bin/bash
 sourceDir=$1
 buildDir=$2
+mode=$3
 
 if [ $sourceDir = '' ] ; then
     exit 0
@@ -22,3 +23,10 @@ cp $sourceDir/translations/*.qm $buildDir/translations
 
 mkdir -p $buildDir/examples
 cp $sourceDir/examples/*.* $buildDir/examples
+
+if [ $mode = 'release' ] ; then
+    mkdir -p $buildDir/api
+    mkdir -p $buildDir/api/linux
+    mkdir -p $buildDir/api/linux/lib
+    cp -r $sourceDir/api/linux/lib/* $buildDir/api/linux/lib/
+fi

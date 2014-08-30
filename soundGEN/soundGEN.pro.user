@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 3.0.1, 2014-08-10T22:03:06. -->
+<!-- Written by QtCreator 3.0.1, 2014-08-31T02:37:00. -->
 <qtcreator>
  <data>
   <variable>ProjectExplorer.Project.ActiveTarget</variable>
@@ -180,7 +180,7 @@
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
-      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">&quot;%{sourceDir}&quot; &quot;%{buildDir}&quot;</value>
+      <value type="QString" key="ProjectExplorer.ProcessStep.Arguments">&quot;%{sourceDir}&quot; &quot;%{buildDir}&quot; &quot;release&quot;</value>
       <value type="QString" key="ProjectExplorer.ProcessStep.Command">lin_deploy.sh</value>
       <value type="QString" key="ProjectExplorer.ProcessStep.WorkingDirectory">%{sourceDir}</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Custom Process Step</value>

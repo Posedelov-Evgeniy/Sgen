@@ -12,7 +12,7 @@ TARGET = soundGEN
 TEMPLATE = app
 
 win32: LIBS += $$PWD/api/windows/lib/fmodex_vc.lib
-else:unix:!macx: LIBS += -L$$PWD/api/linux/lib/ -lfmodex64
+else:unix:!macx: LIBS += $$PWD/api/linux/lib/libfmodex64.so
 
 win32: INCLUDEPATH += $$PWD/api/windows/inc
 else:unix:!macx: INCLUDEPATH += $$PWD/api/linux/inc
@@ -21,7 +21,7 @@ win32: DEPENDPATH += $$PWD/api/windows/inc
 else:unix:!macx: DEPENDPATH += $$PWD/api/linux/inc
 
 win32: PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex_vc.lib
-else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodexL64.so
+else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodex64.so
 
 SOURCES += main.cpp\
     base_functions.cpp \
@@ -41,10 +41,10 @@ SOURCES += main.cpp\
 
 HEADERS  += base_functions.h \
     abstractsndcontroller.h \
+    widgets/soundpicker.h \
     soundlist.h \
     sndcontroller.h \
     mainwindow.h \
-    widgets/soundpicker.h \
     widgets/functiongraphicdrawer.h \
     classes/graphicthread.h \
     widgets/mgraphicdrawsurface.h \
@@ -67,3 +67,4 @@ OTHER_FILES += \
     lin_deploy.sh
 
 TRANSLATIONS += translations/soundGEN_ru_RU.ts
+

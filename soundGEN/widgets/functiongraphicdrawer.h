@@ -17,7 +17,7 @@ public:
     explicit functionGraphicDrawer(QWidget *parent = 0);
     ~functionGraphicDrawer();
 
-    void setGraphicFunction(const GenSoundFunction &value);
+    void setGraphicFunction(GenSoundFunction value);
 
     double getT0() const;
     void setT0(double value);

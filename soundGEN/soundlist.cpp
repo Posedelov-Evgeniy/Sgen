@@ -3,40 +3,68 @@
 SoundList::SoundList(AbstractSndController* base_controller)
 {
     sc = base_controller;
+    curr_tag = 0;
+}
+
+SoundList::~SoundList()
+{
+    clearSounds();
+}
+
+void SoundList::removeSound(int i, bool removeFromList)
+{
+    FMOD_RESULT result;
+    GenSoundRecord *rec = baseSoundsList.at(i);
+    if (rec->base_sound) {
+        result = rec->base_sound->release();
+        AbstractSndController::ERRCHECK(result);
+    }
+    if (rec->pcmData) {
+        delete[] rec->pcmData;
+    }
+    delete rec;
+    if (removeFromList) {
+        baseSoundsList.removeAt(i);
+    }
 }
 
 void SoundList::clearSounds()
 {
-    GenSoundRecord *rec;
-    FMOD_RESULT result;
-    foreach(rec, baseSoundsList)
-    {
-        if (rec->base_sound) {
-            result = rec->base_sound->release();
-            AbstractSndController::ERRCHECK(result);
-        }
-        if (rec->pcmData) {
-            delete[] rec->pcmData;
-        }
-        delete rec;
+    for(int i=0; i<baseSoundsList.length(); i++) {
+        removeSound(i, false);
     }
     baseSoundsList.clear();
 }
 
-void SoundList::AddSound(QString new_file, QString new_function)
+void SoundList::setSound(int index, QString new_file, QString new_function, unsigned int tag)
 {
-    GenSoundRecord *rec = new GenSoundRecord;
+    if (new_file.isEmpty() || new_function.isEmpty()) {
+        return;
+    }
 
-    rec->base_sound = 0;
-    rec->pcmData = 0;
-    rec->soundLenPcmBytes = 0;
-    rec->soundLen = 0;
-    rec->sound_function = new_function;
-    rec->sound_file = new_file;
-    rec->frequency = sc->getFrequency();
-    rec->channels_count = sc->getChannelsCount();
+    if (index>=0 && index<baseSoundsList.length() && baseSoundsList.at(index)->sound_file==new_file && baseSoundsList.at(index)->sound_function==new_function) {
+        baseSoundsList.at(index)->tag = tag ? tag : curr_tag;
+    } else {
+        GenSoundRecord *rec = new GenSoundRecord;
+        rec->base_sound = 0;
+        rec->pcmData = 0;
+        rec->soundLenPcmBytes = 0;
+        rec->soundLen = 0;
+        rec->sound_function = new_function;
+        rec->sound_file = new_file;
+        rec->frequency = sc->getFrequency();
+        rec->channels_count = sc->getChannelsCount();
+        rec->tag = tag ? tag : curr_tag;
 
-    baseSoundsList.append(rec);
+        if (index>=0 && index<baseSoundsList.length()) {
+            removeSound(index, false);
+            baseSoundsList[index] = rec;
+        } else {
+            baseSoundsList.append(rec);
+        }
+    }
+
+    if (tag>curr_tag) curr_tag = tag;
 }
 
 void SoundList::ConvertSoundBuffer(void *buf, int length, int bits_count, void **outbuf, unsigned int *outlength)
@@ -80,6 +108,10 @@ void SoundList::ConvertSoundBuffer(void *buf, int length, int bits_count, void *
 void SoundList::InitSounds()
 {
     if (!sc->getFmodSystem()) return;
+
+    for(int i=0; i<baseSoundsList.length(); i++) {
+        if(baseSoundsList.at(i)->tag<curr_tag) removeSound(i, true);
+    }
 
     FMOD_RESULT result;
     unsigned int read = 0;
@@ -133,9 +165,19 @@ void SoundList::InitSounds()
     }
 }
 
+unsigned int SoundList::getTag()
+{
+    return curr_tag;
+}
+
+void SoundList::setTag(unsigned int newtag)
+{
+    curr_tag = newtag;
+}
+
 QString SoundList::getFunctionsText()
 {
-    QString result;
+    QString result = "";
     GenSoundRecord *rec;
     int i = 0, j;
 

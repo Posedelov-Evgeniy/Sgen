@@ -42,7 +42,7 @@ functionGraphicDrawer::~functionGraphicDrawer()
     delete ui;
 }
 
-void functionGraphicDrawer::setGraphicFunction(const GenSoundFunction &value)
+void functionGraphicDrawer::setGraphicFunction(GenSoundFunction value)
 {
     widget_drawer->setGraphicFunction(value);
 }

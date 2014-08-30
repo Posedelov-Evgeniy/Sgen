@@ -57,13 +57,13 @@ void MainWindow::get_message(QString message)
 void MainWindow::sound_starting()
 {
     emit fill_params();
-
     sc->setFunctionsStr(functions_text->document()->toPlainText());
 
-    SoundPicker *picker;
-    foreach(picker, sounds) {
-        sc->addSound(picker->getFilename(), picker->getFunctionname());
+    unsigned int ctag = sc->getBaseSoundList()->getTag() + 1;
+    for(int i=0; i<sounds.length(); i++) {
+        sc->getBaseSoundList()->setSound(i, sounds.at(i)->getFilename(), sounds.at(i)->getFunctionname(), ctag);
     }
+    sc->getBaseSoundList()->setTag(ctag);
 }
 
 void MainWindow::sound_stopped()

@@ -108,6 +108,7 @@ void ChannelSettings::run_graphic()
 
 void ChannelSettings::stop_graphic()
 {
+    channel_drawer->setGraphicFunction(0);
     channel_drawer->stop();
 }
 

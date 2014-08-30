@@ -43,8 +43,8 @@ public:
 
     void incT();
 
-    void setGraphicFunction(const GenSoundFunction &value);
-    void setGraphicFunctionT(const base_function_signal &value);
+    void setGraphicFunction(GenSoundFunction value);
+    void setGraphicFunctionT(base_function_signal value);
     void resetGraphicFunctions();
 
 protected:

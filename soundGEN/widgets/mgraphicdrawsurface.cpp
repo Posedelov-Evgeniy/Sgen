@@ -82,13 +82,13 @@ void MGraphicDrawSurface::incT()
     t += kt*dt;
 }
 
-void MGraphicDrawSurface::setGraphicFunction(const GenSoundFunction &value)
+void MGraphicDrawSurface::setGraphicFunction(GenSoundFunction value)
 {
     graphicFunction = value;
     graphicTFunction = 0;
 }
 
-void MGraphicDrawSurface::setGraphicFunctionT(const base_function_signal &value)
+void MGraphicDrawSurface::setGraphicFunctionT(base_function_signal value)
 {
     graphicTFunction = value;
     graphicFunction = 0;

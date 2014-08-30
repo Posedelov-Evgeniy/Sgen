@@ -29,6 +29,8 @@ SndController::SndController(QObject *parent) :
     all_functions_loaded = false;
     channels_count = 0;
     frequency = 0;
+    oldParseHash = "";
+    sound_functions = "";
 
     unsigned int            version;
     /*
@@ -69,7 +71,6 @@ SndController::~SndController()
     result = system->release();
     ERRCHECK(result);
 
-    baseSoundList->clearSounds();
     delete baseSoundList;
 }
 
@@ -173,8 +174,55 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
     }
 }
 
+QString SndController::getCurrentParseHash()
+{
+    QCoreApplication *app = QCoreApplication::instance();
+    QCryptographicHash hash(QCryptographicHash::Sha512);
+
+    hash.addData(app->applicationDirPath().toLatin1());
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+        hash.addData(QString::number(QFile::exists(app->applicationDirPath()+"/efr/main.dll")).toLatin1());
+    #else
+        hash.addData(QString::number(QFile::exists(app->applicationDirPath()+"/efr/main.so")).toLatin1());
+    #endif
+    hash.addData(QString::number(channels_count).toLatin1());
+    hash.addData(QString::number(lib.isLoaded()).toLatin1());
+    hash.addData(sound_functions.toLatin1());
+    hash.addData(text_functions.toLatin1());
+    for(int i=0;i<channels_count;i++) {
+        hash.addData(channels.at(i)->function_text.toLatin1());
+    }
+
+    return hash.result().toHex();
+}
+
+bool SndController::checkHash(bool emptyCheck)
+{
+    QString parseHash = "";
+
+    if (emptyCheck || !oldParseHash.isEmpty()) {
+        parseHash = getCurrentParseHash();
+        if (!emptyCheck || oldParseHash.isEmpty()) {
+            qDebug() << tr("Hash is: ") << parseHash;
+        }
+    }
+
+    if (!emptyCheck && !oldParseHash.isEmpty() && !parseHash.isEmpty() && oldParseHash==parseHash) {
+        qDebug() << tr("Hashes equals - no need to parse functions");
+        return true;
+    }
+
+    if (!parseHash.isEmpty()) {
+        oldParseHash = parseHash;
+    }
+
+    return false;
+}
+
 bool SndController::parseFunctions()
 {
+    if (checkHash(false)) return true;
+
     QCoreApplication *app = QCoreApplication::instance();
     QString error = "";
     bool add_base_functions = false;
@@ -233,7 +281,7 @@ bool SndController::parseFunctions()
     out2 << "#include \"main.h\"\n";
     out2 << spec_namespace;
     out2 << "\nPlaySoundFunction BaseSoundFunction;\n";
-    out2 << "\n" + baseSoundList->getFunctionsText() + "\n";
+    out2 << "\n" + sound_functions + "\n";
     out2 << "\n" + text_functions + "\n";
     for(i=0;i<channels_count;i++) {
         out2 << spec_func_pref << "double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+channels.at(i)->function_text+"); };\n";
@@ -331,7 +379,11 @@ bool SndController::parseFunctions()
             channels.at(i)->channel_fct = (GenSoundFunction)(lib.resolve(qPrintable("sound_func_"+QString::number(i))));
             all_functions_loaded = all_functions_loaded && channels.at(i)->channel_fct;
         }
-    } else {
+        checkHash(true);
+    }
+
+    if (!all_functions_loaded) {
+        oldParseHash = "";
         for(i=0;i<channels_count;i++) {
             channels.at(i)->channel_fct = 0;
         }
@@ -358,8 +410,13 @@ void SndController::resetParams()
         info->function_text = "sin(k*t)";
     }
     t = 0.0;
-    baseSoundList->clearSounds();
 }
+
+SoundList *SndController::getBaseSoundList() const
+{
+    return baseSoundList;
+}
+
 double SndController::getFrequency() const
 {
     return frequency;
@@ -399,6 +456,9 @@ int SndController::doprocess()
         console << tr("Freq %num%:").replace("%num%",QString::number(i)) << " " << info->freq << endl;
     }
 
+    sound_functions = baseSoundList->getFunctionsText();
+    console << tr("Sounds:") << "[" << sound_functions << "]" << endl;
+
     if (!parseFunctions()) {
         emit write_message(tr("Error in functions!"));
         return 0;
@@ -410,8 +470,6 @@ int SndController::doprocess()
 
     result = system->createSound(0, mode, &createsoundexinfo_gen, &sound);
     ERRCHECK(result);
-
-    baseSoundList->InitSounds();
 
     /*
         Play the sound.
@@ -481,7 +539,6 @@ int SndController::doprocess()
     */
     result = sound->release();
     ERRCHECK(result);
-    baseSoundList->clearSounds();
 
     is_stopping = false;
     is_running = false;
@@ -533,7 +590,10 @@ double SndController::getInstAmp(unsigned int channel)
 
 GenSoundFunction SndController::getChannelFunction(unsigned int channel)
 {
-    return channels.at(channel)->channel_fct;
+    if (lib.isLoaded() && channel>=0 && channel<channels.length())
+        return channels.at(channel)->channel_fct;
+    else
+        return 0;
 }
 
 FMOD::System *SndController::getFmodSystem()
@@ -544,11 +604,6 @@ FMOD::System *SndController::getFmodSystem()
 FMOD_CREATESOUNDEXINFO SndController::getFmodSoundCreateInfo()
 {
     return createsoundexinfo_sound;
-}
-
-void SndController::addSound(QString new_file, QString new_function)
-{
-    baseSoundList->AddSound(new_file, new_function);
 }
 
 bool SndController::running()

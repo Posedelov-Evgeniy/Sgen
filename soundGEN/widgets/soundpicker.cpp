@@ -6,6 +6,7 @@ SoundPicker::SoundPicker(QWidget *parent, bool add_button, bool remove_button) :
     ui(new Ui::SoundPicker)
 {
     ui->setupUi(this);
+    ui->label_channels->setVisible(false);
     ui->pushButton_sound_add->setEnabled(add_button);
     ui->pushButton_sound_remove->setEnabled(remove_button);
     QObject::connect(ui->lineEdit_sound, SIGNAL(textChanged(QString)), this, SLOT(params_changed()));
@@ -78,6 +79,8 @@ void SoundPicker::params_changed()
 void SoundPicker::checkSound(bool show_warnings)
 {
     ui->label_length->setText(tr("Not loaded"));
+    ui->label_channels->setText("");
+    ui->label_channels->setVisible(false);
     if (getFilename().isEmpty()) return;
     FMOD::System *system = SndController::Instance()->getFmodSystem();
     bool result = false;
@@ -90,9 +93,16 @@ void SoundPicker::checkSound(bool show_warnings)
             if (sound)
             {
                 unsigned int length;
+                FMOD_SOUND_TYPE stype;
+                FMOD_SOUND_FORMAT sformat;
+                int channels_count = 0;
+                int bits_count;
+                sound->getFormat(&stype, &sformat, &channels_count, &bits_count);
 
                 if (sound->getLength(&length, FMOD_TIMEUNIT_MS) == FMOD_OK) {
                     ui->label_length->setText(tr("Length: ") + QString::number(length/1000.0)+ tr("s"));
+                    ui->label_channels->setText(tr("Channels: ") + QString::number(channels_count));
+                    ui->label_channels->setVisible(true);
                     result = true;
                 }
             }

@@ -15,6 +15,7 @@ void graphicThread::run()
         emit DrawStep();
         this->msleep(80);
     } while (!Stop);
+    emit DrawStep();
 }
 
 void graphicThread::addGraphic(QObject *graphicDrawer)

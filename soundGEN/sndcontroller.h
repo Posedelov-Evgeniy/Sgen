@@ -8,6 +8,7 @@
 #include <QProcess>
 #include <QVector>
 #include <math.h>
+#include <QCryptographicHash>
 #include "base_functions.h"
 #include <fmod.hpp>
 #include <fmod_errors.h>
@@ -26,6 +27,8 @@ private:
 
     Q_DISABLE_COPY(SndController);
 
+    QString getCurrentParseHash();
+    bool checkHash(bool emptyCheck);
     bool parseFunctions();
     double getResult(unsigned int channel, double current_t);
 
@@ -40,7 +43,8 @@ private:
     QVector<GenSoundChannelInfo*> channels;
 
     SoundList *baseSoundList;
-    QString text_functions;
+    QString text_functions, sound_functions;
+    QString oldParseHash;
     QLibrary lib;
     QEventLoop loop;
 
@@ -71,8 +75,9 @@ public:
 
     FMOD::System *getFmodSystem();
     FMOD_CREATESOUNDEXINFO getFmodSoundCreateInfo();
-    void addSound(QString new_file, QString new_function);
+    SoundList *getBaseSoundList() const;
     bool running();
+
 signals:
     void starting();
     void started();
