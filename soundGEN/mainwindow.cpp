@@ -192,6 +192,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
         settings.setValue("main/freq_"+QString::number(i), channels.at(i)->getFreq());
         settings.setValue("graphic/kamp_"+QString::number(i), channels.at(i)->getDrawer()->getKampIntValue());
         settings.setValue("graphic/dt_"+QString::number(i), channels.at(i)->getDrawer()->getDtIntValue());
+        settings.setValue("graphic/group_"+QString::number(i), channels.at(i)->getDrawer()->isGrouped());
     }
 
     SoundPicker *picker;
@@ -258,6 +259,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->setFreq(settings.value("main/freq_"+QString::number(i), 500).toDouble());
         channels.at(i)->getDrawer()->setKampIntValue(settings.value("graphic/kamp_"+QString::number(i), 0).toDouble());
         channels.at(i)->getDrawer()->setDtIntValue(settings.value("graphic/dt_"+QString::number(i), 300).toDouble());
+        channels.at(i)->getDrawer()->setGrouped(settings.value("graphic/group_"+QString::number(i), true).toBool());
     }
 
     if (base_settings) {
@@ -401,6 +403,21 @@ void MainWindow::options_changing()
     current_file_changed = true;
 }
 
+void MainWindow::channel_options_changing(int channel_index)
+{
+    options_changing();
+    if (channel_index>=0 && channel_index<channels.length() && channels.at(channel_index)->getDrawer()->isGrouped()) {
+        int dt = channels.at(channel_index)->getDrawer()->getDtIntValue();
+        int kamp = channels.at(channel_index)->getDrawer()->getKampIntValue();
+        for(int i = 0; i<channels.length(); i++) {
+            if (i!=channel_index && channels.at(i)->getDrawer()->isGrouped()) {
+                channels.at(i)->getDrawer()->setDtIntValue(dt);
+                channels.at(i)->getDrawer()->setKampIntValue(kamp);
+            }
+        }
+    }
+}
+
 void MainWindow::on_actionExit_triggered()
 {
     close();
@@ -410,22 +427,23 @@ void MainWindow::setChannelsCount(unsigned int count)
 {
     if (count<channels.length()) {
         while (count>=0 && count<channels.length()) {
-            ui->verticalLayout_channels->removeWidget(channels.last());
+            ui->channels_container->layout()->removeWidget(channels.last());
             channels.last()->deleteLater();
             delete channels.last();
             channels.removeLast();
         }
     } else if (count>channels.length()) {
         while (count>channels.length()) {
-            ChannelSettings *chset = new ChannelSettings(0, channels.length());
-            ui->verticalLayout_channels->addWidget(chset);
+            ChannelSettings *chset = new ChannelSettings(0, channels.length(), count);
+            ui->channels_container->layout()->addWidget(chset);
             QObject::connect(this, SIGNAL(fill_params()), chset, SLOT(init_snd_channel_params()));
             QObject::connect(this, SIGNAL(run_channel_graphics()), chset, SLOT(run_graphic()));
             QObject::connect(this, SIGNAL(stop_channel_graphics()), chset, SLOT(stop_graphic()));
-            QObject::connect(chset, SIGNAL(options_changed()), this, SLOT(options_changing()));
+            QObject::connect(chset, SIGNAL(options_changed(int)), this, SLOT(channel_options_changing(int)));
             channels.append(chset);
         }
     }
+    for(unsigned int i=0; i<count; i++) channels.at(i)->setChannelsCount(count);
 
     sc->setChannelsCount(count);
 }

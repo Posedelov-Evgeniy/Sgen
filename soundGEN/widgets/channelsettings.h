@@ -14,7 +14,7 @@ class ChannelSettings : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ChannelSettings(QWidget *parent = 0, unsigned int base_channel_index = 0);
+    explicit ChannelSettings(QWidget *parent = 0, unsigned int base_channel_index = 0, unsigned int channels_count = 0);
     ~ChannelSettings();
 
     QString getFunction();
@@ -28,11 +28,13 @@ public:
 
     void setVisibleAmp(double amp);
     void setVisibleFreq(double freq);
+    void setChannelsCount(unsigned int channels_count);
 signals:
-    void options_changed();
+    void options_changed(int channel_index);
 public slots:
     void cycle_starting();
     void options_changing();
+    void channel_options_changing();
     void init_snd_channel_params();
     void run_graphic();
     void stop_graphic();

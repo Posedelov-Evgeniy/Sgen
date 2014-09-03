@@ -8,6 +8,7 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     ui(new Ui::functionGraphicDrawer)
 {
     ui->setupUi(this);
+    block_change = false;
 
     widget_drawer = new MGraphicDrawSurface();
     widget_drawer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
@@ -84,8 +85,10 @@ int functionGraphicDrawer::getDtIntValue() const
 
 void functionGraphicDrawer::setDtIntValue(int value)
 {
+    block_change = true;
     ui->durationSlider->setValue(value);
     on_durationSlider_valueChanged(value);
+    block_change = false;
 }
 
 int functionGraphicDrawer::getKampIntValue() const
@@ -95,8 +98,22 @@ int functionGraphicDrawer::getKampIntValue() const
 
 void functionGraphicDrawer::setKampIntValue(int value)
 {
+    block_change = true;
     ui->ampSlider->setValue(value);
     on_ampSlider_valueChanged(value);
+    block_change = false;
+}
+
+bool functionGraphicDrawer::isGrouped()
+{
+    return ui->checkBox_grouped->isChecked();
+}
+
+void functionGraphicDrawer::setGrouped(bool value)
+{
+    block_change = true;
+    ui->checkBox_grouped->setChecked(value);
+    block_change = false;
 }
 
 void functionGraphicDrawer::drawCycle()
@@ -123,12 +140,23 @@ void functionGraphicDrawer::on_durationSlider_valueChanged(int value)
 {
     widget_drawer->setDt(0.1 * value / ui->durationSlider->maximum());
     ui->lcdNumber_dur->display(widget_drawer->getDt());
-    emit changed();
+    if (!block_change) {
+        emit changed();
+    }
 }
 
 void functionGraphicDrawer::on_ampSlider_valueChanged(int value)
 {
     widget_drawer->setKamp(1.0 + (double) 2*value / ui->ampSlider->maximum());
     ui->lcdNumber_koef->display(widget_drawer->getKamp());
-    emit changed();
+    if (!block_change) {
+        emit changed();
+    }
+}
+
+void functionGraphicDrawer::on_checkBox_grouped_stateChanged(int arg1)
+{
+    if (!block_change) {
+        emit changed();
+    }
 }

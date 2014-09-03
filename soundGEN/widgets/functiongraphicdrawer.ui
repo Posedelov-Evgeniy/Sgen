@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>191</height>
+    <width>336</width>
+    <height>192</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>330</width>
+    <height>190</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -133,6 +139,29 @@
    </item>
    <item>
     <layout class="QVBoxLayout" name="indLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="group4Layout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>7</number>
+       </property>
+       <item>
+        <widget class="QCheckBox" name="checkBox_grouped">
+         <property name="text">
+          <string>Group</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item>
       <layout class="QVBoxLayout" name="ind1Layout">
        <property name="spacing">
@@ -144,6 +173,12 @@
        <property name="leftMargin">
         <number>6</number>
        </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_1" native="true"/>
+       </item>
        <item>
         <widget class="QLabel" name="label_dur">
          <property name="sizePolicy">
@@ -206,9 +241,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QWidget" name="widget_1" native="true"/>
-       </item>
       </layout>
      </item>
      <item>
@@ -222,6 +254,12 @@
        <property name="leftMargin">
         <number>6</number>
        </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_2" native="true"/>
+       </item>
        <item>
         <widget class="QLabel" name="label_koef">
          <property name="sizePolicy">
@@ -284,9 +322,6 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QWidget" name="widget_2" native="true"/>
-       </item>
       </layout>
      </item>
      <item>
@@ -300,6 +335,12 @@
        <property name="leftMargin">
         <number>6</number>
        </property>
+       <property name="topMargin">
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QWidget" name="widget_3" native="true"/>
+       </item>
        <item>
         <widget class="QLabel" name="label_t">
          <property name="sizePolicy">
@@ -361,9 +402,6 @@
           <enum>QLCDNumber::Filled</enum>
          </property>
         </widget>
-       </item>
-       <item>
-        <widget class="QWidget" name="widget_3" native="true"/>
        </item>
       </layout>
      </item>

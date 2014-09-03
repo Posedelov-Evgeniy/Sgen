@@ -158,7 +158,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
         t_axis+=dt_axis;
         x0 = (t_axis-t)/k_t_graphic;
         painter.drawLine(x0,0,x0,height_center*2);
-        painter.drawText(x0+5, height_center+5, QString::number(t_axis, 'f', 4));
+        painter.drawText(x0+5, height_center+5, QString::number(round(t_axis*100000)/100000));
     } while (t_axis<=next_t);
 
     painter.setPen(QPen(QBrush(Qt::red), 2));

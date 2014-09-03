@@ -58,6 +58,8 @@ private slots:
 
     void options_changing();
 
+    void channel_options_changing(int channel_index);
+
     void on_action1_Mono_triggered();
 
     void on_action2_Stereo_triggered();

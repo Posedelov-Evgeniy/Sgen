@@ -32,10 +32,14 @@ public:
     void setDtIntValue(int value);
     int getKampIntValue() const;
     void setKampIntValue(int value);
+
+    bool isGrouped();
+    void setGrouped(bool value);
 private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;
     MGraphicDrawSurface *widget_drawer;
+    bool block_change;
 signals:
     void changed();
 public slots:
@@ -45,6 +49,7 @@ private slots:
     void drawCycle();
     void on_durationSlider_valueChanged(int value);
     void on_ampSlider_valueChanged(int value);
+    void on_checkBox_grouped_stateChanged(int arg1);
 };
 
 #endif // FUNCTIONGRAPHICDRAWER_H

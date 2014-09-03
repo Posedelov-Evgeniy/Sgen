@@ -1,7 +1,7 @@
 #include "channelsettings.h"
 #include "ui_channelsettings.h"
 
-ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_index) :
+ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_index, unsigned int channels_count) :
     QWidget(parent),
     ui(new Ui::ChannelSettings)
 {
@@ -16,6 +16,8 @@ ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_inde
     channel_drawer = new functionGraphicDrawer();
     ui->settings_base_horizontal_layout->addWidget(channel_drawer);
 
+    setChannelsCount(channels_count);
+
     QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));
 
     QObject::connect(dialog_functions, SIGNAL(accepted()), this, SLOT(paste_function_accepted()));
@@ -23,7 +25,20 @@ ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_inde
     QObject::connect(function_edit, SIGNAL(textChangedC()), this, SLOT(options_changing()));
     QObject::connect(ui->doubleSpinBox_amp, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
     QObject::connect(ui->doubleSpinBox_freq, SIGNAL(valueChanged(double)), this, SLOT(options_changing()));
-    QObject::connect(channel_drawer, SIGNAL(changed()), this, SLOT(options_changing()));
+    QObject::connect(channel_drawer, SIGNAL(changed()), this, SLOT(channel_options_changing()));
+}
+
+void ChannelSettings::setChannelsCount(unsigned int channels_count)
+{
+    QString ltext;
+    if (channels_count==1) {
+        ltext = tr("Sound");
+    } else if (channels_count==2) {
+        ltext = channel_index==0 ? tr("Left channel") : tr("Right channel");
+    } else {
+        ltext = tr("Channel ") + QString::number(channel_index);
+    }
+    ui->label->setText(ltext);
 }
 
 ChannelSettings::~ChannelSettings()
@@ -88,7 +103,12 @@ void ChannelSettings::cycle_starting()
 
 void ChannelSettings::options_changing()
 {
-    emit options_changed();
+    emit options_changed(-1);
+}
+
+void ChannelSettings::channel_options_changing()
+{
+    emit options_changed(channel_index);
 }
 
 void ChannelSettings::init_snd_channel_params()

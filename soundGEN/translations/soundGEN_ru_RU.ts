@@ -27,6 +27,22 @@
         <source>Frequency (Hz)</source>
         <translation>Частота (Гц)</translation>
     </message>
+    <message>
+        <source>Sound</source>
+        <translation>Звук</translation>
+    </message>
+    <message>
+        <source>Left channel</source>
+        <translation>Левый канал</translation>
+    </message>
+    <message>
+        <source>Right channel</source>
+        <translation>Правый канал</translation>
+    </message>
+    <message>
+        <source>Channel </source>
+        <translation>Канал</translation>
+    </message>
 </context>
 <context>
     <name>DialogFunctions</name>
@@ -194,7 +210,19 @@
     </message>
     <message>
         <source>Time: %sec%s</source>
-        <translation type="unfinished"></translation>
+        <translation>Время: %sec% сек.</translation>
+    </message>
+    <message>
+        <source>Hash is: </source>
+        <translation>Хеш: </translation>
+    </message>
+    <message>
+        <source>Hashes equals - no need to parse functions</source>
+        <translation>Хеши равны. Парсинг не нужен.</translation>
+    </message>
+    <message>
+        <source>Sounds:</source>
+        <translation>Звуки:</translation>
     </message>
 </context>
 <context>
@@ -251,6 +279,10 @@
         <source>s</source>
         <translation> сек</translation>
     </message>
+    <message>
+        <source>Channels: </source>
+        <translation>Каналы: </translation>
+    </message>
 </context>
 <context>
     <name>functionGraphicDrawer</name>
@@ -281,6 +313,10 @@
     <message>
         <source>t (s):</source>
         <translation>t (с):</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>Группа</translation>
     </message>
 </context>
 </TS>
