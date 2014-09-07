@@ -11,6 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = soundGEN
 TEMPLATE = app
 
+win32: RC_FILE += soundGEN.rc
+
 win32: LIBS += $$PWD/api/windows/lib/fmodex_vc.lib
 else:unix:!macx: LIBS += $$PWD/api/linux/lib/libfmodex64.so
 
@@ -63,8 +65,8 @@ FORMS    += mainwindow.ui \
 OTHER_FILES += \
     config.cfg \
     functions.cpp.cfg \
+    lin_deploy.sh \
     win_deploy.bat \
-    lin_deploy.sh
+    soundGEN.rc
 
 TRANSLATIONS += translations/soundGEN_ru_RU.ts
-
