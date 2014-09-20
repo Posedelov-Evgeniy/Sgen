@@ -1,0 +1,8 @@
+/soundGEN/android/bin/
+/soundGEN/android/gen/
+/soundGEN/android/libs/*/libsoundGEN.so
+/build*
+/soundGEN-build*
+
+# files
+Thumbs.db

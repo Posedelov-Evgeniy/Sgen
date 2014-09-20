@@ -11,19 +11,40 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = soundGEN
 TEMPLATE = app
 
-win32: RC_FILE += soundGEN.rc
+android {
+    # Add files and directories to ship with the application
+    # by adapting the examples below.
+    # file1.source = myfile
+    # dir1.source = mydir
+    file1.source = $$PWD/api/android/lib/libfmodex.so
+    DEPLOYMENTFOLDERS = file1 # file1 dir1
 
-win32: LIBS += $$PWD/api/windows/lib/fmodex_vc.lib
-else:unix:!macx: LIBS += $$PWD/api/linux/lib/libfmodex64.so
+    # If your application uses the Qt Mobility libraries, uncomment
+    # the following lines and add the respective components to the
+    # MOBILITY variable.
+    # CONFIG += mobility
+    # MOBILITY +=
 
-win32: INCLUDEPATH += $$PWD/api/windows/inc
-else:unix:!macx: INCLUDEPATH += $$PWD/api/linux/inc
+    LIBS += $$PWD/api/android/lib/armeabi/libfmodex.so
+    INCLUDEPATH += $$PWD/api/android/inc
+    DEPENDPATH += $$PWD/api/android/inc
+    PRE_TARGETDEPS += $$PWD/api/android/lib/armeabi/libfmodex.so
+    # Please do not modify the following two lines. Required for deployment.
+    include(deployment.pri)
+    qtcAddDeployment()
 
-win32: DEPENDPATH += $$PWD/api/windows/inc
-else:unix:!macx: DEPENDPATH += $$PWD/api/linux/inc
-
-win32: PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex_vc.lib
-else:unix:!macx: PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodex64.so
+} else:win32 {
+    RC_FILE += soundGEN.rc
+    LIBS += $$PWD/api/windows/lib/fmodex_vc.lib
+    INCLUDEPATH += $$PWD/api/windows/inc
+    DEPENDPATH += $$PWD/api/windows/inc
+    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex_vc.lib
+} else:unix {
+    LIBS += $$PWD/api/linux/lib/libfmodex64.so
+    INCLUDEPATH += $$PWD/api/linux/inc
+    DEPENDPATH += $$PWD/api/linux/inc
+    PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodex64.so
+}
 
 SOURCES += main.cpp\
     base_functions.cpp \
@@ -67,6 +88,39 @@ OTHER_FILES += \
     functions.cpp.cfg \
     lin_deploy.sh \
     win_deploy.bat \
-    soundGEN.rc
+    soundGEN.rc \
+    android/AndroidManifest.xml \
+    android/res/drawable/icon.png \
+    android/res/drawable/logo.png \
+    android/res/drawable-hdpi/icon.png \
+    android/res/drawable-ldpi/icon.png \
+    android/res/drawable-mdpi/icon.png \
+    android/res/layout/splash.xml \
+    android/res/values/libs.xml \
+    android/res/values/strings.xml \
+    android/res/values-de/strings.xml \
+    android/res/values-el/strings.xml \
+    android/res/values-es/strings.xml \
+    android/res/values-et/strings.xml \
+    android/res/values-fa/strings.xml \
+    android/res/values-fr/strings.xml \
+    android/res/values-id/strings.xml \
+    android/res/values-it/strings.xml \
+    android/res/values-ja/strings.xml \
+    android/res/values-ms/strings.xml \
+    android/res/values-nb/strings.xml \
+    android/res/values-nl/strings.xml \
+    android/res/values-pl/strings.xml \
+    android/res/values-pt-rBR/strings.xml \
+    android/res/values-ro/strings.xml \
+    android/res/values-rs/strings.xml \
+    android/res/values-ru/strings.xml \
+    android/res/values-zh-rCN/strings.xml \
+    android/res/values-zh-rTW/strings.xml \
+    android/src/org/kde/necessitas/ministro/IMinistro.aidl \
+    android/src/org/kde/necessitas/ministro/IMinistroCallback.aidl \
+    android/src/org/kde/necessitas/origo/QtActivity.java \
+    android/src/org/kde/necessitas/origo/QtApplication.java \
+    android/version.xml
 
 TRANSLATIONS += translations/soundGEN_ru_RU.ts

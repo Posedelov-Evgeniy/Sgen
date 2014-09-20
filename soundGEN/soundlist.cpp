@@ -24,13 +24,13 @@ void SoundList::removeSound(int i, bool removeFromList)
     }
     delete rec;
     if (removeFromList) {
-        baseSoundsList.removeAt(i);
+        baseSoundsList.remove(i);
     }
 }
 
 void SoundList::clearSounds()
 {
-    for(int i=0; i<baseSoundsList.length(); i++) {
+    for(int i=0; i<baseSoundsList.size(); i++) {
         removeSound(i, false);
     }
     baseSoundsList.clear();
@@ -42,7 +42,7 @@ void SoundList::setSound(int index, QString new_file, QString new_function, unsi
         return;
     }
 
-    if (index>=0 && index<baseSoundsList.length() && baseSoundsList.at(index)->sound_file==new_file && baseSoundsList.at(index)->sound_function==new_function) {
+    if (index>=0 && index<baseSoundsList.size() && baseSoundsList.at(index)->sound_file==new_file && baseSoundsList.at(index)->sound_function==new_function) {
         baseSoundsList.at(index)->tag = tag ? tag : curr_tag;
     } else {
         GenSoundRecord *rec = new GenSoundRecord;
@@ -56,7 +56,7 @@ void SoundList::setSound(int index, QString new_file, QString new_function, unsi
         rec->channels_count = sc->getChannelsCount();
         rec->tag = tag ? tag : curr_tag;
 
-        if (index>=0 && index<baseSoundsList.length()) {
+        if (index>=0 && index<baseSoundsList.size()) {
             removeSound(index, false);
             baseSoundsList[index] = rec;
         } else {
@@ -109,7 +109,7 @@ void SoundList::InitSounds()
 {
     if (!sc->getFmodSystem()) return;
 
-    for(int i=0; i<baseSoundsList.length(); i++) {
+    for(int i=0; i<baseSoundsList.size(); i++) {
         if(baseSoundsList.at(i)->tag<curr_tag) removeSound(i, true);
     }
 

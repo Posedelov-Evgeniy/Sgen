@@ -93,7 +93,7 @@ void DialogFunctions::initRecords()
         }
 
         while (base_recs.length() && base_recs.first().isEmpty()) base_recs.removeFirst();
-        rec.description = base_recs.join('\n');
+        rec.description = base_recs.join("\n");
 
         records->append(rec);
         ui->functions_listWidget->addItem(rec.name);
@@ -121,7 +121,7 @@ DialogFunctions::~DialogFunctions()
 QString DialogFunctions::getPickedFunction()
 {
     QString result = "";
-    if (last_picked_row>=0 && last_picked_row<records->length()) {
+    if (last_picked_row>=0 && last_picked_row<records->size()) {
         result = records->at(last_picked_row).name;
         if (records->at(last_picked_row).function) {
             result = result.replace("(t)","(k*t)");
@@ -133,7 +133,7 @@ QString DialogFunctions::getPickedFunction()
 void DialogFunctions::on_functions_listWidget_currentRowChanged(int currentRow)
 {
     last_picked_row = currentRow;
-    if (currentRow>=0 && currentRow<records->length()) {
+    if (currentRow>=0 && currentRow<records->size()) {
         ui->descriptions_text->document()->setHtml("<b>"+records->at(currentRow).name+"</b><br>"+records->at(currentRow).description);
         if (records->at(currentRow).function) {
             widget_drawer->show();
@@ -162,9 +162,9 @@ void DialogFunctions::on_functions_listWidget_activated(const QModelIndex &index
 void DialogFunctions::on_category_comboBox_currentIndexChanged(int index)
 {
     last_picked_row = -1;
-    if (records->length()>0) {
+    if (records->size()>0) {
         int first_vis = -1;
-        for (int i=0; i<records->length(); i++)
+        for (int i=0; i<records->size(); i++)
         {
             if (index==0 || records->at(i).category==ui->category_comboBox->itemText(index)) {
                 if (first_vis<0) first_vis = i;

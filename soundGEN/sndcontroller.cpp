@@ -101,13 +101,13 @@ double SndController::playSound(int index, unsigned int channel, double t)
 
 void SndController::setChannelsCount(unsigned int count)
 {
-    if (count<channels.length()) {
-        while (count>=0 && count<channels.length()) {
+    if (count<channels.size()) {
+        while (count>=0 && count<channels.size()) {
             delete channels.last();
-            channels.removeLast();
+            channels.remove(channels.size()-1);
         }
-    } else if (count>channels.length()) {
-        while (count>channels.length()) {
+    } else if (count>channels.size()) {
+        while (count>channels.size()) {
             GenSoundChannelInfo *info = new GenSoundChannelInfo();
             info->amp = 1;
             info->freq = 500;
@@ -177,7 +177,7 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
 QString SndController::getCurrentParseHash()
 {
     QCoreApplication *app = QCoreApplication::instance();
-    QCryptographicHash hash(QCryptographicHash::Sha512);
+    QCryptographicHash hash(QCryptographicHash::Sha1);
 
     hash.addData(app->applicationDirPath().toLatin1());
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
@@ -590,7 +590,7 @@ double SndController::getInstAmp(unsigned int channel)
 
 GenSoundFunction SndController::getChannelFunction(unsigned int channel)
 {
-    if (lib.isLoaded() && channel>=0 && channel<channels.length())
+    if (lib.isLoaded() && channel>=0 && channel<channels.size())
         return channels.at(channel)->channel_fct;
     else
         return 0;
