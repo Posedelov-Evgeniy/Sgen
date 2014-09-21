@@ -179,11 +179,11 @@ QString SndController::getCurrentParseHash()
     QCoreApplication *app = QCoreApplication::instance();
     QCryptographicHash hash(QCryptographicHash::Sha1);
 
-    hash.addData(app->applicationDirPath().toLatin1());
+    hash.addData(EnvironmentInfo::getConfigsPath().toLatin1());
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
         hash.addData(QString::number(QFile::exists(app->applicationDirPath()+"/efr/main.dll")).toLatin1());
     #else
-        hash.addData(QString::number(QFile::exists(app->applicationDirPath()+"/efr/main.so")).toLatin1());
+        hash.addData(QString::number(QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/main.so")).toLatin1());
     #endif
     hash.addData(QString::number(channels_count).toLatin1());
     hash.addData(QString::number(lib.isLoaded()).toLatin1());
@@ -233,20 +233,20 @@ bool SndController::parseFunctions()
         lib.unload();
     }
 
-    QDir dir(app->applicationDirPath());
+    QDir dir(EnvironmentInfo::getConfigsPath());
     dir.mkdir("efr");
 
-    if (QFile::exists(app->applicationDirPath()+"/base_functions.h")) {
-        if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.cpp"))
+    if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/base_functions.h")) {
+        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp"))
         {
-            QFile::remove(app->applicationDirPath()+"/efr/base_functions.cpp");
+            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp");
         }
-        QFile::copy(app->applicationDirPath()+"/base_functions.cpp", app->applicationDirPath()+"/efr/base_functions.cpp");
-        if (QFile::exists(app->applicationDirPath()+"/efr/base_functions.h"))
+        QFile::copy(EnvironmentInfo::getConfigsPath()+"/base_functions.cpp", EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp");
+        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h"))
         {
-            QFile::remove(app->applicationDirPath()+"/efr/base_functions.h");
+            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h");
         }
-        QFile::copy(app->applicationDirPath()+"/base_functions.h", app->applicationDirPath()+"/efr/base_functions.h");
+        QFile::copy(EnvironmentInfo::getConfigsPath()+"/base_functions.h", EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h");
         add_base_functions = true;
     }
 
@@ -262,7 +262,7 @@ bool SndController::parseFunctions()
         QString spec_namespace = "";
     #endif
 
-    QFile file(app->applicationDirPath()+"/efr/main.h");
+    QFile file(EnvironmentInfo::getConfigsPath()+"/efr/main.h");
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
     out << "#include <math.h>\n";
@@ -275,7 +275,7 @@ bool SndController::parseFunctions()
     }
     file.close();
 
-    QFile file2(app->applicationDirPath()+"/efr/"+main_file_name);
+    QFile file2(EnvironmentInfo::getConfigsPath()+"/efr/"+main_file_name);
     file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out2(&file2);
     out2 << "#include \"main.h\"\n";
@@ -291,17 +291,10 @@ bool SndController::parseFunctions()
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
         QString tcmd;
-
-        QStringList env_list(QProcess::systemEnvironment());
-        int idx = env_list.indexOf(QRegExp("^VS110COMNTOOLS=.*", Qt::CaseInsensitive));
-        if (idx > -1)
+        QString vcdir = EnvironmentInfo::getVCPath();
+        if (!vcdir.isEmpty())
         {
-            QStringList windir = env_list[idx].split('=');
-            QDir rdir(windir[1]);
-            rdir.cdUp();
-            rdir.cdUp();
-            rdir.cd("VC");
-            pConsoleProc->setWorkingDirectory(rdir.absolutePath());
+            pConsoleProc->setWorkingDirectory(vcdir);
             pConsoleProc->start("vcvarsall.bat x86");
             pConsoleProc->waitForFinished();
             qDebug() << pConsoleProc->workingDirectory() << endl;
@@ -327,12 +320,12 @@ bool SndController::parseFunctions()
             tcmd = "cl.exe /LD main.cpp /link /DLL";
         }
     #else
-        if (QFile::exists(app->applicationDirPath()+"/efr/main.so"))
+        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/main.so"))
         {
-            QFile::remove(app->applicationDirPath()+"/efr/main.so");
+            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/main.so");
         }
 
-        QFile file3(app->applicationDirPath()+"/efr/Makefile");
+        QFile file3(EnvironmentInfo::getConfigsPath()+"/efr/Makefile");
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);
 
@@ -352,7 +345,7 @@ bool SndController::parseFunctions()
         out3 << "	rm -f main.so\n";
         file3.close();
 
-        QString tcmd = "make -C \""+app->applicationDirPath()+"/efr\" -f Makefile";
+        QString tcmd = "make -C \""+EnvironmentInfo::getConfigsPath()+"/efr\" -f Makefile";
     #endif
     qDebug() <<  tcmd << endl;
 
@@ -372,7 +365,7 @@ bool SndController::parseFunctions()
     delete pConsoleProc;
 
     if (error.isEmpty()) {
-        lib.setFileName(app->applicationDirPath()+"/efr/main");
+        lib.setFileName(EnvironmentInfo::getConfigsPath()+"/efr/main");
         lib.load();
         all_functions_loaded = true;
         for(i=0;i<channels_count;i++) {

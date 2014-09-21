@@ -14,6 +14,7 @@
 #include <fmod_errors.h>
 #include "abstractsndcontroller.h"
 #include "soundlist.h"
+#include "classes/environmentinfo.h"
 
 double base_play_sound(int i, unsigned int c, double t);
 

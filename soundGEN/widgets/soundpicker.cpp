@@ -53,11 +53,15 @@ QString SoundPicker::getFunctionname()
 void SoundPicker::on_pushButton_sound_clicked()
 {
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-    QString bfile = "";
+        QString bfile = "";
     #else
-    QString bfile = "/home";
+        #if defined(ANDROID)
+        QString bfile = EnvironmentInfo::getConfigsPath();
+        #else
+        QString bfile = "/home";
+        #endif
     #endif
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), bfile, tr("Sound files (*.mp3 *.wav *.ogg)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), bfile, tr("Sound files (*.mp3 *.wav *.ogg)")+";;"+tr("All files (*)"));
     setFilename(fileName, true);
 }
 

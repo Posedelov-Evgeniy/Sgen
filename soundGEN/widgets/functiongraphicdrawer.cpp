@@ -10,6 +10,13 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     ui->setupUi(this);
     block_change = false;
 
+    #if defined(__ANDROID__)
+    ui->ampSlider->setOrientation(Qt::Horizontal);
+    ui->ampSlider->setVisible(false);
+    ui->lcdNumber_koef->setVisible(false);
+    ui->label_koef->setVisible(false);
+    #endif
+
     widget_drawer = new MGraphicDrawSurface();
     widget_drawer->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     ui->verticalLayout->addWidget(widget_drawer);

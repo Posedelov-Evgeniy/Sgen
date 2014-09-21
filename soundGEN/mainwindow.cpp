@@ -6,8 +6,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     /* initial params */
-    default_save_path = QCoreApplication::applicationDirPath()+"/config.cfg";
-    default_functions_path = QCoreApplication::applicationDirPath()+"/config.cfg";
+    default_save_path = EnvironmentInfo::getConfigsPath()+"/config.cfg";
+    default_functions_path = EnvironmentInfo::getConfigsPath()+"/config.cfg";
     auto_restart = false;
     close_on_stop = false;
     current_file_changed = false;
@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Run"));
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Stop"));
     ui->buttonBox->button(QDialogButtonBox::Retry)->setText(tr("Restart"));
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64) || defined(__ANDROID__)
     ui->buttonBox->setLayoutDirection(Qt::LeftToRight);
     #endif
 
@@ -214,7 +214,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
         settings.setValue("main/opened_file", current_file);
         settings.setValue("main/opened_file_changed", current_file_changed);
 
-        QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
+        QFile file(EnvironmentInfo::getConfigsPath()+"/functions.cpp.cfg");
         if (file.open(QIODevice::WriteOnly))
         {
             QTextStream stream(&file);
@@ -266,7 +266,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
         QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
 
-        QFile file(QCoreApplication::applicationDirPath()+"/functions.cpp.cfg");
+        QFile file(EnvironmentInfo::getConfigsPath()+"/functions.cpp.cfg");
         if(!file.exists()){
             qDebug() << tr("Functions.cpp.cfg not exists");
         }

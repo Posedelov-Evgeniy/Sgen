@@ -36,7 +36,7 @@ void DialogFunctions::initRecords()
     getBaseFunctions(&base_f);
 
     QString funct_str;
-    QFile file(QCoreApplication::applicationDirPath()+"/base_functions.cpp");
+    QFile file(EnvironmentInfo::getConfigsPath()+"/base_functions.cpp");
     if(!file.exists()){
         qDebug() << tr("base_functions.cpp not exists");
     }

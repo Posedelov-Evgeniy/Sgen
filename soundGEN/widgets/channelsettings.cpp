@@ -16,6 +16,14 @@ ChannelSettings::ChannelSettings(QWidget *parent, unsigned int base_channel_inde
     channel_drawer = new functionGraphicDrawer();
     ui->settings_base_horizontal_layout->addWidget(channel_drawer);
 
+    #if defined(__ANDROID__)
+    QPalette Pal = function_edit->palette();
+    Pal.setColor(QPalette::Background, Qt::white);
+    function_edit->setAutoFillBackground(true);
+    function_edit->setPalette(Pal);
+    ui->doubleSpinBox_freq->setDecimals(3);
+    #endif
+
     setChannelsCount(channels_count);
 
     QObject::connect(sc, SIGNAL(cycle_start()), this, SLOT(cycle_starting()));

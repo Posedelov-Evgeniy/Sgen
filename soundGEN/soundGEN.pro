@@ -17,7 +17,11 @@ android {
     # file1.source = myfile
     # dir1.source = mydir
     file1.source = $$PWD/api/android/lib/libfmodex.so
-    DEPLOYMENTFOLDERS = file1 # file1 dir1
+    file2.source = $$PWD/base_functions.cpp
+    file3.source = $$PWD/base_functions.h
+    file4.source = $$PWD/config.cfg
+    file5.source = $$PWD/functions.cpp.cfg
+    DEPLOYMENTFOLDERS = file1 file2 file3 file4 file5
 
     # If your application uses the Qt Mobility libraries, uncomment
     # the following lines and add the respective components to the
@@ -48,6 +52,7 @@ android {
 
 SOURCES += main.cpp\
     base_functions.cpp \
+    classes/environmentinfo.cpp \
     abstractsndcontroller.cpp \
     mainwindow.cpp \
     sndcontroller.cpp \
@@ -63,6 +68,7 @@ SOURCES += main.cpp\
     widgets/dialogfunctions.cpp
 
 HEADERS  += base_functions.h \
+    classes/environmentinfo.h \
     abstractsndcontroller.h \
     widgets/soundpicker.h \
     soundlist.h \

@@ -28,6 +28,10 @@
 package org.kde.necessitas.origo;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,12 +52,14 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources.Theme;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -123,6 +129,75 @@ public class QtActivity extends Activity
     private DexClassLoader m_classLoader = null; // loader object
     private String[] m_qtLibs = null; // required qt libs
 
+    boolean resCopy;
+    private String[] wrong = {
+        "images",
+        "sounds",
+        "webkit"
+    };
+    private String COPY_DIR = "soundGEN";
+    private static final String LOG_TAG = "soundGEN:AppActivity";
+
+    private boolean copyAsset(String fileName, String dir) {
+        try {
+            AssetManager am = getAssets();
+            File destinationFile = new File(Environment.getExternalStorageDirectory() + dir + fileName);  //путь
+            InputStream in = am.open(fileName); // открываем файл
+            FileOutputStream f = new FileOutputStream(destinationFile);
+            byte[] buffer = new byte[1024];
+            int len1 = 0;
+            while ((len1 = in.read(buffer)) > 0) {
+                f.write(buffer, 0, len1);
+            }
+            f.close();
+            resCopy=true;
+        } catch (Exception e) {
+            Log.d(LOG_TAG, e.getMessage());
+            resCopy=false;
+        }
+        return resCopy;
+    }
+
+    private void copyAssets() {
+        final String dir="/"+COPY_DIR+"/";
+        final AssetManager am = getAssets();
+        if (dirChecker(Environment.getExternalStorageDirectory()+dir)) {
+            try {
+                String[] files = am.list("");
+                for(int i=0; i<files.length; i++) {
+                    if (!CheckMass(files[i],wrong)) {
+                        copyAsset(files[i],dir);
+                    }
+                }
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
+    private boolean dirChecker(String dir) {
+        File Directory = new File(dir);
+        Log.i(LOG_TAG, dir +" - dir check");
+        if(!Directory.isDirectory()) {
+            Directory.mkdirs();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean CheckMass(String text, String[] arr)
+    {
+        boolean res=false;
+        int strLenght=arr.length;
+        for (int i=0;i<strLenght;i++){
+            if (text.equals(arr[i])){
+                res=true;
+                break;
+            }
+        }
+        return res;
+    }
+
     // this function is used to load and start the loader
     private void loadApplication(Bundle loaderParams)
     {
@@ -184,6 +259,8 @@ public class QtActivity extends Activity
             // now load the application library so it's accessible from this class loader
             if (libName != null)
                 System.loadLibrary(libName);
+
+            copyAssets();
 
             Method startAppMethod=qtLoader.getClass().getMethod("startApplication");
             if (!(Boolean)startAppMethod.invoke(qtLoader))
