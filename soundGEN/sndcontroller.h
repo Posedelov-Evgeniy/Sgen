@@ -16,7 +16,15 @@
 #include "soundlist.h"
 #include "classes/environmentinfo.h"
 
+#if defined(WIN32) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
+    #define __PACKED                         /* dummy */
+#else
+    #define __PACKED __attribute__((packed)) /* gcc packed */
+#endif
+
 double base_play_sound(int i, unsigned int c, double t);
+
+enum SndControllerPlayMode { SndPlay, SndExport };
 
 class SndController : public QObject, public AbstractSndController
 {
@@ -33,13 +41,18 @@ private:
     bool parseFunctions();
     double getResult(unsigned int channel, double current_t);
 
-    int doprocess();
     void resetParams();
+    void play_cycle(FMOD::Sound *sound);
+    void export_cycle(FMOD::Sound *sound);
+    void writeWavHeader(FILE *file, FMOD::Sound *sound, int length);
+
     bool is_stopping, is_running;
     double t;
     bool all_functions_loaded;
     unsigned int channels_count;
     double frequency;
+    int export_max_t;
+    QString export_filename;
 
     QVector<GenSoundChannelInfo*> channels;
 
@@ -48,6 +61,7 @@ private:
     QString oldParseHash;
     QLibrary lib;
     QEventLoop loop;
+    QThread process_thread, export_thread;
 
     FMOD::System *system;
     FMOD_CREATESOUNDEXINFO  createsoundexinfo_gen, createsoundexinfo_sound;
@@ -78,16 +92,22 @@ public:
     FMOD_CREATESOUNDEXINFO getFmodSoundCreateInfo();
     SoundList *getBaseSoundList() const;
     bool running();
-
+    void run();
+    void stop();
+    void run_export(int seconds, QString filename);
+    void stop_export();
 signals:
     void starting();
     void started();
     void stopped();
     void cycle_start();
     void write_message(QString message);
-public slots:
-    void run();
-    void stop();
+    void finished();
+    void export_finished();
+    void export_status(int percent);
+private slots:
+    void process_sound(SndControllerPlayMode mode = SndPlay);
+    void process_export_sound();
 };
 
 #endif // SNDCONTROLLER_H

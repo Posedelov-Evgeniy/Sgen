@@ -9,6 +9,7 @@
 #include "sndcontroller.h"
 #include "widgets/soundpicker.h"
 #include "widgets/channelsettings.h"
+#include "widgets/dialogexport.h"
 #include "classes/utextedit.h"
 
 namespace Ui {
@@ -70,6 +71,8 @@ private slots:
 
     void on_action8_triggered();
 
+    void on_actionExport_to_triggered();
+
 private:
     static const int maxSounds = 10;
     Ui::MainWindow *ui;
@@ -82,6 +85,7 @@ private:
     QList<ChannelSettings*> channels;
     UTextEdit *functions_text;
     UTextEdit *dialog_for_edit;
+    DialogExport *export_form;
 
     void removeSoundPicker(SoundPicker* p);
     void adjustSoundParams();

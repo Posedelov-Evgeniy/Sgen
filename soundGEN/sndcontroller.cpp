@@ -51,6 +51,12 @@ SndController::SndController(QObject *parent) :
     result = system->init(32, FMOD_INIT_NORMAL, 0);
     ERRCHECK(result);
 
+    QObject::connect(&process_thread,SIGNAL(started()),this,SLOT(process_sound()));
+    QObject::connect(this,SIGNAL(finished()),&process_thread,SLOT(terminate()));
+
+    QObject::connect(&export_thread,SIGNAL(started()),this,SLOT(process_export_sound()));
+    QObject::connect(this,SIGNAL(export_finished()),&export_thread,SLOT(terminate()));
+
     memset(&createsoundexinfo_sound, 0, sizeof(FMOD_CREATESOUNDEXINFO));
     createsoundexinfo_sound.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO); /* required. */
     createsoundexinfo_sound.format            = FMOD_SOUND_FORMAT_PCM32;        /* Data format of sound. */
@@ -223,7 +229,6 @@ bool SndController::parseFunctions()
 {
     if (checkHash(false)) return true;
 
-    QCoreApplication *app = QCoreApplication::instance();
     QString error = "";
     bool add_base_functions = false;
     all_functions_loaded = false;
@@ -250,17 +255,26 @@ bool SndController::parseFunctions()
         add_base_functions = true;
     }
 
-    QProcess* pConsoleProc = new QProcess;
-
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
         QString main_file_name = "main.cpp";
         QString spec_func_pref = "extern \"C\" __declspec(dllexport)";
         QString spec_namespace = "using namespace std;\n";
+        QString lib_file = "main.dll";
     #else
         QString main_file_name = "main.c";
         QString spec_func_pref = "extern \"C\"";
         QString spec_namespace = "";
+        QString lib_file = "main.so";
     #endif
+
+    if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file))
+    {
+        if (!QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file)) {
+            qDebug() <<  tr("Can't remove %filename%").replace("%filename%", lib_file) << endl;
+        }
+    }
+
+    QProcess* pConsoleProc = new QProcess;
 
     QFile file(EnvironmentInfo::getConfigsPath()+"/efr/main.h");
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
@@ -295,18 +309,13 @@ bool SndController::parseFunctions()
         if (!vcdir.isEmpty())
         {
             pConsoleProc->setWorkingDirectory(vcdir);
-            pConsoleProc->start("vcvarsall.bat x86");
+            pConsoleProc->start("vcvarsall.bat x86_amd64");
             pConsoleProc->waitForFinished();
             qDebug() << pConsoleProc->workingDirectory() << endl;
         }
 
-        pConsoleProc->setWorkingDirectory(app->applicationDirPath()+"/efr");
+        pConsoleProc->setWorkingDirectory(EnvironmentInfo::getConfigsPath()+"/efr");
         qDebug() << pConsoleProc->workingDirectory() << endl;
-
-        if (QFile::exists(app->applicationDirPath()+"/efr/main.dll"))
-        {
-            QFile::remove(app->applicationDirPath()+"/efr/main.dll");
-        }
 
         if (add_base_functions) {
             pConsoleProc->start("cl.exe /c /EHsc base_functions.cpp");
@@ -354,8 +363,11 @@ bool SndController::parseFunctions()
     {
        QByteArray b = pConsoleProc->readAllStandardError();
        #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-           qDebug() <<  pConsoleProc->readAll() << endl;
-           error = "";
+           error = pConsoleProc->readAll();
+           qDebug() <<  error << endl;
+           if (error.indexOf("fatal error", 0, Qt::CaseInsensitive)<0) {
+               error = "";
+           }
        #else
            error = QString(b);
        #endif
@@ -426,51 +438,113 @@ void SndController::setFrequency(double value)
     createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
 }
 
-int SndController::doprocess()
+
+void SndController::writeWavHeader(FILE *file, FMOD::Sound *sound, int length)
 {
-    FMOD::Sound            *sound;
+    int             channels, bits;
+    float           rate;
+
+    if (!sound)
+    {
+        return;
+    }
+
+    fseek(file, 0, SEEK_SET);
+
+    sound->getFormat  (0, 0, &channels, &bits);
+    sound->getDefaults(&rate, 0, 0, 0);
+
+    {
+        #if defined(WIN32) || defined(_WIN64) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
+        #pragma pack(1)
+        #endif
+
+        /*
+            WAV Structures
+        */
+        typedef struct
+        {
+            signed char id[4];
+            int 		size;
+        } RiffChunk;
+
+        struct
+        {
+            RiffChunk       chunk           __PACKED;
+            unsigned short	wFormatTag      __PACKED;    /* format type  */
+            unsigned short	nChannels       __PACKED;    /* number of channels (i.e. mono, stereo...)  */
+            unsigned int	nSamplesPerSec  __PACKED;    /* sample rate  */
+            unsigned int	nAvgBytesPerSec __PACKED;    /* for buffer estimation  */
+            unsigned short	nBlockAlign     __PACKED;    /* block size of data  */
+            unsigned short	wBitsPerSample  __PACKED;    /* number of bits per sample of mono data */
+        } __PACKED FmtChunk  = { {{'f','m','t',' '}, sizeof(FmtChunk) - sizeof(RiffChunk) }, 1, channels, (int)rate, (int)rate * channels * bits / 8, 1 * channels * bits / 8, bits };
+
+        struct
+        {
+            RiffChunk   chunk;
+        } DataChunk = { {{'d','a','t','a'}, length } };
+
+        struct
+        {
+            RiffChunk   chunk;
+            signed char rifftype[4];
+        } WavHeader = { {{'R','I','F','F'}, sizeof(FmtChunk) + sizeof(RiffChunk) + length }, {'W','A','V','E'} };
+
+        #if defined(WIN32) || defined(_WIN64) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
+        #pragma pack()
+        #endif
+
+        /*
+            Write out the WAV header.
+        */
+        fwrite(&WavHeader, sizeof(WavHeader), 1, file);
+        fwrite(&FmtChunk, sizeof(FmtChunk), 1, file);
+        fwrite(&DataChunk, sizeof(DataChunk), 1, file);
+    }
+}
+
+void SndController::export_cycle(FMOD::Sound *sound)
+{
+    emit export_status(0);
+
+    FILE *mainfile = fopen(qPrintable(export_filename), "wb");
+
+    if (mainfile) {
+        unsigned int datalength = 0;
+        writeWavHeader(mainfile, sound, datalength);
+
+        unsigned int sec_buff_size = ((unsigned int) frequency) * channels_count * sizeof(qint32);
+        quint8 *buf = new quint8[sec_buff_size];
+        t = 0;
+        for(int second = 0; second<export_max_t; second++) {
+            fillBuffer(0, buf, sec_buff_size);
+            datalength += fwrite(buf, 1, sec_buff_size, mainfile);
+            emit export_status(round(100.0*second/export_max_t));
+        }
+        delete buf;
+
+        if (datalength) {
+            writeWavHeader(mainfile, sound, datalength);
+        }
+
+        fclose(mainfile);
+        qDebug() << tr("Sound object written to file");
+
+        emit export_status(100);
+    } else {
+        emit write_message(tr("Error write to file: %filename%").replace("%filename%",export_filename));
+    }
+}
+
+void SndController::play_cycle(FMOD::Sound *sound)
+{
     FMOD::Channel          *channel = 0;
-    FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
-    QTextStream             console(stdout);
-    GenSoundChannelInfo    *info;
-
-    is_stopping = false;
-    resetParams();
-
-    emit starting();
-
-    emit write_message(tr("Initialization..."));
-
-    console << tr("Starting with:") << " " << endl;
-    for(unsigned int i=0; i<channels_count; i++) {
-        info = channels.at(i);
-        console << tr("Function %num%:").replace("%num%",QString::number(i)) << " " << info->function_text << endl;
-        console << tr("Amp %num%:").replace("%num%",QString::number(i)) << " " << info->amp << endl;
-        console << tr("Freq %num%:").replace("%num%",QString::number(i)) << " " << info->freq << endl;
-    }
-
-    sound_functions = baseSoundList->getFunctionsText();
-    console << tr("Sounds:") << "[" << sound_functions << "]" << endl;
-
-    if (!parseFunctions()) {
-        emit write_message(tr("Error in functions!"));
-        return 0;
-    }
-
-    emit started();
-
-    mode |= FMOD_CREATESTREAM;
-
-    result = system->createSound(0, mode, &createsoundexinfo_gen, &sound);
-    ERRCHECK(result);
 
     /*
         Play the sound.
     */
     result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
     ERRCHECK(result);
-
-    emit write_message(tr("Playing"));
 
     is_running = true;
     /*
@@ -515,17 +589,65 @@ int SndController::doprocess()
             }
         }
 
-        //Sleep(20);
         QTimer::singleShot(2000, &loop, SLOT(quit()));
         loop.exec();
 
     } while (!is_stopping);
 
-    printf("\n");
-
     if (channel) {
         channel->setPaused(true);
     }
+}
+
+void SndController::process_sound(SndControllerPlayMode process_mode)
+{
+    FMOD::Sound            *sound;
+    FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
+    QTextStream             console(stdout);
+    GenSoundChannelInfo    *info;
+
+    is_stopping = false;
+    resetParams();
+
+    emit starting();
+
+    emit write_message(tr("Initialization..."));
+
+    console << tr("Starting with:") << " " << endl;
+    for(unsigned int i=0; i<channels_count; i++) {
+        info = channels.at(i);
+        console << tr("Function %num%:").replace("%num%",QString::number(i)) << " " << info->function_text << endl;
+        console << tr("Amp %num%:").replace("%num%",QString::number(i)) << " " << info->amp << endl;
+        console << tr("Freq %num%:").replace("%num%",QString::number(i)) << " " << info->freq << endl;
+    }
+
+    sound_functions = baseSoundList->getFunctionsText();
+    console << tr("Sounds:") << "[" << sound_functions << "]" << endl;
+
+    if (!parseFunctions()) {
+        emit write_message(tr("Error in functions!"));
+        return;
+    }
+
+    if (process_mode == SndPlay) emit started();
+
+    mode |= FMOD_CREATESTREAM;
+
+    result = system->createSound(0, mode, &createsoundexinfo_gen, &sound);
+    ERRCHECK(result);
+
+    emit write_message(tr("Playing"));
+
+    switch (process_mode) {
+        case SndPlay:
+            play_cycle(sound);
+        break;
+        case SndExport:
+            export_cycle(sound);
+        break;
+    }
+
+    printf("\n");
 
     /*
         Shut down
@@ -537,18 +659,38 @@ int SndController::doprocess()
     is_running = false;
 
     emit write_message(tr("Stopped"));
+    emit finished();
+    if (process_mode == SndExport) emit export_finished();
 
-    return 0;
+    emit stopped();
+
+    return;
 }
 
 void SndController::run() {
-    doprocess();
-    emit stopped();
+    process_thread.start();
 }
 
 void SndController::stop() {
+    process_thread.exit();
     is_stopping = true;
     loop.exit();
+}
+
+void SndController::process_export_sound()
+{
+    process_sound(SndExport);
+}
+
+void SndController::run_export(int seconds, QString filename) {
+    export_max_t = seconds;
+    export_filename = filename;
+    export_thread.start();
+}
+
+void SndController::stop_export() {
+    export_thread.exit();
+    is_stopping = true;
 }
 
 void SndController::setFunctionsStr(QString new_f) {

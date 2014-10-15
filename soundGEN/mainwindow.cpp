@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     base_title = windowTitle();
 
     /* adding widgets */
+    export_form = new DialogExport(parent);
     functions_text = new UTextEdit();
     ui->functions_tab->layout()->addWidget(functions_text);
 
@@ -46,6 +47,7 @@ MainWindow::~MainWindow()
 {
     functions_text->deleteLater();
     delete functions_text;
+    delete export_form;
     delete ui;
 }
 
@@ -72,6 +74,7 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
 
+    ui->actionExport_to->setEnabled(true);
     ui->action1_Mono->setEnabled(true);
     ui->action2_Stereo->setEnabled(true);
     ui->action4_Quadro->setEnabled(true);
@@ -99,6 +102,7 @@ void MainWindow::sound_started()
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(true);
 
+    ui->actionExport_to->setEnabled(false);
     ui->action1_Mono->setEnabled(false);
     ui->action2_Stereo->setEnabled(false);
     ui->action4_Quadro->setEnabled(false);
@@ -481,4 +485,9 @@ void MainWindow::on_action6_triggered()
 void MainWindow::on_action8_triggered()
 {
     pickChannelsCount(8);
+}
+
+void MainWindow::on_actionExport_to_triggered()
+{
+    export_form->exec();
 }

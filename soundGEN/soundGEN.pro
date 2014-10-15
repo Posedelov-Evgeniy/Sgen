@@ -43,6 +43,12 @@ android {
     INCLUDEPATH += $$PWD/api/windows/inc
     DEPENDPATH += $$PWD/api/windows/inc
     PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex_vc.lib
+} else:win64 {
+    RC_FILE += soundGEN.rc
+    LIBS += $$PWD/api/windows/lib/fmodex64_vc.lib
+    INCLUDEPATH += $$PWD/api/windows/inc
+    DEPENDPATH += $$PWD/api/windows/inc
+    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex64_vc.lib
 } else:unix {
     LIBS += $$PWD/api/linux/lib/libfmodex64.so
     INCLUDEPATH += $$PWD/api/linux/inc
@@ -65,7 +71,8 @@ SOURCES += main.cpp\
     classes/highlighter.cpp \
     classes/utextblockdata.cpp \
     classes/utextedit.cpp \
-    widgets/dialogfunctions.cpp
+    widgets/dialogfunctions.cpp \
+    widgets/dialogexport.cpp
 
 HEADERS  += base_functions.h \
     classes/environmentinfo.h \
@@ -81,13 +88,15 @@ HEADERS  += base_functions.h \
     classes/highlighter.h \
     classes/utextblockdata.h \
     classes/utextedit.h \
-    widgets/dialogfunctions.h
+    widgets/dialogfunctions.h \
+    widgets/dialogexport.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
     widgets/functiongraphicdrawer.ui \
     widgets/channelsettings.ui \
-    widgets/dialogfunctions.ui
+    widgets/dialogfunctions.ui \
+    widgets/dialogexport.ui
 
 OTHER_FILES += \
     config.cfg \

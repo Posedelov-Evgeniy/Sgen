@@ -1,5 +1,19 @@
 #include "environmentinfo.h"
 
+QString EnvironmentInfo::getHomePath()
+{
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+        QString bfile = "";
+    #else
+        #if defined(ANDROID)
+        QString bfile = getConfigsPath();
+        #else
+        QString bfile = "/home";
+        #endif
+    #endif
+    return bfile;
+}
+
 QString EnvironmentInfo::getConfigsPath()
 {
     #if !defined(__ANDROID__)

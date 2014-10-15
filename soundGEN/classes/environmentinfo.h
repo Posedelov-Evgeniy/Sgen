@@ -9,6 +9,7 @@ class EnvironmentInfo
 {
 private:
 public:
+    static QString getHomePath();
     static QString getConfigsPath();
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
     static QString getVCPath();
