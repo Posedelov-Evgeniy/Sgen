@@ -1,0 +1,23 @@
+<!DOCTYPE QPH>
+<QPH sourcelanguage="en" language="ru">
+<phrase>
+    <source>Channel</source>
+    <target>Канал</target>
+</phrase>
+<phrase>
+    <source>Channels</source>
+    <target>Каналы</target>
+</phrase>
+<phrase>
+    <source>Form</source>
+    <target>Форма</target>
+</phrase>
+<phrase>
+    <source>Exit</source>
+    <target>Выход</target>
+</phrase>
+<phrase>
+    <source>Close</source>
+    <target>Закрыть</target>
+</phrase>
+</QPH>

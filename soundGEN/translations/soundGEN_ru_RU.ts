@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="ru" sourcelanguage="en">
 <context>
     <name>ChannelSettings</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Форма</translation>
     </message>
     <message>
         <source>Channel</source>
@@ -13,11 +13,11 @@
     </message>
     <message>
         <source>f(t) =</source>
-        <translation type="unfinished"></translation>
+        <translation>f(t) =</translation>
     </message>
     <message>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <source>Amplitude</source>
@@ -123,7 +123,7 @@
     </message>
     <message>
         <source>Save as...</source>
-        <translation>Сохранить как</translation>
+        <translation>Сохранить как...</translation>
     </message>
     <message>
         <source>Exit</source>
@@ -229,19 +229,19 @@
     <name>SoundPicker</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Форма</translation>
     </message>
     <message>
         <source>...</source>
-        <translation type="unfinished"></translation>
+        <translation>...</translation>
     </message>
     <message>
         <source>-</source>
-        <translation type="unfinished"></translation>
+        <translation>-</translation>
     </message>
     <message>
         <source>+</source>
-        <translation type="unfinished"></translation>
+        <translation>+</translation>
     </message>
     <message>
         <source>Open File</source>
@@ -288,7 +288,7 @@
     <name>functionGraphicDrawer</name>
     <message>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Форма</translation>
     </message>
     <message>
         <source>Kamp:</source>
