@@ -37,7 +37,6 @@ MainWindow::MainWindow(QWidget *parent) :
     /* creating signal-slot connections */
     QObject::connect(sc, SIGNAL(stopped()), this, SLOT(sound_stopped()));
     QObject::connect(sc, SIGNAL(started()), this, SLOT(sound_started()));
-    QObject::connect(sc, SIGNAL(starting()), this, SLOT(sound_starting()));
     QObject::connect(sc, SIGNAL(write_message(QString)), this, SLOT(get_message(QString)));
 
     QObject::connect(functions_text, SIGNAL(textChangedC()), this, SLOT(options_changing()));
@@ -56,7 +55,7 @@ void MainWindow::get_message(QString message)
     ui->statusBar->showMessage(message, 5000);
 }
 
-void MainWindow::sound_starting()
+void MainWindow::doSetParams()
 {
     emit fill_params();
     sc->setFunctionsStr(functions_text->document()->toPlainText());
@@ -82,12 +81,12 @@ void MainWindow::sound_stopped()
     ui->action8->setEnabled(true);
 
     ui->actionOpen->setEnabled(true);
+    emit stop_channel_graphics();
 
     if (auto_restart && !close_on_stop) {
         auto_restart = false;
+        doSetParams();
         sc->run();
-    } else {
-        emit stop_channel_graphics();
     }
 
     if (close_on_stop) {
@@ -356,6 +355,7 @@ void MainWindow::remove_sound(SoundPicker *p)
 void MainWindow::on_buttonBox_clicked(QAbstractButton *button)
 {
     if (button == ui->buttonBox->button(QDialogButtonBox::Ok)) {
+        doSetParams();
         sc->run();
     } else if(button == ui->buttonBox->button(QDialogButtonBox::Retry)) {
         auto_restart = true;
@@ -489,5 +489,6 @@ void MainWindow::on_action8_triggered()
 
 void MainWindow::on_actionExport_to_triggered()
 {
+    doSetParams();
     export_form->exec();
 }

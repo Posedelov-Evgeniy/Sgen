@@ -4,9 +4,9 @@
 #include <QObject>
 #include <string.h>
 #include <stdio.h>
-#include "base_functions.h"
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "base_functions.h"
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);
 

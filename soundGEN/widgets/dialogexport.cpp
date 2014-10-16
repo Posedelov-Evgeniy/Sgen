@@ -37,7 +37,6 @@ void DialogExport::on_pushButton_filename_clicked()
 
 void DialogExport::exportProcess(int seconds, QString filename)
 {
-    qDebug() << seconds;
     ui->buttonBox->setEnabled(false);
     ui->filenameEdit->setEnabled(false);
     ui->timeEdit->setEnabled(false);

@@ -9,9 +9,9 @@
 #include <QVector>
 #include <math.h>
 #include <QCryptographicHash>
-#include "base_functions.h"
 #include <fmod.hpp>
 #include <fmod_errors.h>
+#include "base_functions.h"
 #include "abstractsndcontroller.h"
 #include "soundlist.h"
 #include "classes/environmentinfo.h"
@@ -61,11 +61,12 @@ private:
     QString oldParseHash;
     QLibrary lib;
     QEventLoop loop;
-    QThread process_thread, export_thread;
+    QThread *process_thread;
 
     FMOD::System *system;
     FMOD_CREATESOUNDEXINFO  createsoundexinfo_gen, createsoundexinfo_sound;
     FMOD_RESULT result;
+    SndControllerPlayMode process_mode;
 public:
     static SndController* Instance();
     static bool DeleteInstance();
@@ -106,8 +107,7 @@ signals:
     void export_finished();
     void export_status(int percent);
 private slots:
-    void process_sound(SndControllerPlayMode mode = SndPlay);
-    void process_export_sound();
+    void process_sound();
 };
 
 #endif // SNDCONTROLLER_H

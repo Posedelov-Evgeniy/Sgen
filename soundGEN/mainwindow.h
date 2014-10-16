@@ -35,8 +35,6 @@ private slots:
 
     void sound_started();
 
-    void sound_starting();
-
     void add_sound(SoundPicker* p);
 
     void remove_sound(SoundPicker* p);
@@ -98,6 +96,7 @@ private:
     void load_settings(QString filename, bool base_settings = true);
     void pickChannelsCount(unsigned int count);
     void setChannelsCount(unsigned int count);
+    void doSetParams();
 };
 
 #endif // MAINWINDOW_H

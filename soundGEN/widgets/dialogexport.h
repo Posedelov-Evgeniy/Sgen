@@ -1,7 +1,6 @@
 #ifndef DIALOGEXPORT_H
 #define DIALOGEXPORT_H
 
-#include "../sndcontroller.h"
 #include <QDialog>
 #include <QAbstractButton>
 #include <QTimeEdit>
@@ -9,6 +8,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include "../sndcontroller.h"
 
 namespace Ui {
 class DialogExport;
