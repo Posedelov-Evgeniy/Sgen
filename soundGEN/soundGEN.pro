@@ -60,6 +60,9 @@ SOURCES += main.cpp\
     base_functions.cpp \
     classes/environmentinfo.cpp \
     abstractsndcontroller.cpp \
+    kiss_fft/kiss_fft.c \
+    kiss_fft/kiss_fftr.c \
+    classes/sndanalyzer.cpp \
     mainwindow.cpp \
     sndcontroller.cpp \
     widgets/soundpicker.cpp \
@@ -80,6 +83,11 @@ HEADERS  += base_functions.h \
     widgets/soundpicker.h \
     soundlist.h \
     sndcontroller.h \
+    kiss_fft/_kiss_fft_guts.h \
+    kiss_fft/kiss_fft.h \
+    kiss_fft/kissfft.hh \
+    kiss_fft/kiss_fftr.h \
+    classes/sndanalyzer.h \
     mainwindow.h \
     widgets/functiongraphicdrawer.h \
     classes/graphicthread.h \

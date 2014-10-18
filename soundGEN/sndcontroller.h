@@ -15,6 +15,7 @@
 #include "abstractsndcontroller.h"
 #include "soundlist.h"
 #include "classes/environmentinfo.h"
+#include "classes/sndanalyzer.h"
 
 #if defined(WIN32) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
     #define __PACKED                         /* dummy */
@@ -67,6 +68,7 @@ private:
     FMOD_CREATESOUNDEXINFO  createsoundexinfo_gen, createsoundexinfo_sound;
     FMOD_RESULT result;
     SndControllerPlayMode process_mode;
+    SndAnalyzer *analyzer;
 public:
     static SndController* Instance();
     static bool DeleteInstance();

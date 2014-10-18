@@ -25,6 +25,7 @@ SndController::SndController(QObject *parent) :
     QObject(parent)
 {
     baseSoundList = new SoundList(this);
+    analyzer = new SndAnalyzer();
     is_running = false;
     all_functions_loaded = false;
     channels_count = 0;
@@ -83,6 +84,7 @@ SndController::~SndController()
     ERRCHECK(result);
 
     delete baseSoundList;
+    delete analyzer;
     delete process_thread;
 }
 
@@ -158,28 +160,18 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
         for(unsigned int i=0; i<channels_count; i++)
         {
             double curr = 0;
-            double pprev = 0;
-            double prev = 0;
-            double cnt = 0;
-            double amp = 0;
 
             for (count=0; count<datalen; count++)
             {
                 curr = getResult(i, t+count/frequency);
                 buffer[count*channels_count + i] = (qint32)(curr * max_val);
-                curr = fabs(curr);
-
-                if (pprev>0 && prev>curr && prev>pprev) {
-                    cnt++;
-                }
-
-                if (amp<curr) amp = curr;
-
-                pprev = prev;
-                prev = curr;
             }
-            channels.at(i)->fr = 0.5 * cnt/(datalen/frequency);
-            channels.at(i)->ar = amp<=1.0 ? amp : 1.0;
+
+            if (process_mode == SndPlay) {
+                //analyzer->function_fft(getChannelFunction(i), base_play_sound, t, t + datalen/frequency, channels.at(i)->freq, 2*frequency, 2);
+                channels.at(i)->fr = analyzer->getInstFrequency();
+                channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
+            }
         }
 
         t += datalen/frequency;
