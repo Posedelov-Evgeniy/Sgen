@@ -26,6 +26,8 @@ SndController::SndController(QObject *parent) :
 {
     baseSoundList = new SoundList(this);
     analyzer = new SndAnalyzer();
+    loop = new QEventLoop();
+    timer = new QTimer();
     all_functions_loaded = false;
     channels_count = 0;
     frequency = 0;
@@ -58,7 +60,10 @@ SndController::SndController(QObject *parent) :
     QObject::connect(process_thread,SIGNAL(started()),this,SLOT(process_sound()));
     QObject::connect(this,SIGNAL(finished()),process_thread,SLOT(terminate()));
     moveToThread(process_thread);
-    loop.moveToThread(process_thread);
+    loop->moveToThread(process_thread);
+    timer->moveToThread(process_thread);
+    timer->setTimerType(Qt::PreciseTimer);
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
 
     memset(&createsoundexinfo_sound, 0, sizeof(FMOD_CREATESOUNDEXINFO));
     createsoundexinfo_sound.cbsize            = sizeof(FMOD_CREATESOUNDEXINFO); /* required. */
@@ -83,6 +88,8 @@ SndController::~SndController()
     result = system->release();
     ERRCHECK(result);
 
+    delete loop;
+    delete timer;
     delete baseSoundList;
     delete analyzer;
     delete process_thread;
@@ -325,11 +332,6 @@ bool SndController::parseFunctions()
             tcmd = "cl.exe /LD main.cpp /link /DLL /OUT:" + lib_file;
         }
     #else
-        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/main.so"))
-        {
-            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/main.so");
-        }
-
         QFile file3(EnvironmentInfo::getConfigsPath()+"/efr/Makefile");
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);
@@ -338,16 +340,16 @@ bool SndController::parseFunctions()
         out3 << "MODULES= main.o base_functions.o\n";
         out3 << "OBJECTS=\n";
         out3 << "RCLOBJECTS= main.c main.h base_functions.cpp base_functions.h\n";
-        out3 << "all: main.so\n";
-        out3 << "main.so:$(MODULES)\n";
-        out3 << "	$(CC) -shared $(MODULES) -o main.so\n";
+        out3 << "all: "+lib_file+"\n";
+        out3 << lib_file+":$(MODULES)\n";
+        out3 << "	$(CC) -shared $(MODULES) -o "+lib_file+"\n";
         out3 << "base_functions.o: $(RCLOBJECTS)\n";
         out3 << "	g++ -m64 -Wall -fPIC -c base_functions.cpp -o base_functions.o\n";
         out3 << "main.o: $(RCLOBJECTS)\n";
         out3 << "	g++ -m64 -Wall -fPIC -c main.c -o main.o\n";
         out3 << "clean:\n";
         out3 << "	rm -f *.o\n";
-        out3 << "	rm -f main.so\n";
+        out3 << "	rm -f "+lib_file+"\n";
         file3.close();
 
         QString tcmd = "make -C \""+EnvironmentInfo::getConfigsPath()+"/efr\" -f Makefile";
@@ -361,7 +363,7 @@ bool SndController::parseFunctions()
        #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
            error = pConsoleProc->readAll();
            qDebug() <<  error << endl;
-           if (error.indexOf("fatal error", 0, Qt::CaseInsensitive)<0) {
+           if (error.indexOf("fatal error", 0, Qt::CaseInsensitive)<0 && error.indexOf("error c", 0, Qt::CaseInsensitive)<0) {
                error = "";
            }
        #else
@@ -410,6 +412,7 @@ void SndController::resetParams()
         info->function_text = "sin(k*t)";
     }
     t = 0.0;
+    t_real = 0.0;
 }
 
 SoundList *SndController::getBaseSoundList() const
@@ -510,7 +513,7 @@ void SndController::export_cycle(FMOD::Sound *sound)
 
         unsigned int sec_buff_size = ((unsigned int) frequency) * channels_count * sizeof(qint32);
         quint8 *buf = new quint8[sec_buff_size];
-        t = 0;
+        t = 0.0;
         for(int second = 0; second<export_max_t; second++) {
             fillBuffer(0, buf, sec_buff_size);
             datalength += fwrite(buf, 1, sec_buff_size, mainfile);
@@ -542,6 +545,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
     result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
     ERRCHECK(result);
 
+    timer->start(1000);
     is_running = true;
     /*
         Main loop.
@@ -551,7 +555,6 @@ void SndController::play_cycle(FMOD::Sound *sound)
         system->update();
 
         emit cycle_start();
-        emit write_message(tr("Time: %sec%s").replace("%sec%",QString::number(t, 'f', 1)));
 
         if (channel)
         {
@@ -586,14 +589,15 @@ void SndController::play_cycle(FMOD::Sound *sound)
         }
 
         for(i=0; i<channels.length(); i++) {
-            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, frequency, 1);
+            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 1, t + 1, channels.at(i)->freq, frequency, 2);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }
 
-        QTimer::singleShot(1000, &loop, SLOT(quit()));
-        loop.exec();
+        QTimer::singleShot(1000, loop, SLOT(quit()));
+        loop->exec();
     } while (!is_stopping);
+    timer->stop();
 
     if (channel) {
         channel->setPaused(true);
@@ -608,7 +612,7 @@ void SndController::process_sound()
     GenSoundChannelInfo    *info;
     bool parsed;
 
-    t = 0.0;
+    t = t_real = 0.0;
     is_stopping = false;
     emit write_message(tr("Initialization..."));
 
@@ -671,6 +675,12 @@ void SndController::process_sound()
     return;
 }
 
+void SndController::updateTimer()
+{
+    t_real += 1.0;
+    emit write_message(tr("Time: %sec%s").replace("%sec%",QString::number(t_real, 'f', 1)));
+}
+
 void SndController::run() {
     process_mode = SndPlay;
     process_thread->start();
@@ -679,7 +689,7 @@ void SndController::run() {
 
 void SndController::stop() {
     is_stopping = true;
-    loop.exit();
+    loop->exit();
     process_thread->quit();
     while (!process_thread->isFinished()) {};
     emit stopped();

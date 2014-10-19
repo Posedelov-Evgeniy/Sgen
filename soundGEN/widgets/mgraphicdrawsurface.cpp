@@ -139,7 +139,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
     painter.drawRect(rect().left(),rect().top(),rect().right()-1,rect().bottom()-1);
     if (!graphicFunction && !graphicTFunction) return;
 
-    int points_count = width() - 1;
+    int points_count = 2 * width() - 1;
     int height_center = height() / 2;
     double k_y_graphic = kamp * amp * 0.4 * height();
     double k_t_graphic = dt/points_count;
@@ -156,9 +156,10 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 
     do {
         t_axis+=dt_axis;
-        x0 = (t_axis-t)/k_t_graphic;
+        x0 = 0.5*(t_axis-t)/k_t_graphic;
         painter.drawLine(x0,0,x0,height_center*2);
         painter.drawText(x0+5, height_center+5, QString::number(round(t_axis*100000)/100000));
+        painter.drawText(x0+5, 15, QString::number(round(t_axis*100000)/100000));
     } while (t_axis<=next_t);
 
     painter.setPen(QPen(QBrush(Qt::red), 2));
@@ -172,7 +173,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
     for(i=1;i<points_count;i++) {
         x0 = x1;
         y0 = y1;
-        x1 = i;
+        x1 = i/2;
 
         if (graphicFunction)
             y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound);

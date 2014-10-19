@@ -23,8 +23,11 @@ public:
     double getInstAmp();
     unsigned int getTop_harmonic() const;
     void setTop_harmonic(unsigned int value);
+    bool getSkip_zero_frequency() const;
+    void setSkip_zero_frequency(bool value);
 private:
     double result_freq, result_amp;
+    bool skip_zero_frequency;
     unsigned int top_harmonic;
     QVector<HarmonicInfo>* harmonics;
 };

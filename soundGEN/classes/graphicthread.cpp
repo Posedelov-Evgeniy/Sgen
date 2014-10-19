@@ -13,7 +13,7 @@ void graphicThread::run()
 {
     do {
         emit DrawStep();
-        this->msleep(80);
+        this->msleep(30);
     } while (!Stop);
     emit DrawStep();
 }

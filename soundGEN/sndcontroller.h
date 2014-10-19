@@ -47,7 +47,7 @@ private:
     void writeWavHeader(FILE *file, FMOD::Sound *sound, int length);
 
     bool is_stopping, is_running;
-    double t;
+    double t, t_real;
     bool all_functions_loaded;
     unsigned int channels_count;
     double frequency;
@@ -60,7 +60,8 @@ private:
     QString text_functions, sound_functions;
     QString oldParseHash;
     QLibrary lib;
-    QEventLoop loop;
+    QEventLoop *loop;
+    QTimer *timer;
     QThread *process_thread;
 
     FMOD::System *system;
@@ -109,6 +110,7 @@ signals:
     void export_status(int percent);
 private slots:
     void process_sound();
+    void updateTimer();
 };
 
 #endif // SNDCONTROLLER_H
