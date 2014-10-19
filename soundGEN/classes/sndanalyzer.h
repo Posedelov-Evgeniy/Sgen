@@ -17,8 +17,8 @@ class SndAnalyzer
 {
 public:
     SndAnalyzer();
+    ~SndAnalyzer();
     void function_fft(GenSoundFunction fct, PlaySoundFunction pfct, double t1, double t2, double freq, unsigned int points, double timelen);
-    //void buffer_fft(qint32 *buffer, unsigned int points, double frequency, unsigned int channels, unsigned int channel_index);
     double getInstFrequency();
     double getInstAmp();
     unsigned int getTop_harmonic() const;
@@ -27,8 +27,6 @@ private:
     double result_freq, result_amp;
     unsigned int top_harmonic;
     QVector<HarmonicInfo>* harmonics;
-
-    void fft_results(kiss_fft_cpx* cout, unsigned int size);
 };
 
 #endif // SNDANALYZER_H

@@ -22,7 +22,15 @@ void DialogExport::on_buttonBox_clicked(QAbstractButton *button)
     {
         QTime tedit = ui->timeEdit->time();
         int seconds = tedit.second() + tedit.minute()*60 + tedit.hour()*3600;
-        exportProcess(seconds, ui->filenameEdit->text());
+        if (seconds>0) {
+            if (ui->filenameEdit->text().size()>0) {
+                exportProcess(seconds, ui->filenameEdit->text());
+            } else {
+                QMessageBox::critical(this, tr("Export"), tr("You need to set export file!"), QMessageBox::Ok, QMessageBox::Ok);
+            }
+        } else {
+            QMessageBox::critical(this, tr("Export"), tr("You need to set duration to at least 1 second!"), QMessageBox::Ok, QMessageBox::Ok);
+        }
     } else {
         close();
     }

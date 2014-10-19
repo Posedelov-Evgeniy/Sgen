@@ -7,7 +7,6 @@
 #include <QtCore/QCoreApplication>
 #include <QProcess>
 #include <QVector>
-#include <math.h>
 #include <QCryptographicHash>
 #include <fmod.hpp>
 #include <fmod_errors.h>

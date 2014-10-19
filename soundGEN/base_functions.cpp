@@ -5,6 +5,16 @@
 #include <stdarg.h>
 #include "base_functions.h"
 
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
+    // vs2012 hack
+    #ifndef FP_INFINITE
+        double round(double t)
+        {
+            return floor(t + 0.5);
+        }
+    #endif
+#endif
+
 /*
     {{sin(t)}}
     Категория: сигналы.

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include "base_functions.h"

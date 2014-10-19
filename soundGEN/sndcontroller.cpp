@@ -26,13 +26,13 @@ SndController::SndController(QObject *parent) :
 {
     baseSoundList = new SoundList(this);
     analyzer = new SndAnalyzer();
-    is_running = false;
     all_functions_loaded = false;
     channels_count = 0;
     frequency = 0;
     oldParseHash = "";
     sound_functions = "";
     is_stopping = false;
+    is_running = false;
     process_mode = SndPlay;
 
     unsigned int            version;
@@ -136,8 +136,8 @@ void SndController::setChannelsCount(unsigned int count)
 
     channels_count = count;
 
-    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
-    createsoundexinfo_sound.numchannels       = channels_count;                                                   /* Number of channels in the sound. */
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32); /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_sound.numchannels       = channels_count;                                               /* Number of channels in the sound. */
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.numchannels = createsoundexinfo_sound.numchannels;
 }
@@ -165,12 +165,6 @@ void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datal
             {
                 curr = getResult(i, t+count/frequency);
                 buffer[count*channels_count + i] = (qint32)(curr * max_val);
-            }
-
-            if (process_mode == SndPlay) {
-                //analyzer->function_fft(getChannelFunction(i), base_play_sound, t, t + datalen/frequency, channels.at(i)->freq, 2*frequency, 2);
-                channels.at(i)->fr = analyzer->getInstFrequency();
-                channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
             }
         }
 
@@ -431,9 +425,9 @@ double SndController::getFrequency() const
 void SndController::setFrequency(double value)
 {
     frequency = value;
-    createsoundexinfo_sound.decodebuffersize  = (unsigned int) frequency;                                         /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32) * 2; /* Length of PCM data in bytes of whole song (for Sound::getLength) */
-    createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                         /* Default playback rate of sound. */
+    createsoundexinfo_sound.decodebuffersize  = (unsigned int) frequency;                                     /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32); /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                     /* Default playback rate of sound. */
     createsoundexinfo_gen.decodebuffersize = createsoundexinfo_sound.decodebuffersize;
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
@@ -540,6 +534,7 @@ void SndController::export_cycle(FMOD::Sound *sound)
 void SndController::play_cycle(FMOD::Sound *sound)
 {
     FMOD::Channel          *channel = 0;
+    unsigned int i;
 
     /*
         Play the sound.
@@ -590,7 +585,13 @@ void SndController::play_cycle(FMOD::Sound *sound)
             }
         }
 
-        QTimer::singleShot(2000, &loop, SLOT(quit()));
+        for(i=0; i<channels.length(); i++) {
+            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, frequency, 1);
+            channels.at(i)->fr = analyzer->getInstFrequency();
+            channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
+        }
+
+        QTimer::singleShot(1000, &loop, SLOT(quit()));
         loop.exec();
     } while (!is_stopping);
 

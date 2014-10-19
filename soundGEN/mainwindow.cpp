@@ -145,7 +145,9 @@ void MainWindow::addSoundPicker(QString file_name, QString function_name)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    sc->stop();
+    if (sc->running()) {
+        sc->stop();
+    }
 
     if (!saveMessageBox()) {
         event->ignore();

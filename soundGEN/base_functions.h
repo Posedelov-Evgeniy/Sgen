@@ -12,6 +12,10 @@
     #ifndef M_PI
         #define M_PI 3.14159265358979323846
     #endif
+    // vs2012 hack
+    #ifndef FP_INFINITE
+        double round(double t);
+    #endif
 #endif
 
 typedef double (*base_function_signal) (double);

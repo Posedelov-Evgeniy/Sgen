@@ -45,6 +45,49 @@
     </message>
 </context>
 <context>
+    <name>DialogExport</name>
+    <message>
+        <source>Export</source>
+        <translation>Экспорт</translation>
+    </message>
+    <message>
+        <source>Duration:</source>
+        <translation>Длительность:</translation>
+    </message>
+    <message>
+        <source>H:mm:ss</source>
+        <translation>H:mm:ss</translation>
+    </message>
+    <message>
+        <source>Save to:</source>
+        <translation>Сохранить в:</translation>
+    </message>
+    <message>
+        <source>...</source>
+        <translation>...</translation>
+    </message>
+    <message>
+        <source>Save File</source>
+        <translation>Сохранить файл</translation>
+    </message>
+    <message>
+        <source>Sound file (*.wav)</source>
+        <translation>Звуковой файл (*.wav)</translation>
+    </message>
+    <message>
+        <source>Export successfully finished!</source>
+        <translation>Экспорт успешно завершён!</translation>
+    </message>
+    <message>
+        <source>You need to set duration to at least 1 second!</source>
+        <translation>Вам необходимо установить длительность не менее 1 секунды!</translation>
+    </message>
+    <message>
+        <source>You need to set export file!</source>
+        <translation>Необходимо установить файл для экспорта!</translation>
+    </message>
+</context>
+<context>
     <name>DialogFunctions</name>
     <message>
         <source>Available functions</source>
@@ -173,6 +216,22 @@
         <source>8 (7.1)</source>
         <translation>8 (7.1)</translation>
     </message>
+    <message>
+        <source>Ctrl+O</source>
+        <translation>Ctrl+O</translation>
+    </message>
+    <message>
+        <source>Ctrl+S</source>
+        <translation>Ctrl+S</translation>
+    </message>
+    <message>
+        <source>Export to...</source>
+        <translation>Экспортировать в...</translation>
+    </message>
+    <message>
+        <source>Ctrl+E</source>
+        <translation>Ctrl+E</translation>
+    </message>
 </context>
 <context>
     <name>SndController</name>
@@ -223,6 +282,18 @@
     <message>
         <source>Sounds:</source>
         <translation>Звуки:</translation>
+    </message>
+    <message>
+        <source>Can&apos;t remove %filename%</source>
+        <translation>Не удаётся удалить %filename%</translation>
+    </message>
+    <message>
+        <source>Sound object written to file</source>
+        <translation>Звуковой объект записан в файл</translation>
+    </message>
+    <message>
+        <source>Error write to file: %filename%</source>
+        <translation>Ошибка записи в файл: %filename%</translation>
     </message>
 </context>
 <context>
@@ -282,6 +353,10 @@
     <message>
         <source>Channels: </source>
         <translation>Каналы: </translation>
+    </message>
+    <message>
+        <source>All files (*)</source>
+        <translation>Все файлы (*)</translation>
     </message>
 </context>
 <context>

@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>176</height>
+    <height>200</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>400</width>
-    <height>176</height>
+    <height>200</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>400</width>
-    <height>176</height>
+    <height>200</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -43,6 +43,12 @@
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
        <widget class="QWidget" name="widget" native="true">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>40</height>
+         </size>
+        </property>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
           <number>0</number>
@@ -68,6 +74,18 @@
          </item>
          <item>
           <widget class="QTimeEdit" name="timeEdit">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
            <property name="font">
             <font>
              <pointsize>14</pointsize>
@@ -77,11 +95,18 @@
             <time>
              <hour>0</hour>
              <minute>0</minute>
-             <second>1</second>
+             <second>0</second>
             </time>
            </property>
            <property name="displayFormat">
             <string>H:mm:ss</string>
+           </property>
+           <property name="time">
+            <time>
+             <hour>0</hour>
+             <minute>1</minute>
+             <second>0</second>
+            </time>
            </property>
           </widget>
          </item>
