@@ -89,6 +89,7 @@ public:
 
     double getInstFreq(unsigned int channel);
     double getInstAmp(unsigned int channel);
+    double getT();
     GenSoundFunction getChannelFunction(unsigned int channel);
 
     FMOD::System *getFmodSystem();

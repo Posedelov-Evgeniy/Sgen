@@ -198,6 +198,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
         settings.setValue("graphic/kamp_"+QString::number(i), channels.at(i)->getDrawer()->getKampIntValue());
         settings.setValue("graphic/dt_"+QString::number(i), channels.at(i)->getDrawer()->getDtIntValue());
         settings.setValue("graphic/group_"+QString::number(i), channels.at(i)->getDrawer()->isGrouped());
+        settings.setValue("graphic/fft_"+QString::number(i), channels.at(i)->getDrawer()->isFft());
     }
 
     SoundPicker *picker;
@@ -265,6 +266,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->getDrawer()->setKampIntValue(settings.value("graphic/kamp_"+QString::number(i), 0).toDouble());
         channels.at(i)->getDrawer()->setDtIntValue(settings.value("graphic/dt_"+QString::number(i), 300).toDouble());
         channels.at(i)->getDrawer()->setGrouped(settings.value("graphic/group_"+QString::number(i), true).toBool());
+        channels.at(i)->getDrawer()->setFft(settings.value("graphic/fft_"+QString::number(i), false).toBool());
     }
 
     if (base_settings) {

@@ -49,7 +49,7 @@ double MGraphicDrawSurface::getDt() const
 void MGraphicDrawSurface::setDt(double value)
 {
     dt = value;
-    calculateTGrid();
+    dt_axis = calculateTGrid(dt);
 }
 
 double MGraphicDrawSurface::getKt() const
@@ -105,9 +105,9 @@ MGraphicDrawSurface::MGraphicDrawSurface() :
 {
 }
 
-void MGraphicDrawSurface::calculateTGrid()
+double MGraphicDrawSurface::calculateTGrid(double cl_dt)
 {
-    double cl_dt = dt;
+    double dt_ax = 0;
 
     if (cl_dt>0)
     {
@@ -116,15 +116,20 @@ void MGraphicDrawSurface::calculateTGrid()
             divider *= 10;
             cl_dt *= 10;
         }
+        while (cl_dt>10) {
+            divider *= 0.1;
+            cl_dt *= 0.1;
+        }
         cl_dt = round(cl_dt);
-        if (cl_dt>5) dt_axis = 5/divider;
-        else if(cl_dt>2) dt_axis = 2/divider;
-        else if(cl_dt>1) dt_axis = 1/divider;
-        else dt_axis = 0.5/divider;
+        if (cl_dt>5) dt_ax = 5/divider;
+        else if(cl_dt>2) dt_ax = 2/divider;
+        else if(cl_dt>1) dt_ax = 1/divider;
+        else dt_ax = 0.5/divider;
     } else
     {
-        dt_axis = 1;
+        dt_ax = 1;
     }
+    return dt_ax;
 }
 
 void MGraphicDrawSurface::paintEvent(QPaintEvent *e)

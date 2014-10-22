@@ -13,8 +13,11 @@ public:
     void removeGraphic();
     bool Stop;
     int getLinksCount() const;
+    unsigned long getInterval() const;
+    void setInterval(unsigned long value);
 private:
     int linksCount;
+    unsigned long interval;
 signals:
     void DrawStep();
 public slots:

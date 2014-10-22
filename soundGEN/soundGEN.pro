@@ -70,6 +70,7 @@ SOURCES += main.cpp\
     widgets/functiongraphicdrawer.cpp \
     classes/graphicthread.cpp \
     widgets/mgraphicdrawsurface.cpp \
+    widgets/mfftdrawsurface.cpp \
     widgets/channelsettings.cpp \
     classes/highlighter.cpp \
     classes/utextblockdata.cpp \
@@ -92,6 +93,7 @@ HEADERS  += base_functions.h \
     widgets/functiongraphicdrawer.h \
     classes/graphicthread.h \
     widgets/mgraphicdrawsurface.h \
+    widgets/mfftdrawsurface.h \
     widgets/channelsettings.h \
     classes/highlighter.h \
     classes/utextblockdata.h \

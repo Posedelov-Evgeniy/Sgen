@@ -7,13 +7,14 @@ graphicThread::graphicThread(QObject *parent) :
 {
     Stop = false;
     linksCount = 0;
+    interval = 30;
 }
 
 void graphicThread::run()
 {
     do {
         emit DrawStep();
-        this->msleep(30);
+        msleep(interval);
     } while (!Stop);
     emit DrawStep();
 }
@@ -33,4 +34,15 @@ int graphicThread::getLinksCount() const
 {
     return linksCount;
 }
+
+unsigned long graphicThread::getInterval() const
+{
+    return interval;
+}
+
+void graphicThread::setInterval(unsigned long value)
+{
+    interval = value;
+}
+
 

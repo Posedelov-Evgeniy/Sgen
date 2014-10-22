@@ -5,6 +5,7 @@
 #include "../sndcontroller.h"
 #include "../classes/graphicthread.h"
 #include "./mgraphicdrawsurface.h"
+#include "./mfftdrawsurface.h"
 
 namespace Ui {
 class functionGraphicDrawer;
@@ -19,13 +20,8 @@ public:
 
     void setGraphicFunction(GenSoundFunction value);
 
-    double getT0() const;
     void setT0(double value);
-
-    double getAmp() const;
     void setAmp(double value);
-
-    double getFreq() const;
     void setFreq(double value);
 
     int getDtIntValue() const;
@@ -35,10 +31,14 @@ public:
 
     bool isGrouped();
     void setGrouped(bool value);
+
+    bool isFft();
+    void setFft(bool value);
 private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;
     MGraphicDrawSurface *widget_drawer;
+    MFftDrawSurface *widget_fft_drawer;
     bool block_change;
 signals:
     void changed();
@@ -50,6 +50,7 @@ private slots:
     void on_durationSlider_valueChanged(int value);
     void on_ampSlider_valueChanged(int value);
     void on_checkBox_grouped_stateChanged(int arg1);
+    void on_checkBox_fft_stateChanged(int arg1);
 };
 
 #endif // FUNCTIONGRAPHICDRAWER_H

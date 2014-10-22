@@ -545,7 +545,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
     result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
     ERRCHECK(result);
 
-    timer->start(1000);
+    timer->start(500);
     is_running = true;
     /*
         Main loop.
@@ -589,7 +589,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
         }
 
         for(i=0; i<channels.length(); i++) {
-            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 1, t + 1, channels.at(i)->freq, frequency, 2);
+            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 1, t + 1, channels.at(i)->freq, frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }
@@ -677,7 +677,7 @@ void SndController::process_sound()
 
 void SndController::updateTimer()
 {
-    t_real += 1.0;
+    t_real += timer->interval() / 1000.0;
     emit write_message(tr("Time: %sec%s").replace("%sec%",QString::number(t_real, 'f', 1)));
 }
 
@@ -731,6 +731,11 @@ double SndController::getInstFreq(unsigned int channel)
 double SndController::getInstAmp(unsigned int channel)
 {
     return channels.at(channel)->ar;
+}
+
+double SndController::getT()
+{
+    return t_real;
 }
 
 GenSoundFunction SndController::getChannelFunction(unsigned int channel)

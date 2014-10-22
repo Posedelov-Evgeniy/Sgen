@@ -10,16 +10,16 @@
 class MGraphicDrawSurface : public QWidget
 {
     Q_OBJECT
-private:
+protected:
     double t, t0, amp, freq, dt, kt, kamp, dt_axis;
     GenSoundFunction graphicFunction;
     base_function_signal graphicTFunction;
-    void calculateTGrid();
+    double calculateTGrid(double cl_dt);
 public:
     explicit MGraphicDrawSurface();
 
-    double getT() const;
-    void setT(double value);
+    virtual double getT() const;
+    virtual void setT(double value);
 
     double getT0() const;
     void setT0(double value);
@@ -41,7 +41,7 @@ public:
 
     double getDt_axis() const;
 
-    void incT();
+    virtual void incT();
 
     void setGraphicFunction(GenSoundFunction value);
     void setGraphicFunctionT(base_function_signal value);
