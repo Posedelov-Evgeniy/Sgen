@@ -27,6 +27,7 @@ public:
     bool getSkip_zero_frequency() const;
     void setSkip_zero_frequency(bool value);
     QVector<HarmonicInfo>* getHarmonics();
+    void clearHarmonics();
 private:
     double result_freq, result_amp;
     bool skip_zero_frequency;

@@ -16,7 +16,7 @@ void SndAnalyzer::function_fft(GenSoundFunction fct, PlaySoundFunction pfct, dou
 {
     double t, dt;
     double timelen = abs(t2-t1);
-    unsigned int i, i_start, i_finish;
+    unsigned int i, j, i_start, i_finish;
     double base_freq = points / timelen;
 
     i_start = 0;
@@ -48,7 +48,7 @@ void SndAnalyzer::function_fft(GenSoundFunction fct, PlaySoundFunction pfct, dou
 
     unsigned int mi;
     bool mi_set;
-    double max_amp, max_freq, tmp_amp, tmp_freq;
+    double max_amp, max_freq, tmp_amp, tmp_amp2, tmp_freq;
     HarmonicInfo tmp_info;
 
     harmonics->clear();
@@ -57,16 +57,16 @@ void SndAnalyzer::function_fft(GenSoundFunction fct, PlaySoundFunction pfct, dou
         mi_set = false;
         max_amp = 0;
         max_freq = 0;
-        for(i = i_start; i<=i_finish; i++) {
+        for(i = i_start, j = i_finish; i<=j; i++, j--) {
             tmp_amp = 2 * sqrt(sqr(cout[i].r)+sqr(cout[i].i)) / base_freq;
+            tmp_amp2 = 2 * sqrt(sqr(cout[j].r)+sqr(cout[j].i)) / base_freq;
+            if (tmp_amp<tmp_amp2) tmp_amp = tmp_amp2;
             if (max_amp<=tmp_amp) {
-                tmp_freq = i <= base_freq/2 ? i/timelen : base_freq-i/timelen;
-                if (max_freq<tmp_freq) {
-                    mi = i;
-                    mi_set = true;
-                    max_amp = tmp_amp;
-                    max_freq = tmp_freq;
-                }
+                tmp_freq = i/timelen;
+                mi = i;
+                mi_set = true;
+                max_amp = tmp_amp;
+                max_freq = tmp_freq;
             }
         }
         if (mi_set) {
@@ -165,6 +165,11 @@ void SndAnalyzer::setSkip_zero_frequency(bool value)
 QVector<HarmonicInfo> *SndAnalyzer::getHarmonics()
 {
     return harmonics;
+}
+
+void SndAnalyzer::clearHarmonics()
+{
+    harmonics->clear();
 }
 
 double SndAnalyzer::getInstFrequency()

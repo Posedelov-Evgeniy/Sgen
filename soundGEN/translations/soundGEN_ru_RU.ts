@@ -393,5 +393,9 @@
         <source>Group</source>
         <translation>Группа</translation>
     </message>
+    <message>
+        <source>FFT</source>
+        <translation>АЧХ</translation>
+    </message>
 </context>
 </TS>

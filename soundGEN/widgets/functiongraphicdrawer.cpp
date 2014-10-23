@@ -26,9 +26,11 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     ui->verticalLayout->addWidget(widget_fft_drawer);
     widget_fft_drawer->setVisible(false);
     widget_fft_drawer->setHidden(true);
+    widget_fft_drawer->setTimerInterval(30);
 
     if (mThread==0) {
         mThread = new graphicThread();
+        mThread->setInterval(30);
     }
 
     mThread->addGraphic(this);
@@ -67,6 +69,7 @@ functionGraphicDrawer::~functionGraphicDrawer()
 void functionGraphicDrawer::setGraphicFunction(GenSoundFunction value)
 {
     widget_drawer->setGraphicFunction(value);
+    widget_fft_drawer->setGraphicFunction(value);
 }
 
 void functionGraphicDrawer::setT0(double value)
@@ -141,10 +144,13 @@ void functionGraphicDrawer::drawCycle()
     widget_drawer->incT();
     widget_drawer->update();
     ui->lcdNumber_t->display(widget_drawer->getT());
+    widget_fft_drawer->incT();
+    widget_fft_drawer->update();
 }
 
 void functionGraphicDrawer::run()
 {
+    drawCycle();
     mThread->Stop = false;
     mThread->start();
 }
@@ -157,7 +163,7 @@ void functionGraphicDrawer::stop()
 void functionGraphicDrawer::on_durationSlider_valueChanged(int value)
 {
     widget_drawer->setDt(0.1 * value / ui->durationSlider->maximum());
-    widget_fft_drawer->setDt(0.5 + 2 * value / ui->durationSlider->maximum());
+    widget_fft_drawer->setDt(0.2 + 0.01 * floor(200 * value / ui->durationSlider->maximum()));
     ui->lcdNumber_dur->display((widget_drawer->isVisible() ? widget_drawer : widget_fft_drawer)->getDt());
     if (!block_change) {
         emit changed();

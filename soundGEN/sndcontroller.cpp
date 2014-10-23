@@ -589,7 +589,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
         }
 
         for(i=0; i<channels.length(); i++) {
-            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 1, t + 1, channels.at(i)->freq, frequency);
+            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }

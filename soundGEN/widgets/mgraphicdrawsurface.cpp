@@ -103,6 +103,7 @@ void MGraphicDrawSurface::resetGraphicFunctions()
 MGraphicDrawSurface::MGraphicDrawSurface() :
     QWidget()
 {
+    grid_k = 1;
 }
 
 double MGraphicDrawSurface::calculateTGrid(double cl_dt)
@@ -125,6 +126,8 @@ double MGraphicDrawSurface::calculateTGrid(double cl_dt)
         else if(cl_dt>2) dt_ax = 2/divider;
         else if(cl_dt>1) dt_ax = 1/divider;
         else dt_ax = 0.5/divider;
+
+        dt_ax = grid_k * dt_ax;
     } else
     {
         dt_ax = 1;
