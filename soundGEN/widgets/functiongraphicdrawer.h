@@ -26,6 +26,8 @@ public:
 
     int getDtIntValue() const;
     void setDtIntValue(int value);
+    int getDtFftIntValue() const;
+    void setDtFftIntValue(int value);
     int getKampIntValue() const;
     void setKampIntValue(int value);
 
@@ -51,6 +53,7 @@ private slots:
     void on_ampSlider_valueChanged(int value);
     void on_checkBox_grouped_stateChanged(int arg1);
     void on_checkBox_fft_stateChanged(int arg1);
+    void on_durationSlider_fft_valueChanged(int value);
 };
 
 #endif // FUNCTIONGRAPHICDRAWER_H

@@ -10,17 +10,20 @@ MFftDrawSurface::MFftDrawSurface() :
     t = 0;
     dt = 0;
     next_dt = 0.5;
-    data = 0;
-    data_buffer = 0;
+    data = data_buffer = data_top = 0;
     round_interval_dt = ceil(timer_interval*0.001);
     grid_k = 0.5;
     max_y = 0;
     max_y_axis = 1;
     analyzer = new SndAnalyzer();
+    analyzer->setTop_harmonic(5);
+    analyzer->setAmp_filter(0.0001);
 }
 
 MFftDrawSurface::~MFftDrawSurface()
 {
+    if (data)     delete data;
+    if (data_top) delete data_top;
     delete analyzer;
 }
 
@@ -47,14 +50,20 @@ void MFftDrawSurface::recalcData()
             delete data;
             data = 0;
         }
+        if (data_top) {
+            delete data_top;
+            data_top = 0;
+        }
         if (!analyzer->getHarmonics() || analyzer->getHarmonics()->isEmpty()) {
-            analyzer->function_fft_for_graph(graphicFunction, base_play_sound, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+            analyzer->function_fft_base(graphicFunction, base_play_sound, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         }
         if (analyzer->getHarmonics()) {
             data = new QVector<HarmonicInfo>(*(analyzer->getHarmonics()));
         }
-
-        analyzer->function_fft_for_graph(graphicFunction, base_play_sound, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+        if (analyzer->getTopHarmonics()) {
+            data_top = new QVector<HarmonicInfo>(*(analyzer->getTopHarmonics()));
+        }
+        analyzer->function_fft_base(graphicFunction, base_play_sound, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         data_buffer = analyzer->getHarmonics();
     }
     last_fmod_dt = cfmod;
@@ -160,5 +169,21 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
         x1 = i+5;
         y1 = height_center * (1 - 0.95*k_y*draw_result[i]);
         painter.drawLine(x0,y0,x1,y1);
+    }
+
+    if (data_top && !data_top->isEmpty()) {
+        int max_top_width = fm.width("00000.0"+tr("Hz")+" -> 0.0000");
+        int tmp_top_width = fm.width(tr("Top harmonics:"));
+        if (tmp_top_width>max_top_width) max_top_width = tmp_top_width;
+        max_top_width+=15;
+        painter.setBrush(QColor(0, 0, 255, 150));
+        painter.setPen(Qt::blue);
+        painter.drawRect(rect().right()-10-max_top_width,rect().top()+10,max_top_width,10+(data_top->size()+1)*(fm.height()+5));
+        painter.setPen(Qt::yellow);
+        painter.drawText(rect().right()-max_top_width, rect().top()+25, tr("Top harmonics:"));
+        painter.setPen(Qt::white);
+        for(i=0;i<data_top->size();i++) {
+            painter.drawText(rect().right()-max_top_width, rect().top()+30+(i+1)*(fm.height()+5), QString::number(data_top->at(i).freq, 'f', 1) + tr("Hz") + " -> " + QString::number(data_top->at(i).amp, 'f', 4));
+        }
     }
 }

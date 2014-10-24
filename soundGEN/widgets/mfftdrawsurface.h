@@ -11,6 +11,7 @@ private:
     SndAnalyzer *analyzer;
     QVector<HarmonicInfo>* data;
     QVector<HarmonicInfo>* data_buffer;
+    QVector<HarmonicInfo>* data_top;
     double* draw_result;
     double last_fmod_dt;
     double round_interval_dt;

@@ -25,9 +25,10 @@ SndController::SndController(QObject *parent) :
     QObject(parent)
 {
     baseSoundList = new SoundList(this);
-    analyzer = new SndAnalyzer();
     loop = new QEventLoop();
     timer = new QTimer();
+    analyzer = new SndAnalyzer();
+    analyzer->setTop_harmonic(1);
     all_functions_loaded = false;
     channels_count = 0;
     frequency = 0;
@@ -589,7 +590,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
         }
 
         for(i=0; i<channels.length(); i++) {
-            analyzer->function_fft(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
+            analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }

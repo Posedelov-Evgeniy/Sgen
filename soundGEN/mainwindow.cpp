@@ -199,6 +199,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
         settings.setValue("graphic/dt_"+QString::number(i), channels.at(i)->getDrawer()->getDtIntValue());
         settings.setValue("graphic/group_"+QString::number(i), channels.at(i)->getDrawer()->isGrouped());
         settings.setValue("graphic/fft_"+QString::number(i), channels.at(i)->getDrawer()->isFft());
+        settings.setValue("graphic/dt_fft_"+QString::number(i), channels.at(i)->getDrawer()->getDtFftIntValue());
     }
 
     SoundPicker *picker;
@@ -267,6 +268,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->getDrawer()->setDtIntValue(settings.value("graphic/dt_"+QString::number(i), 300).toDouble());
         channels.at(i)->getDrawer()->setGrouped(settings.value("graphic/group_"+QString::number(i), true).toBool());
         channels.at(i)->getDrawer()->setFft(settings.value("graphic/fft_"+QString::number(i), false).toBool());
+        channels.at(i)->getDrawer()->setDtFftIntValue(settings.value("graphic/dt_fft_"+QString::number(i), 100).toDouble());
     }
 
     if (base_settings) {
@@ -417,10 +419,14 @@ void MainWindow::channel_options_changing(int channel_index)
     if (channel_index>=0 && channel_index<channels.length() && channels.at(channel_index)->getDrawer()->isGrouped()) {
         int dt = channels.at(channel_index)->getDrawer()->getDtIntValue();
         int kamp = channels.at(channel_index)->getDrawer()->getKampIntValue();
+        bool is_fft = channels.at(channel_index)->getDrawer()->isFft();
+        int fft_dt = channels.at(channel_index)->getDrawer()->getDtFftIntValue();
         for(int i = 0; i<channels.length(); i++) {
             if (i!=channel_index && channels.at(i)->getDrawer()->isGrouped()) {
                 channels.at(i)->getDrawer()->setDtIntValue(dt);
                 channels.at(i)->getDrawer()->setKampIntValue(kamp);
+                channels.at(i)->getDrawer()->setDtFftIntValue(fft_dt);
+                channels.at(i)->getDrawer()->setFft(is_fft);
             }
         }
     }
