@@ -15,6 +15,7 @@ private:
     double last_fmod_dt;
     double round_interval_dt;
     double next_dt;
+    double max_y, max_y_axis;
     unsigned int draw_size;
     long int timer_interval;
     void recalcData();

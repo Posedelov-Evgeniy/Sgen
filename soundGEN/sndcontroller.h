@@ -48,6 +48,7 @@ private:
 
     bool is_stopping, is_running;
     double t, t_real;
+    qint64 t_real_ms_unixtime;
     bool all_functions_loaded;
     unsigned int channels_count;
     double frequency;

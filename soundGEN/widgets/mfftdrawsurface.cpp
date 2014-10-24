@@ -14,6 +14,8 @@ MFftDrawSurface::MFftDrawSurface() :
     data_buffer = 0;
     round_interval_dt = ceil(timer_interval*0.001);
     grid_k = 0.5;
+    max_y = 0;
+    max_y_axis = 1;
     analyzer = new SndAnalyzer();
 }
 
@@ -40,14 +42,17 @@ void MFftDrawSurface::setDt(double value)
 void MFftDrawSurface::recalcData()
 {
     double cfmod = fmod(t, round_interval_dt);
-    if (last_fmod_dt>cfmod) {
+    if (last_fmod_dt>cfmod && graphicFunction) {
         if (data) {
             delete data;
+            data = 0;
         }
         if (!analyzer->getHarmonics() || analyzer->getHarmonics()->isEmpty()) {
             analyzer->function_fft_for_graph(graphicFunction, base_play_sound, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         }
-        data = new QVector<HarmonicInfo>(*(analyzer->getHarmonics()));
+        if (analyzer->getHarmonics()) {
+            data = new QVector<HarmonicInfo>(*(analyzer->getHarmonics()));
+        }
 
         analyzer->function_fft_for_graph(graphicFunction, base_play_sound, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         data_buffer = analyzer->getHarmonics();
@@ -61,7 +66,7 @@ void MFftDrawSurface::incT()
     if (this->isHidden()) return;
     if (dt!=next_dt) {
         dt = next_dt;
-        round_interval_dt = ceil((ceil((dt*1000)/timer_interval) / 1000.0) * timer_interval);
+        round_interval_dt = ceil((ceil((dt*500)/timer_interval) / 1000.0) * timer_interval);
         last_fmod_dt = -1;
         analyzer->clearHarmonics();
     }
@@ -82,8 +87,6 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
     if (!data_buffer || data_buffer->isEmpty()) return;
     if (last_fmod_dt<0) return;
 
-    qDebug() << last_fmod_dt;
-
     if (draw_size!=width()-10 && draw_result) {
         delete [] draw_result;
         draw_result = 0;
@@ -94,7 +97,8 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
         draw_result = new double[draw_size];
     }
 
-    int height_center = height()-18;
+    QFontMetrics fm(painter.font());
+    int height_center = height()-fm.height()-5;
 
     unsigned int i, j;
     double x0, y0, x1, y1;
@@ -114,15 +118,35 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
                 draw_result[i] = y0;
             }
         }
+        if (draw_result[i]>max_y) {
+            max_y = draw_result[i];
+            max_y_axis = -1;
+        }
     }
 
-    painter.drawLine(0,height_center,draw_size,height_center);
+    if (max_y_axis<0) {
+        max_y_axis = calculateTGrid(max_y);
+    }
+
+    double k_y = 1;
+    if (max_y>0 && max_y<1) k_y = 1/max_y;
+
+    painter.drawLine(0,height_center,draw_size+10,height_center);
+
+    y0 = max_y_axis;
+    do {
+        y1 = height_center * (1 - 0.95*k_y*y0);
+        QString axis_num = QString::number(round(y0*1000)/1000);
+        painter.drawLine(0, y1,7,y1);
+        painter.drawText(10, y1+fm.height()/2, axis_num);
+        y0+=max_y_axis;
+    } while (y0<=max_y);
 
     do {
         QString axis_num = QString::number(round(fc*10)/10);
         x0 = (fc/f1) * draw_size + 5;
         painter.drawLine(x0,0,x0,height_center+2);
-        painter.drawText(x0-axis_num.size()*3.5, height_center+12, axis_num);
+        painter.drawText(x0-0.5*fm.width(axis_num)+1, height_center+fm.height()+1, axis_num);
         fc+=f_axis;
     } while (fc<=f1);
 
@@ -134,7 +158,7 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
         x0 = x1;
         y0 = y1;
         x1 = i+5;
-        y1 = height_center * (1 - draw_result[i]);
+        y1 = height_center * (1 - 0.95*k_y*draw_result[i]);
         painter.drawLine(x0,y0,x1,y1);
     }
 }

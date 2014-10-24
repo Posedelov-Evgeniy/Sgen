@@ -677,6 +677,7 @@ void SndController::process_sound()
 
 void SndController::updateTimer()
 {
+    t_real_ms_unixtime = QDateTime::currentMSecsSinceEpoch();
     t_real += timer->interval() / 1000.0;
     emit write_message(tr("Time: %sec%s").replace("%sec%",QString::number(t_real, 'f', 1)));
 }
@@ -735,7 +736,14 @@ double SndController::getInstAmp(unsigned int channel)
 
 double SndController::getT()
 {
-    return t_real;
+    double rt;
+    rt = QDateTime::currentMSecsSinceEpoch() - t_real_ms_unixtime;
+    if (!timer->isActive() || rt>2*timer->interval()) {
+        rt = 0;
+    } else {
+        rt = rt / 1000;
+    }
+    return t_real + rt;
 }
 
 GenSoundFunction SndController::getChannelFunction(unsigned int channel)
