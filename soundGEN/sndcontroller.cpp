@@ -63,7 +63,9 @@ SndController::SndController(QObject *parent) :
     moveToThread(process_thread);
     loop->moveToThread(process_thread);
     timer->moveToThread(process_thread);
+    #if !defined(ANDROID) && !defined(__ANDROID__)
     timer->setTimerType(Qt::PreciseTimer);
+    #endif
     connect(timer, SIGNAL(timeout()), this, SLOT(updateTimer()));
 
     memset(&createsoundexinfo_sound, 0, sizeof(FMOD_CREATESOUNDEXINFO));
@@ -589,7 +591,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
             }
         }
 
-        for(i=0; i<channels.length(); i++) {
+        for(i=0; i<channels.size(); i++) {
             analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();

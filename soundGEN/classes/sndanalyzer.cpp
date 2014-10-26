@@ -199,7 +199,7 @@ void SndAnalyzer::function_fft_calc_top(kiss_fft_cpx *cout, unsigned int points,
 
     } while (top_harmonics->count()<top_harmonic && mi_set);
 
-    if (top_harmonics->length()>0) {
+    if (top_harmonics->count()>0) {
         result_freq = top_harmonics->at(0).freq;
     }
 }

@@ -5,7 +5,7 @@ QString EnvironmentInfo::getHomePath()
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
         QString bfile = "";
     #else
-        #if defined(ANDROID)
+        #if defined(ANDROID) || defined(__ANDROID__)
         QString bfile = getConfigsPath();
         #else
         QString bfile = "/home";
@@ -16,7 +16,7 @@ QString EnvironmentInfo::getHomePath()
 
 QString EnvironmentInfo::getConfigsPath()
 {
-    #if !defined(__ANDROID__)
+    #if !defined(ANDROID) && !defined(__ANDROID__)
         return QCoreApplication::instance()->applicationDirPath();
     #else
         return "/sdcard/soundGEN/";

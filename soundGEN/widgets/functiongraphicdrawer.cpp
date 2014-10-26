@@ -10,11 +10,10 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
     ui->setupUi(this);
     block_change = false;
 
-    #if defined(__ANDROID__)
+    #if defined(__ANDROID__) || defined(ANDROID)
     ui->ampSlider->setOrientation(Qt::Horizontal);
     ui->ampSlider->setVisible(false);
-    ui->lcdNumber_koef->setVisible(false);
-    ui->label_koef->setVisible(false);
+    ui->widget_koef->setVisible(false);
     #endif
 
     widget_drawer = new MGraphicDrawSurface();
@@ -204,10 +203,13 @@ void functionGraphicDrawer::on_checkBox_grouped_stateChanged(int arg1)
 void functionGraphicDrawer::on_checkBox_fft_stateChanged(int arg1)
 {
     bool fft_mode = ui->checkBox_fft->isChecked();
-    ui->widget_koef->setVisible(!fft_mode);
     ui->widget_t->setVisible(!fft_mode);
     ui->widget_duration->setVisible(!fft_mode);
+
+    #if !defined(__ANDROID__) && !defined(ANDROID)
     ui->ampSlider->setVisible(!fft_mode);
+    ui->widget_koef->setVisible(!fft_mode);
+    #endif
 
     ui->durationSlider->setVisible(!fft_mode);
     ui->durationSlider_fft->setVisible(fft_mode);

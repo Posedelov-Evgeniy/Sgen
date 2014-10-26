@@ -115,6 +115,17 @@
     </message>
 </context>
 <context>
+    <name>MFftDrawSurface</name>
+    <message>
+        <source>Hz</source>
+        <translation>Гц</translation>
+    </message>
+    <message>
+        <source>Top harmonics:</source>
+        <translation>Высшие гармоники:</translation>
+    </message>
+</context>
+<context>
     <name>MainWindow</name>
     <message>
         <source>SndGEN</source>
