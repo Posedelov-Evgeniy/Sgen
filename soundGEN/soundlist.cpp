@@ -135,11 +135,9 @@ void SoundList::InitSounds()
                 int channels_count;
                 int bits_count;
                 float freq;
-                float volume;
-                float pan;
                 int priority;
 
-                rec->base_sound->getDefaults(&freq, &volume, &pan, &priority);
+                rec->base_sound->getDefaults(&freq, &priority);
                 rec->base_sound->getFormat(&stype, &sformat, &channels_count, &bits_count);
                 rec->base_sound->getLength(&(rec->soundLenPcmBytes), FMOD_TIMEUNIT_PCMBYTES);
                 rec->base_sound->seekData(0);

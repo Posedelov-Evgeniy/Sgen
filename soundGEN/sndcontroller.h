@@ -70,6 +70,7 @@ private:
     FMOD_RESULT result;
     SndControllerPlayMode process_mode;
     SndAnalyzer *analyzer;
+    bool sound_system_initialized;
 public:
     static SndController* Instance();
     static bool DeleteInstance();
@@ -110,6 +111,8 @@ signals:
     void finished();
     void export_finished();
     void export_status(int percent);
+protected:
+    void initSoundSystem();
 private slots:
     void process_sound();
     void updateTimer();

@@ -24,6 +24,7 @@ double base_play_sound(int i, unsigned int c, double t) {
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
+    sound_system_initialized = false;
     baseSoundList = new SoundList(this);
     loop = new QEventLoop();
     timer = new QTimer();
@@ -54,9 +55,6 @@ SndController::SndController(QObject *parent) :
         exit(-1);
     }
 
-    result = system->init(32, FMOD_INIT_NORMAL, 0);
-    ERRCHECK(result);
-
     process_thread = new QThread();
     QObject::connect(process_thread,SIGNAL(started()),this,SLOT(process_sound()));
     QObject::connect(this,SIGNAL(finished()),process_thread,SLOT(terminate()));
@@ -78,6 +76,8 @@ SndController::SndController(QObject *parent) :
     setChannelsCount(2);
     setFrequency(44100.0);
     resetParams();
+
+    initSoundSystem();
 }
 
 SndController::~SndController()
@@ -105,6 +105,46 @@ SndController *SndController::Instance()
         _self_controller = new SndController();
     }
     return _self_controller;
+}
+
+void SndController::initSoundSystem()
+{
+    if (sound_system_initialized) {
+        sound_system_initialized = false;
+        result = system->close();
+        ERRCHECK(result);
+    }
+
+    FMOD_SPEAKERMODE spmode;
+    int set_channels = 32;
+
+    switch(channels_count) {
+        case 8:
+            spmode = FMOD_SPEAKERMODE_7POINT1; break;
+        case 6:
+            spmode = FMOD_SPEAKERMODE_5POINT1; break;
+        case 5:
+            spmode = FMOD_SPEAKERMODE_SURROUND; break;
+        case 4:
+            spmode = FMOD_SPEAKERMODE_QUAD; break;
+        case 2:
+            spmode = FMOD_SPEAKERMODE_STEREO; break;
+        case 1:
+            spmode = FMOD_SPEAKERMODE_MONO; break;
+        default:
+            spmode = FMOD_SPEAKERMODE_DEFAULT;
+    }
+
+    result = system->setSoftwareFormat(createsoundexinfo_sound.defaultfrequency, spmode, 0);
+    if (result != FMOD_OK && spmode != FMOD_SPEAKERMODE_DEFAULT) {
+        result = system->setSoftwareFormat(createsoundexinfo_sound.defaultfrequency, FMOD_SPEAKERMODE_DEFAULT, 0);
+    } else if (result == FMOD_OK && spmode != FMOD_SPEAKERMODE_DEFAULT) {
+        set_channels = channels_count;
+    }
+
+    result = system->init(set_channels, FMOD_INIT_NORMAL, 0);
+    ERRCHECK(result);
+    sound_system_initialized = true;
 }
 
 bool SndController::DeleteInstance()
@@ -150,6 +190,8 @@ void SndController::setChannelsCount(unsigned int count)
     createsoundexinfo_sound.numchannels       = channels_count;                                               /* Number of channels in the sound. */
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.numchannels = createsoundexinfo_sound.numchannels;
+
+    if (sound_system_initialized) initSoundSystem();
 }
 
 unsigned int SndController::getChannelsCount()
@@ -306,7 +348,7 @@ bool SndController::parseFunctions()
     for(i=0;i<channels_count;i++) {
         out2 << spec_func_pref << "double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+channels.at(i)->function_text+"); };\n";
     }
-    out2 << "int main() {return 0;};\n";
+    out2 << "int main(int argc, char *argv[]) {return 0;};\n";
     file2.close();
 
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
@@ -339,17 +381,24 @@ bool SndController::parseFunctions()
         file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         QTextStream out3(&file3);
 
+        #if defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)
+            int platform = 64;
+        #else
+            int platform = 32;
+        #endif
+
         out3 << "CC = g++\n";
         out3 << "MODULES= main.o base_functions.o\n";
+        out3 << "INC=-I/usr/local/sbin -I/usr/local/bin -I/usr/sbin -I/usr/bin -I/sbin -I/bin\n";
         out3 << "OBJECTS=\n";
         out3 << "RCLOBJECTS= main.c main.h base_functions.cpp base_functions.h\n";
         out3 << "all: "+lib_file+"\n";
         out3 << lib_file+":$(MODULES)\n";
         out3 << "	$(CC) -shared $(MODULES) -o "+lib_file+"\n";
         out3 << "base_functions.o: $(RCLOBJECTS)\n";
-        out3 << "	g++ -m64 -Wall -fPIC -c base_functions.cpp -o base_functions.o\n";
+        out3 << "	g++ -m" << platform << " -Wall -fPIC -c base_functions.cpp -o base_functions.o\n";
         out3 << "main.o: $(RCLOBJECTS)\n";
-        out3 << "	g++ -m64 -Wall -fPIC -c main.c -o main.o\n";
+        out3 << "	g++ -m" << platform << " -Wall -fPIC -c main.c -o main.o\n";
         out3 << "clean:\n";
         out3 << "	rm -f *.o\n";
         out3 << "	rm -f "+lib_file+"\n";
@@ -437,6 +486,7 @@ void SndController::setFrequency(double value)
     createsoundexinfo_gen.decodebuffersize = createsoundexinfo_sound.decodebuffersize;
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
+    if (sound_system_initialized) initSoundSystem();
 }
 
 
@@ -453,7 +503,7 @@ void SndController::writeWavHeader(FILE *file, FMOD::Sound *sound, int length)
     fseek(file, 0, SEEK_SET);
 
     sound->getFormat  (0, 0, &channels, &bits);
-    sound->getDefaults(&rate, 0, 0, 0);
+    sound->getDefaults(&rate, 0);
 
     {
         #if defined(WIN32) || defined(_WIN64) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
@@ -545,7 +595,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
     /*
         Play the sound.
     */
-    result = system->playSound(FMOD_CHANNEL_FREE, sound, 0, &channel);
+    result = system->playSound(sound, 0, 0, &channel);
     ERRCHECK(result);
 
     timer->start(500);
@@ -558,38 +608,6 @@ void SndController::play_cycle(FMOD::Sound *sound)
         system->update();
 
         emit cycle_start();
-
-        if (channel)
-        {
-            unsigned int ms;
-            unsigned int lenms;
-            bool         playing;
-            bool         paused;
-
-            channel->isPlaying(&playing);
-            if ((result != FMOD_OK) && (result != FMOD_ERR_INVALID_HANDLE) && (result != FMOD_ERR_CHANNEL_STOLEN))
-            {
-                ERRCHECK(result);
-            }
-
-            result = channel->getPaused(&paused);
-            if ((result != FMOD_OK) && (result != FMOD_ERR_INVALID_HANDLE) && (result != FMOD_ERR_CHANNEL_STOLEN))
-            {
-                ERRCHECK(result);
-            }
-
-            result = channel->getPosition(&ms, FMOD_TIMEUNIT_MS);
-            if ((result != FMOD_OK) && (result != FMOD_ERR_INVALID_HANDLE) && (result != FMOD_ERR_CHANNEL_STOLEN))
-            {
-                ERRCHECK(result);
-            }
-
-            result = sound->getLength(&lenms, FMOD_TIMEUNIT_MS);
-            if ((result != FMOD_OK) && (result != FMOD_ERR_INVALID_HANDLE) && (result != FMOD_ERR_CHANNEL_STOLEN))
-            {
-                ERRCHECK(result);
-            }
-        }
 
         for(i=0; i<channels.size(); i++) {
             analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
@@ -610,7 +628,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
 void SndController::process_sound()
 {
     FMOD::Sound            *sound;
-    FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL | FMOD_SOFTWARE;
+    FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL;
     QTextStream             console(stdout);
     GenSoundChannelInfo    *info;
     bool parsed;
@@ -618,6 +636,14 @@ void SndController::process_sound()
     t = t_real = 0.0;
     is_stopping = false;
     emit write_message(tr("Initialization..."));
+
+    int driver = -1;
+    char soundcard[256];
+    system->getDriver(&driver);
+    if (driver >= 0) {
+        system->getDriverInfo(driver, soundcard, sizeof(soundcard), 0, 0, 0, 0);
+        console << tr("Driver:") << " " << QString(soundcard) << endl;
+    }
 
     console << tr("Starting with:") << " " << endl;
     for(unsigned int i=0; i<channels_count; i++) {

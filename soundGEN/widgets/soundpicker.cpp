@@ -84,7 +84,7 @@ void SoundPicker::checkSound(bool show_warnings)
     if (system)
     {
         FMOD::Sound      *sound;
-        if (system->createSound(qPrintable(getFilename()), FMOD_HARDWARE, 0, &sound) == FMOD_OK)
+        if (system->createSound(qPrintable(getFilename()), FMOD_2D | FMOD_LOOP_OFF, 0, &sound) == FMOD_OK)
         {
             if (sound)
             {

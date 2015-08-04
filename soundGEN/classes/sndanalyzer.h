@@ -3,7 +3,6 @@
 
 #include <math.h>
 #include <QVector>
-#include <qDebug>
 #include "../abstractsndcontroller.h"
 #include "../kiss_fft/kiss_fftr.h"
 #include "../kiss_fft/_kiss_fft_guts.h"

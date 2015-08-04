@@ -7,6 +7,6 @@ SoundGen - кросплатформенный генератор и анализ
 Системные требования
 -----------
 
-Linux x64 с установленным g++ и qt версии выше 4<br>
+Linux с установленным g++ и qt версии выше 4<br>
 или<br>
-Windows x86 с установленным Visual Studio 2012 или 2013 (Professional или Ultimate)<br>
+Windows с установленным Visual Studio 2012 или 2013 (Professional или Ultimate)<br>

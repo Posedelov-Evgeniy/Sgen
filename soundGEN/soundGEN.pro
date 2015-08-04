@@ -16,12 +16,14 @@ android {
     # by adapting the examples below.
     # file1.source = myfile
     # dir1.source = mydir
-    file1.source = $$PWD/api/android/lib/libfmodex.so
-    file2.source = $$PWD/base_functions.cpp
-    file3.source = $$PWD/base_functions.h
-    file4.source = $$PWD/config.cfg
-    file5.source = $$PWD/functions.cpp.cfg
-    DEPLOYMENTFOLDERS = file1 file2 file3 file4 file5
+    file1.source = $$PWD/base_functions.cpp
+    file2.source = $$PWD/base_functions.h
+    file3.source = $$PWD/config.cfg
+    file4.source = $$PWD/functions.cpp.cfg
+    file5.source = $$PWD/examples
+    file6.source = $$PWD/translations
+    file7.source = $$PWD/api/android/lib/libfmodex.so
+    DEPLOYMENTFOLDERS = file1 file2 file3 file4 file5 file6 file7
 
     # If your application uses the Qt Mobility libraries, uncomment
     # the following lines and add the respective components to the
@@ -36,24 +38,34 @@ android {
     # Please do not modify the following two lines. Required for deployment.
     include(deployment.pri)
     qtcAddDeployment()
-
 } else:win32 {
     RC_FILE += soundGEN.rc
-    LIBS += $$PWD/api/windows/lib/fmodex_vc.lib
+    LIBS += $$PWD/api/windows/lib/fmod_vc.lib
     INCLUDEPATH += $$PWD/api/windows/inc
     DEPENDPATH += $$PWD/api/windows/inc
-    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex_vc.lib
+    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod.dll
+
+    include(deployment_desktop.pri)
 } else:win64 {
     RC_FILE += soundGEN.rc
-    LIBS += $$PWD/api/windows/lib/fmodex64_vc.lib
+    LIBS += $$PWD/api/windows/lib/fmod64_vc.lib
     INCLUDEPATH += $$PWD/api/windows/inc
     DEPENDPATH += $$PWD/api/windows/inc
-    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmodex64_vc.lib
+    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod64.dll
+
+    include(deployment_desktop.pri)
 } else:unix {
-    LIBS += $$PWD/api/linux/lib/libfmodex64.so
+    *-64 {
+        LIBS += -L$$PWD/api/linux/lib/x86_64/ -lfmod
+        PRE_TARGETDEPS += $$PWD/api/linux/lib/x86_64/libfmod.so
+    } else {
+        LIBS += -L$$PWD/api/linux/lib/x86/ -lfmod
+        PRE_TARGETDEPS += $$PWD/api/linux/lib/x86/libfmod.so
+    }
     INCLUDEPATH += $$PWD/api/linux/inc
     DEPENDPATH += $$PWD/api/linux/inc
-    PRE_TARGETDEPS += $$PWD/api/linux/lib/libfmodex64.so
+
+    include(deployment_desktop.pri)
 }
 
 SOURCES += main.cpp\
@@ -111,8 +123,8 @@ FORMS    += mainwindow.ui \
 OTHER_FILES += \
     config.cfg \
     functions.cpp.cfg \
-    lin_deploy.sh \
-    win_deploy.bat \
+    scripts/lin_deploy.sh \
+    scripts/win_deploy.bat \
     soundGEN.rc \
     android/AndroidManifest.xml \
     android/res/drawable/icon.png \
