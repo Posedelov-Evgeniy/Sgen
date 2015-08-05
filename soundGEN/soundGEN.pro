@@ -88,7 +88,8 @@ SOURCES += main.cpp\
     classes/utextblockdata.cpp \
     classes/utextedit.cpp \
     widgets/dialogfunctions.cpp \
-    widgets/dialogexport.cpp
+    widgets/dialogexport.cpp \
+    widgets/soundpickerslist.cpp
 
 HEADERS  += base_functions.h \
     classes/environmentinfo.h \
@@ -111,14 +112,16 @@ HEADERS  += base_functions.h \
     classes/utextblockdata.h \
     classes/utextedit.h \
     widgets/dialogfunctions.h \
-    widgets/dialogexport.h
+    widgets/dialogexport.h \
+    widgets/soundpickerslist.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
     widgets/functiongraphicdrawer.ui \
     widgets/channelsettings.ui \
     widgets/dialogfunctions.ui \
-    widgets/dialogexport.ui
+    widgets/dialogexport.ui \
+    widgets/soundpickerslist.ui
 
 OTHER_FILES += \
     config.cfg \

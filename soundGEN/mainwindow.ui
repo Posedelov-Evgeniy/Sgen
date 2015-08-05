@@ -56,7 +56,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="main_tab">
          <attribute name="title">
@@ -97,8 +97,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>816</width>
-               <height>269</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <property name="palette">
@@ -289,8 +289,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>816</width>
-               <height>269</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4"/>
@@ -405,8 +405,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>816</width>
-               <height>269</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_6"/>
@@ -468,7 +468,7 @@
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

@@ -7,7 +7,7 @@
 #include <QPushButton>
 #include <QMessageBox>
 #include "sndcontroller.h"
-#include "widgets/soundpicker.h"
+#include "widgets/soundpickerslist.h"
 #include "widgets/channelsettings.h"
 #include "widgets/dialogexport.h"
 #include "classes/utextedit.h"
@@ -34,10 +34,6 @@ private slots:
     void sound_stopped();
 
     void sound_started();
-
-    void add_sound(SoundPicker* p);
-
-    void remove_sound(SoundPicker* p);
 
     void get_message(QString message);
 
@@ -72,22 +68,19 @@ private slots:
     void on_actionExport_to_triggered();
 
 private:
-    static const int maxSounds = 10;
     Ui::MainWindow *ui;
     SndController *sc;
     bool auto_restart, close_on_stop, current_file_changed;
     QString default_save_path, default_functions_path;
     QString base_title;
     QString current_file;
-    QList<SoundPicker*> sounds;
+
     QList<ChannelSettings*> channels;
     UTextEdit *functions_text;
     UTextEdit *dialog_for_edit;
     DialogExport *export_form;
+    SoundPickersList *pickers_list;
 
-    void removeSoundPicker(SoundPicker* p);
-    void adjustSoundParams();
-    void addSoundPicker(QString file_name, QString function_name);
     void closeEvent(QCloseEvent *event);
     void setActionEnabled(int index, bool enabled = false);
     bool saveMessageBox();
