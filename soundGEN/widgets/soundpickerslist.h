@@ -35,7 +35,7 @@ private:
 
     void addSoundPicker(QString file_name, QString function_name);
     void removeSoundPicker(SoundPicker* p);
-    void adjustSoundParams();
+    void adjustParams();
 };
 
 #endif // SOUNDPICKERSLIST_H

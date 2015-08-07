@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include "sndcontroller.h"
 #include "widgets/soundpickerslist.h"
+#include "widgets/variablepickerslist.h"
 #include "widgets/channelsettings.h"
 #include "widgets/dialogexport.h"
 #include "classes/utextedit.h"
@@ -80,6 +81,7 @@ private:
     UTextEdit *dialog_for_edit;
     DialogExport *export_form;
     SoundPickersList *pickers_list;
+    VariablePickersList *variables_list;
 
     void closeEvent(QCloseEvent *event);
     void setActionEnabled(int index, bool enabled = false);

@@ -15,7 +15,7 @@ SndAnalyzer::~SndAnalyzer()
     delete top_harmonics;
 }
 
-void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, PlaySoundFunction pfct, double t1, double t2, double freq, unsigned int points)
+void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, PlaySoundFunction pfct, VariablesFunction vfct, double t1, double t2, double freq, unsigned int points)
 {
     double t, dt;
     unsigned int i;
@@ -32,7 +32,7 @@ void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, PlaySoundFunction 
     for(i = 0; i<points; i++) {
         t = t1 + dt*i;
         cin[i].i = zero;
-        cin[i].r = fct(t, freq*2*M_PI, freq, pfct);
+        cin[i].r = fct(t, freq*2*M_PI, freq, pfct, vfct);
         if (abs(cin[i].r)>result_amp) result_amp = abs(cin[i].r);
     }
 
@@ -46,7 +46,7 @@ void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, PlaySoundFunction 
     delete [] cout;
 }
 
-void SndAnalyzer::function_fft_base(GenSoundFunction fct, PlaySoundFunction pfct, double t1, double t2, double freq, unsigned int points)
+void SndAnalyzer::function_fft_base(GenSoundFunction fct, PlaySoundFunction pfct, VariablesFunction vfct, double t1, double t2, double freq, unsigned int points)
 {
     double t, dt;
     double timelen = abs(t2-t1);
@@ -73,7 +73,7 @@ void SndAnalyzer::function_fft_base(GenSoundFunction fct, PlaySoundFunction pfct
     for(i = 0; i<points; i++) {
         t = t1 + dt*i;
         cin[i].i = zero;
-        cin[i].r = fct(t, freq*2*M_PI, freq, pfct);
+        cin[i].r = fct(t, freq*2*M_PI, freq, pfct, vfct);
         if (abs(cin[i].r)>result_amp) result_amp = abs(cin[i].r);
     }
 

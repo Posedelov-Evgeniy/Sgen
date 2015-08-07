@@ -16,10 +16,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /* adding widgets */
     pickers_list = new SoundPickersList(ui->sound_container);
+    variables_list = new VariablePickersList(ui->variables_container);
     export_form = new DialogExport(parent);
     functions_text = new UTextEdit();
     ui->functions_tab->layout()->addWidget(functions_text);
     ui->sound_container->layout()->addWidget(pickers_list);
+    ui->variables_container->layout()->addWidget(variables_list);
 
     /* setting options */
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("Run"));
@@ -43,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(functions_text, SIGNAL(textChangedC()), this, SLOT(options_changing()));
     QObject::connect(pickers_list, SIGNAL(pickers_options_changed()), this, SLOT(options_changing()));
+    QObject::connect(variables_list, SIGNAL(variables_options_changed()), this, SLOT(options_changing()));
 }
 
 MainWindow::~MainWindow()
@@ -51,6 +54,7 @@ MainWindow::~MainWindow()
     delete functions_text;
     delete export_form;
     delete pickers_list;
+    delete variables_list;
     delete ui;
 }
 
@@ -65,6 +69,7 @@ void MainWindow::doSetParams()
     sc->setFunctionsStr(functions_text->document()->toPlainText());
 
     pickers_list->setSNDOptions(sc);
+    variables_list->setSNDOptions(sc);
 }
 
 void MainWindow::sound_stopped()
@@ -178,6 +183,7 @@ void MainWindow::save_settings(QString filename, bool base_settings)
     }
 
     pickers_list->savePickersSettings(&settings);
+    variables_list->savePickersSettings(&settings);
 
     if (base_settings) {
         QRect gg = this->geometry();
@@ -215,6 +221,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     int i;
 
     pickers_list->loadPickersSettings(&settings);
+    variables_list->loadPickersSettings(&settings);
 
     int channels_cnt = settings.value("main/channels_count", 2).toInt();
     if (channels_cnt<=0 || channels_cnt>8) channels_cnt=2;

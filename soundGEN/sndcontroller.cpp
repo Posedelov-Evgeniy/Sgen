@@ -17,6 +17,10 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     return FMOD_OK;
 }
 
+double get_variable_value(char* varname) {
+    return SndController::Instance()->getVariables()->value(QString::fromLocal8Bit(varname));
+}
+
 double base_play_sound(int i, unsigned int c, double t) {
     return SndController::Instance()->playSound(i, c, t);
 }
@@ -28,6 +32,8 @@ SndController::SndController(QObject *parent) :
     baseSoundList = new SoundList(this);
     loop = new QEventLoop();
     timer = new QTimer();
+    variables = new QMap<QString, double>();
+    expressions = new QMap<QString, QString>();
     analyzer = new SndAnalyzer();
     analyzer->setTop_harmonic(1);
     all_functions_loaded = false;
@@ -95,6 +101,8 @@ SndController::~SndController()
     delete timer;
     delete baseSoundList;
     delete analyzer;
+    delete variables;
+    delete expressions;
     delete process_thread;
 }
 
@@ -332,8 +340,9 @@ bool SndController::parseFunctions()
     out << "#include <stdio.h>\n";
     if (add_base_functions) out << "#include \"base_functions.h\"\n";
     out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
+    out << "typedef double (*VariablesFunction) (char*);\n";
     for(i=0;i<channels_count;i++) {
-        out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction);\n";
+        out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction, VariablesFunction __cFunction);\n";
     }
     file.close();
 
@@ -343,11 +352,40 @@ bool SndController::parseFunctions()
     out2 << "#include \"main.h\"\n";
     out2 << spec_namespace;
     out2 << "\nPlaySoundFunction BaseSoundFunction;\n";
+    out2 << "\VariablesFunction BaseVariablesFunction;\n\n";
     out2 << "\n" + sound_functions + "\n";
     out2 << "\n" + text_functions + "\n";
+
+    QMap<QString, double>::const_iterator iter_var;
+    QMap<QString, QString>::const_iterator iter_expr;
+    QString ftext;
+
     for(i=0;i<channels_count;i++) {
-        out2 << spec_func_pref << "double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction) { BaseSoundFunction=__bFunction; return (double) ("+channels.at(i)->function_text+"); };\n";
+        ftext = channels.at(i)->function_text;
+
+        out2 << spec_func_pref << "double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction, VariablesFunction __cFunction) \n";
+        out2 << "{\n";
+        out2 << "    BaseSoundFunction = __bFunction;\n";
+        out2 << "    BaseVariablesFunction = __cFunction;\n";
+
+        iter_var = variables->constBegin();
+        while (iter_var != variables->constEnd()) {
+            if (ftext.contains(QRegExp("(\\W|^)("+iter_var.key()+")(\\W|$)"))) {
+                out2 << "    double " << iter_var.key() << " = BaseVariablesFunction(\"" << iter_var.key() << "\");\n";
+            }
+            ++iter_var;
+        }
+
+        iter_expr = expressions->constBegin();
+        while (iter_expr != expressions->constEnd()) {
+            out2 << "    double " << iter_expr.key() << " = (" << iter_expr.value() << ");\n";
+            ++iter_expr;
+        }
+
+        out2 << "    return (double) ("+ftext+");\n";
+        out2 << "};\n";
     }
+    out2 << "\n";
     out2 << "int main(int argc, char *argv[]) {return 0;};\n";
     file2.close();
 
@@ -449,7 +487,7 @@ bool SndController::parseFunctions()
 double SndController::getResult(unsigned int channel, double current_t)
 {
     GenSoundChannelInfo *info = channels.at(channel);
-    return info->amp * info->channel_fct(current_t, info->k, info->freq, base_play_sound);
+    return info->amp * info->channel_fct(current_t, info->k, info->freq, base_play_sound, get_variable_value);
 }
 
 void SndController::resetParams()
@@ -470,6 +508,16 @@ void SndController::resetParams()
 SoundList *SndController::getBaseSoundList() const
 {
     return baseSoundList;
+}
+
+QMap<QString, double>* SndController::getVariables()
+{
+    return variables;
+}
+
+QMap<QString, QString>* SndController::getExpressions()
+{
+    return expressions;
 }
 
 double SndController::getFrequency() const
@@ -610,7 +658,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
         emit cycle_start();
 
         for(i=0; i<channels.size(); i++) {
-            analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
+            analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, get_variable_value, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }

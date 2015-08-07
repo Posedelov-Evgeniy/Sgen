@@ -10,8 +10,9 @@
 #include "base_functions.h"
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);
+typedef double (*VariablesFunction) (char*);
 
-typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction);
+typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction, VariablesFunction);
 
 struct GenSoundChannelInfo {
     double freq;

@@ -174,7 +174,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 
     x1 = 0;
     if (graphicFunction)
-        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq, base_play_sound);
+        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq, base_play_sound, get_variable_value);
     else
         y1 = height_center - k_y_graphic*graphicTFunction(kFreq*t);
 
@@ -184,7 +184,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
         x1 = i/2;
 
         if (graphicFunction)
-            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound);
+            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound, get_variable_value);
         else
             y1 = height_center - k_y_graphic*graphicTFunction((t+i*k_t_graphic)*kFreq);
         painter.drawLine(x0,y0,x1,y1);

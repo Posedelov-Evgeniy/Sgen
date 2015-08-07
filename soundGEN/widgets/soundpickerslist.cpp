@@ -34,7 +34,7 @@ void SoundPickersList::addSoundPicker(QString file_name, QString function_name)
         QObject::connect(picker, SIGNAL(add_new(SoundPicker*)), this, SLOT(options_changing()));
         QObject::connect(picker, SIGNAL(remove_item(SoundPicker*)), this, SLOT(options_changing()));
         sounds.append(picker);
-        adjustSoundParams();
+        adjustParams();
     }
 }
 
@@ -83,12 +83,12 @@ void SoundPickersList::removeSoundPicker(SoundPicker *p)
         if (sounds.length()==0) {
             addSoundPicker("", "");
         } else {
-            adjustSoundParams();
+            adjustParams();
         }
     }
 }
 
-void SoundPickersList::adjustSoundParams()
+void SoundPickersList::adjustParams()
 {
     SoundPicker *picker;
     QList<QString> func_names;

@@ -89,7 +89,9 @@ SOURCES += main.cpp\
     classes/utextedit.cpp \
     widgets/dialogfunctions.cpp \
     widgets/dialogexport.cpp \
-    widgets/soundpickerslist.cpp
+    widgets/soundpickerslist.cpp \
+    widgets/variablepicker.cpp \
+    widgets/variablepickerslist.cpp
 
 HEADERS  += base_functions.h \
     classes/environmentinfo.h \
@@ -113,7 +115,9 @@ HEADERS  += base_functions.h \
     classes/utextedit.h \
     widgets/dialogfunctions.h \
     widgets/dialogexport.h \
-    widgets/soundpickerslist.h
+    widgets/soundpickerslist.h \
+    widgets/variablepicker.h \
+    widgets/variablepickerslist.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
@@ -121,7 +125,9 @@ FORMS    += mainwindow.ui \
     widgets/channelsettings.ui \
     widgets/dialogfunctions.ui \
     widgets/dialogexport.ui \
-    widgets/soundpickerslist.ui
+    widgets/soundpickerslist.ui \
+    widgets/variablepicker.ui \
+    widgets/variablepickerslist.ui
 
 OTHER_FILES += \
     config.cfg \

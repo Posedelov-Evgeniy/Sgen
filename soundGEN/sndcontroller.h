@@ -7,6 +7,7 @@
 #include <QtCore/QCoreApplication>
 #include <QProcess>
 #include <QVector>
+#include <QMap>
 #include <QCryptographicHash>
 #include <fmod.hpp>
 #include <fmod_errors.h>
@@ -23,6 +24,7 @@
 #endif
 
 double base_play_sound(int i, unsigned int c, double t);
+double get_variable_value(char* varname);
 
 enum SndControllerPlayMode { SndPlay, SndExport };
 
@@ -56,6 +58,8 @@ private:
     QString export_filename;
 
     QVector<GenSoundChannelInfo*> channels;
+    QMap<QString, double> *variables;
+    QMap<QString, QString> *expressions;
 
     SoundList *baseSoundList;
     QString text_functions, sound_functions;
@@ -102,6 +106,10 @@ public:
     void stop();
     void run_export(int seconds, QString filename);
     void stop_export();
+
+    QMap<QString, double>* getVariables();
+    QMap<QString, QString>* getExpressions();
+
 signals:
     void starting();
     void started();
