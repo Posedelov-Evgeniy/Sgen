@@ -24,7 +24,7 @@
 #endif
 
 double base_play_sound(int i, unsigned int c, double t);
-double get_variable_value(char* varname);
+double get_variable_value(const char* varname);
 
 enum SndControllerPlayMode { SndPlay, SndExport };
 
@@ -75,6 +75,8 @@ private:
     SndControllerPlayMode process_mode;
     SndAnalyzer *analyzer;
     bool sound_system_initialized;
+    unsigned int system_buffer_ms_size;
+
 public:
     static SndController* Instance();
     static bool DeleteInstance();
@@ -109,6 +111,9 @@ public:
 
     QMap<QString, double>* getVariables();
     QMap<QString, QString>* getExpressions();
+
+    unsigned int getSystemBufferMsSize() const;
+    void setSystemBufferMsSize(unsigned int value);
 
 signals:
     void starting();

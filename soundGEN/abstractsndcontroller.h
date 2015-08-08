@@ -10,7 +10,7 @@
 #include "base_functions.h"
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);
-typedef double (*VariablesFunction) (char*);
+typedef double (*VariablesFunction) (const char*);
 
 typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction, VariablesFunction);
 

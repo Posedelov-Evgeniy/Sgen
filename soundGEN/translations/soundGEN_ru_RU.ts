@@ -243,6 +243,38 @@
         <source>Ctrl+E</source>
         <translation>Ctrl+E</translation>
     </message>
+    <message>
+        <source>Variables</source>
+        <translation>Переменные </translation>
+    </message>
+    <message>
+        <source>Settings</source>
+        <translation>Настройки</translation>
+    </message>
+    <message>
+        <source>Buffer</source>
+        <translation>Буфер</translation>
+    </message>
+    <message>
+        <source>25 ms</source>
+        <translation>25 мс</translation>
+    </message>
+    <message>
+        <source>50 ms</source>
+        <translation>50 мс</translation>
+    </message>
+    <message>
+        <source>250 ms</source>
+        <translation>250 мс</translation>
+    </message>
+    <message>
+        <source>1000 ms</source>
+        <translation>1000 мс</translation>
+    </message>
+    <message>
+        <source>10000 ms</source>
+        <translation>10000 мс</translation>
+    </message>
 </context>
 <context>
     <name>SndController</name>
@@ -306,6 +338,10 @@
         <source>Error write to file: %filename%</source>
         <translation>Ошибка записи в файл: %filename%</translation>
     </message>
+    <message>
+        <source>Driver:</source>
+        <translation>Устройство:</translation>
+    </message>
 </context>
 <context>
     <name>SoundPicker</name>
@@ -368,6 +404,87 @@
     <message>
         <source>All files (*)</source>
         <translation>Все файлы (*)</translation>
+    </message>
+</context>
+<context>
+    <name>SoundPickersList</name>
+    <message>
+        <source>Form</source>
+        <translation>Форма</translation>
+    </message>
+</context>
+<context>
+    <name>VariablePicker</name>
+    <message>
+        <source>Form</source>
+        <translation>Форма</translation>
+    </message>
+    <message>
+        <source>Variable name:</source>
+        <translation>Название переменной:</translation>
+    </message>
+    <message>
+        <source>=</source>
+        <translation>=</translation>
+    </message>
+    <message>
+        <source>Variable type:</source>
+        <translation>Тип переменной:</translation>
+    </message>
+    <message>
+        <source>Integer</source>
+        <translation>Целая</translation>
+    </message>
+    <message>
+        <source>Float</source>
+        <translation>Вещественная</translation>
+    </message>
+    <message>
+        <source>Time</source>
+        <translation>Время</translation>
+    </message>
+    <message>
+        <source>Boolean</source>
+        <translation>Логическая</translation>
+    </message>
+    <message>
+        <source>Minimum:</source>
+        <translation>Минимум:</translation>
+    </message>
+    <message>
+        <source>Maximum:</source>
+        <translation>Максимум:</translation>
+    </message>
+    <message>
+        <source>Value:</source>
+        <translation>Значение:</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <source>E</source>
+        <translation>В</translation>
+    </message>
+    <message>
+        <source>T</source>
+        <translation>Т</translation>
+    </message>
+    <message>
+        <source>-</source>
+        <translation>-</translation>
+    </message>
+    <message>
+        <source>+</source>
+        <translation>+</translation>
+    </message>
+</context>
+<context>
+    <name>VariablePickersList</name>
+    <message>
+        <source>Form</source>
+        <translation>Форма</translation>
     </message>
 </context>
 <context>

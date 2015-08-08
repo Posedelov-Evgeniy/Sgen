@@ -85,6 +85,12 @@ void MainWindow::sound_stopped()
     ui->action6->setEnabled(true);
     ui->action8->setEnabled(true);
 
+    ui->action25_ms->setEnabled(true);
+    ui->action50_ms->setEnabled(true);
+    ui->action250_ms->setEnabled(true);
+    ui->action1000_ms->setEnabled(true);
+    ui->action10000_ms->setEnabled(true);
+
     ui->actionOpen->setEnabled(true);
     emit stop_channel_graphics();
 
@@ -112,6 +118,12 @@ void MainWindow::sound_started()
     ui->action4_Quadro->setEnabled(false);
     ui->action6->setEnabled(false);
     ui->action8->setEnabled(false);
+
+    ui->action25_ms->setEnabled(false);
+    ui->action50_ms->setEnabled(false);
+    ui->action250_ms->setEnabled(false);
+    ui->action1000_ms->setEnabled(false);
+    ui->action10000_ms->setEnabled(false);
 
     ui->actionOpen->setEnabled(false);
 
@@ -185,6 +197,8 @@ void MainWindow::save_settings(QString filename, bool base_settings)
     pickers_list->savePickersSettings(&settings);
     variables_list->savePickersSettings(&settings);
 
+    settings.setValue("main/buffer_size", sc->getSystemBufferMsSize());
+
     if (base_settings) {
         QRect gg = this->geometry();
         settings.setValue("window/left", gg.left());
@@ -237,6 +251,8 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->getDrawer()->setFft(settings.value("graphic/fft_"+QString::number(i), false).toBool());
         channels.at(i)->getDrawer()->setDtFftIntValue(settings.value("graphic/dt_fft_"+QString::number(i), 100).toDouble());
     }
+
+    pickBufferSize(settings.value("main/buffer_size", 1000).toInt());
 
     if (base_settings) {
         QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
@@ -353,6 +369,27 @@ void MainWindow::on_actionExit_triggered()
     close();
 }
 
+void MainWindow::pickBufferSize(unsigned int size)
+{
+    switch(size) {
+        case 25:
+        case 50:
+        case 250:
+        case 1000:
+        case 10000:
+            break;
+        default:
+            size = 1000;
+    }
+
+    ui->action25_ms->setChecked(size==25);
+    ui->action50_ms->setChecked(size==50);
+    ui->action250_ms->setChecked(size==250);
+    ui->action1000_ms->setChecked(size==1000);
+    ui->action10000_ms->setChecked(size==10000);
+    sc->setSystemBufferMsSize(size);
+}
+
 void MainWindow::setChannelsCount(unsigned int count)
 {
     if (count<channels.length()) {
@@ -417,4 +454,29 @@ void MainWindow::on_actionExport_to_triggered()
 {
     doSetParams();
     export_form->exec();
+}
+
+void MainWindow::on_action25_ms_triggered()
+{
+    pickBufferSize(25);
+}
+
+void MainWindow::on_action50_ms_triggered()
+{
+    pickBufferSize(50);
+}
+
+void MainWindow::on_action250_ms_triggered()
+{
+    pickBufferSize(250);
+}
+
+void MainWindow::on_action1000_ms_triggered()
+{
+    pickBufferSize(1000);
+}
+
+void MainWindow::on_action10000_ms_triggered()
+{
+    pickBufferSize(10000);
 }

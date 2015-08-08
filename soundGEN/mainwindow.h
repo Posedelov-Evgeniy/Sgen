@@ -68,6 +68,16 @@ private slots:
 
     void on_actionExport_to_triggered();
 
+    void on_action25_ms_triggered();
+
+    void on_action50_ms_triggered();
+
+    void on_action250_ms_triggered();
+
+    void on_action1000_ms_triggered();
+
+    void on_action10000_ms_triggered();
+
 private:
     Ui::MainWindow *ui;
     SndController *sc;
@@ -89,6 +99,7 @@ private:
 
     void save_settings(QString filename, bool base_settings = true);
     void load_settings(QString filename, bool base_settings = true);
+    void pickBufferSize(unsigned int size);
     void pickChannelsCount(unsigned int count);
     void setChannelsCount(unsigned int count);
     void doSetParams();

@@ -17,7 +17,7 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     return FMOD_OK;
 }
 
-double get_variable_value(char* varname) {
+double get_variable_value(const char* varname) {
     return SndController::Instance()->getVariables()->value(QString::fromLocal8Bit(varname));
 }
 
@@ -44,6 +44,7 @@ SndController::SndController(QObject *parent) :
     is_stopping = false;
     is_running = false;
     process_mode = SndPlay;
+    system_buffer_ms_size = 1000;
 
     unsigned int            version;
     /*
@@ -340,7 +341,7 @@ bool SndController::parseFunctions()
     out << "#include <stdio.h>\n";
     if (add_base_functions) out << "#include \"base_functions.h\"\n";
     out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-    out << "typedef double (*VariablesFunction) (char*);\n";
+    out << "typedef double (*VariablesFunction) (const char*);\n";
     for(i=0;i<channels_count;i++) {
         out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction, VariablesFunction __cFunction);\n";
     }
@@ -520,6 +521,20 @@ QMap<QString, QString>* SndController::getExpressions()
     return expressions;
 }
 
+unsigned int SndController::getSystemBufferMsSize() const
+{
+    return system_buffer_ms_size;
+}
+
+void SndController::setSystemBufferMsSize(unsigned int value)
+{
+    system_buffer_ms_size = value;
+    createsoundexinfo_sound.decodebuffersize  = (unsigned int) round(frequency * system_buffer_ms_size / 1000); /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32);   /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_gen.decodebuffersize = createsoundexinfo_sound.decodebuffersize;
+    createsoundexinfo_gen.length = createsoundexinfo_sound.length;
+}
+
 double SndController::getFrequency() const
 {
     return frequency;
@@ -528,9 +543,9 @@ double SndController::getFrequency() const
 void SndController::setFrequency(double value)
 {
     frequency = value;
-    createsoundexinfo_sound.decodebuffersize  = (unsigned int) frequency;                                     /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
-    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32); /* Length of PCM data in bytes of whole song (for Sound::getLength) */
-    createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                     /* Default playback rate of sound. */
+    createsoundexinfo_sound.decodebuffersize  = (unsigned int) round(frequency * system_buffer_ms_size / 1000); /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
+    createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32);   /* Length of PCM data in bytes of whole song (for Sound::getLength) */
+    createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                       /* Default playback rate of sound. */
     createsoundexinfo_gen.decodebuffersize = createsoundexinfo_sound.decodebuffersize;
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
@@ -646,7 +661,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
     result = system->playSound(sound, 0, 0, &channel);
     ERRCHECK(result);
 
-    timer->start(500);
+    timer->start(system_buffer_ms_size >= 100 ? system_buffer_ms_size / 2 : 50);
     is_running = true;
     /*
         Main loop.
@@ -663,7 +678,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }
 
-        QTimer::singleShot(1000, loop, SLOT(quit()));
+        QTimer::singleShot(system_buffer_ms_size, loop, SLOT(quit()));
         loop->exec();
     } while (!is_stopping);
     timer->stop();
