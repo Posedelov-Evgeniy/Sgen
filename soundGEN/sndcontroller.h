@@ -24,7 +24,7 @@
 #endif
 
 double base_play_sound(int i, unsigned int c, double t);
-double get_variable_value(const char* varname);
+double get_variable_value(unsigned int);
 
 enum SndControllerPlayMode { SndPlay, SndExport };
 
@@ -60,6 +60,7 @@ private:
     QVector<GenSoundChannelInfo*> channels;
     QMap<QString, double> *variables;
     QMap<QString, QString> *expressions;
+    QStringList *inner_variables;
 
     SoundList *baseSoundList;
     QString text_functions, sound_functions;
@@ -77,10 +78,17 @@ private:
     bool sound_system_initialized;
     unsigned int system_buffer_ms_size;
 
+    QMutex buffer_mutex;
+    qint32 *double_buff;
+    unsigned int double_buff_size;
+    bool variable_changed;
+
 public:
     static SndController* Instance();
     static bool DeleteInstance();
 
+    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer);
+    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer);
     void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
     double playSound(int index, unsigned int channel, double t);
 
@@ -114,6 +122,9 @@ public:
 
     unsigned int getSystemBufferMsSize() const;
     void setSystemBufferMsSize(unsigned int value);
+
+    QStringList* getInnerVariables() const;
+    void setVariableChanged(bool value);
 
 signals:
     void starting();

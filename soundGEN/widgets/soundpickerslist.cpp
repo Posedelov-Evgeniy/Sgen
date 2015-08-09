@@ -65,6 +65,8 @@ void SoundPickersList::loadPickersSettings(QSettings *settings)
 
 void SoundPickersList::setSNDOptions(SndController *sc)
 {
+    adjustParams();
+
     unsigned int ctag = sc->getBaseSoundList()->getTag() + 1;
     for(int i=0; i<sounds.length(); i++) {
         sc->getBaseSoundList()->setSound(i, sounds.at(i)->getFilename(), sounds.at(i)->getFunctionname(), ctag);
@@ -102,11 +104,12 @@ void SoundPickersList::adjustParams()
         picker->setRemoveButtonEnabled(true);
 
         current_func_name = picker->getFunctionname();
-        if (current_func_name.isEmpty() || current_func_name.indexOf(' ')>-1 || func_names.indexOf(current_func_name)>=0)
+        current_func_name = current_func_name.replace(QRegExp("\\W"), "");
+        if (current_func_name.isEmpty() || SndController::Instance()->getInnerVariables()->contains(current_func_name, Qt::CaseInsensitive) || func_names.indexOf(current_func_name)>=0)
         {
             while (func_names.indexOf(current_func_name = "sound"+QString::number(j))>=0) j++;
-            picker->setFunctionname(current_func_name);
         }
+        picker->setFunctionname(current_func_name);
         func_names.append(current_func_name);
 
         i++;

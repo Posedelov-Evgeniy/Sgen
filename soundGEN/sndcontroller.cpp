@@ -5,7 +5,7 @@ SndController *SndController::_self_controller = 0;
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
-    SndController::Instance()->fillBuffer(sound, data, datalen);
+    SndController::Instance()->fillBuffer(sound, data, datalen, true);
     return FMOD_OK;
 }
 
@@ -17,8 +17,9 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
     return FMOD_OK;
 }
 
-double get_variable_value(const char* varname) {
-    return SndController::Instance()->getVariables()->value(QString::fromLocal8Bit(varname));
+double get_variable_value(unsigned int varid) {
+    QMap<QString, double> *variables = SndController::Instance()->getVariables();
+    return variables->value(variables->keys().at(varid));
 }
 
 double base_play_sound(int i, unsigned int c, double t) {
@@ -28,12 +29,28 @@ double base_play_sound(int i, unsigned int c, double t) {
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
+    double_buff_size = 0;
+    double_buff = NULL;
     sound_system_initialized = false;
     baseSoundList = new SoundList(this);
     loop = new QEventLoop();
     timer = new QTimer();
     variables = new QMap<QString, double>();
     expressions = new QMap<QString, QString>();
+
+    inner_variables = new QStringList();
+    inner_variables->append("t");
+    inner_variables->append("k");
+    inner_variables->append("f");
+    inner_variables->append("__bFunction");
+    inner_variables->append("__cFunction");
+    inner_variables->append("PlaySoundFunction");
+    inner_variables->append("VariablesFunction");
+    inner_variables->append("extern");
+    inner_variables->append("return");
+    inner_variables->append("break");
+    inner_variables->append("continue");
+
     analyzer = new SndAnalyzer();
     analyzer->setTop_harmonic(1);
     all_functions_loaded = false;
@@ -102,6 +119,7 @@ SndController::~SndController()
     delete timer;
     delete baseSoundList;
     delete analyzer;
+    delete inner_variables;
     delete variables;
     delete expressions;
     delete process_thread;
@@ -208,29 +226,69 @@ unsigned int SndController::getChannelsCount()
     return channels_count;
 }
 
-void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
+void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer)
 {
-    unsigned int  count;
+    unsigned int count, maxcount, offset;
     qint32 *buffer = (qint32*)data;
     qint32 max_val = std::numeric_limits<qint32>::max();
+    double curr;
+    bool old_variable_changed = variable_changed;
 
-    datalen = datalen/(channels_count*sizeof(qint32));
+    if (!for_second_buffer)  buffer_mutex.lock();
+
+    datalen = datalen/sizeof(qint32);
+    maxcount = datalen/channels_count;
 
     if (all_functions_loaded)
     {
         for(unsigned int i=0; i<channels_count; i++)
         {
-            double curr = 0;
-
-            for (count=0; count<datalen; count++)
+            curr = 0;
+            for (count=0; count<maxcount; count++)
             {
                 curr = getResult(i, t+count/frequency);
                 buffer[count*channels_count + i] = (qint32)(curr * max_val);
             }
         }
 
-        t += datalen/frequency;
+        if (old_variable_changed && !for_second_buffer && use_second_buffer && double_buff && double_buff_size>=datalen) {
+            for(unsigned int i=0; i<channels_count; i++)
+            {
+                for (count=0; count<maxcount; count++)
+                {
+                    offset =  count*channels_count + i;
+                    buffer[offset] = round(
+                            (double) buffer[offset]*(count+1)/((double)maxcount) +
+                            (double) double_buff[offset]*(maxcount-count-1)/((double)maxcount)
+                    );
+                }
+            }
+            variable_changed = false;
+        }
+
+        if (!for_second_buffer) t += maxcount/frequency;
     }
+
+    if (!for_second_buffer && use_second_buffer) {
+        if (double_buff_size < datalen || !double_buff) {
+            if (double_buff) delete[] double_buff;
+            double_buff = new qint32[datalen];
+            double_buff_size = datalen;
+        }
+        fillBuffer(sound, double_buff, datalen*sizeof(qint32), true, true);
+    }
+
+    if (!for_second_buffer) buffer_mutex.unlock();
+}
+
+void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer)
+{
+    fillBuffer(sound, data, datalen, use_second_buffer, false);
+}
+
+void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
+{
+    fillBuffer(sound, data, datalen, false, false);
 }
 
 QString SndController::getCurrentParseHash()
@@ -341,7 +399,7 @@ bool SndController::parseFunctions()
     out << "#include <stdio.h>\n";
     if (add_base_functions) out << "#include \"base_functions.h\"\n";
     out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-    out << "typedef double (*VariablesFunction) (const char*);\n";
+    out << "typedef double (*VariablesFunction) (unsigned int);\n";
     for(i=0;i<channels_count;i++) {
         out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f, PlaySoundFunction __bFunction, VariablesFunction __cFunction);\n";
     }
@@ -360,6 +418,7 @@ bool SndController::parseFunctions()
     QMap<QString, double>::const_iterator iter_var;
     QMap<QString, QString>::const_iterator iter_expr;
     QString ftext;
+    int ind;
 
     for(i=0;i<channels_count;i++) {
         ftext = channels.at(i)->function_text;
@@ -370,11 +429,13 @@ bool SndController::parseFunctions()
         out2 << "    BaseVariablesFunction = __cFunction;\n";
 
         iter_var = variables->constBegin();
+        ind = 0;
         while (iter_var != variables->constEnd()) {
             if (ftext.contains(QRegExp("(\\W|^)("+iter_var.key()+")(\\W|$)"))) {
-                out2 << "    double " << iter_var.key() << " = BaseVariablesFunction(\"" << iter_var.key() << "\");\n";
+                out2 << "    double " << iter_var.key() << " = BaseVariablesFunction(" << ind << ");\n";
             }
             ++iter_var;
+            ++ind;
         }
 
         iter_expr = expressions->constBegin();
@@ -535,6 +596,17 @@ void SndController::setSystemBufferMsSize(unsigned int value)
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
 }
 
+QStringList* SndController::getInnerVariables() const
+{
+    return inner_variables;
+}
+
+void SndController::setVariableChanged(bool value)
+{
+    QMutexLocker locker(&buffer_mutex);
+    variable_changed = value;
+}
+
 double SndController::getFrequency() const
 {
     return frequency;
@@ -661,6 +733,10 @@ void SndController::play_cycle(FMOD::Sound *sound)
     result = system->playSound(sound, 0, 0, &channel);
     ERRCHECK(result);
 
+    variable_changed = false;
+    buffer_mutex.lock();
+    buffer_mutex.unlock();
+
     timer->start(system_buffer_ms_size >= 100 ? system_buffer_ms_size / 2 : 50);
     is_running = true;
     /*
@@ -673,7 +749,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
         emit cycle_start();
 
         for(i=0; i<channels.size(); i++) {
-            analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, get_variable_value, t - 0.5, t + 0.5, channels.at(i)->freq, 1*frequency);
+            analyzer->function_fft_top_only(getChannelFunction(i), base_play_sound, get_variable_value, t - system_buffer_ms_size/2000.0, t + system_buffer_ms_size/2000.0, channels.at(i)->freq, 1*frequency);
             channels.at(i)->fr = analyzer->getInstFrequency();
             channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
         }
@@ -685,6 +761,14 @@ void SndController::play_cycle(FMOD::Sound *sound)
 
     if (channel) {
         channel->setPaused(true);
+    }
+
+    QMutexLocker locker(&buffer_mutex);
+
+    if (double_buff) {
+        delete double_buff;
+        double_buff = NULL;
+        double_buff_size = 0;
     }
 }
 
@@ -807,13 +891,17 @@ void SndController::setFunctionStr(unsigned int channel, QString new_text)
 
 void SndController::setAmp(unsigned int channel, double new_amp)
 {
+    QMutexLocker locker(&buffer_mutex);
     channels.at(channel)->amp = new_amp;
+    variable_changed = true;
 }
 
 void SndController::setFreq(unsigned int channel, double new_freq)
 {
+    QMutexLocker locker(&buffer_mutex);
     channels.at(channel)->freq = new_freq;
     channels.at(channel)->k = new_freq*2.0*M_PI;
+    variable_changed = true;
 }
 
 double SndController::getInstFreq(unsigned int channel)

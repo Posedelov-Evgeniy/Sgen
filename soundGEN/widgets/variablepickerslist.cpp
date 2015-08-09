@@ -78,6 +78,8 @@ void VariablePickersList::loadPickersSettings(QSettings *settings)
 
 void VariablePickersList::setSNDOptions(SndController *sc)
 {
+    adjustParams();
+
     sc->getVariables()->clear();
     sc->getExpressions()->clear();
 
@@ -120,13 +122,13 @@ void VariablePickersList::adjustParams()
         picker->setRemoveButtonEnabled(true);
 
         current_var_name = picker->getVarname();
-        if (current_var_name.isEmpty() || current_var_name.indexOf(' ')>-1 || var_names.indexOf(current_var_name)>=0)
+        current_var_name = current_var_name.replace(QRegExp("\\W"), "");
+        if (current_var_name.isEmpty() || SndController::Instance()->getInnerVariables()->contains(current_var_name, Qt::CaseInsensitive) || var_names.indexOf(current_var_name)>=0)
         {
             while (var_names.indexOf(current_var_name = "var"+QString::number(j))>=0) j++;
-            picker->setVarname(current_var_name);
         }
+        picker->setVarname(current_var_name);
         var_names.append(current_var_name);
-
         i++;
     }
 }
@@ -150,6 +152,7 @@ void VariablePickersList::send_changed_value()
 {
     VariablePicker *picker = dynamic_cast<VariablePicker*>(this->sender());
     if (picker && SndController::Instance()->getVariables()->contains(picker->getVarname())) {
+        SndController::Instance()->setVariableChanged(true);
         SndController::Instance()->getVariables()->insert(picker->getVarname(), picker->getValue());
     }
 }

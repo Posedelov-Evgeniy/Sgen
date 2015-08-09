@@ -200,11 +200,16 @@ void MainWindow::save_settings(QString filename, bool base_settings)
     settings.setValue("main/buffer_size", sc->getSystemBufferMsSize());
 
     if (base_settings) {
-        QRect gg = this->geometry();
-        settings.setValue("window/left", gg.left());
-        settings.setValue("window/top", gg.top());
-        settings.setValue("window/width", gg.width());
-        settings.setValue("window/height", gg.height());
+
+        settings.setValue("window/maximized", isMaximized());
+        settings.setValue("window/minimized", isMinimized());
+        if (!isMaximized() && !isMinimized()) {
+            QRect gg = this->geometry();
+            settings.setValue("window/left", gg.left());
+            settings.setValue("window/top", gg.top());
+            settings.setValue("window/width", gg.width());
+            settings.setValue("window/height", gg.height());
+        }
 
         settings.setValue("main/opened_file", current_file);
         settings.setValue("main/opened_file_changed", current_file_changed);
@@ -257,6 +262,13 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     if (base_settings) {
         QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
         QWidget::resize(settings.value("window/width", 400).toInt(), settings.value("window/height", 300).toInt());
+
+        if (settings.value("window/maximized", false).toBool()) {
+            showMaximized();
+        }
+        if (settings.value("window/minimized", false).toBool()) {
+            showMinimized();
+        }
 
         QFile file(EnvironmentInfo::getConfigsPath()+"/functions.cpp.cfg");
         if(!file.exists()){
