@@ -55,7 +55,7 @@ void MFftDrawSurface::recalcData()
             data_top = 0;
         }
         if (!analyzer->getHarmonics() || analyzer->getHarmonics()->isEmpty()) {
-            analyzer->function_fft_base(graphicFunction, base_play_sound, get_variable_value, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+            analyzer->function_fft_base(graphicFunction, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         }
         if (analyzer->getHarmonics()) {
             data = new QVector<HarmonicInfo>(*(analyzer->getHarmonics()));
@@ -63,7 +63,7 @@ void MFftDrawSurface::recalcData()
         if (analyzer->getTopHarmonics()) {
             data_top = new QVector<HarmonicInfo>(*(analyzer->getTopHarmonics()));
         }
-        analyzer->function_fft_base(graphicFunction, base_play_sound, get_variable_value, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+        analyzer->function_fft_base(graphicFunction, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
         data_buffer = analyzer->getHarmonics();
     }
     last_fmod_dt = cfmod;
@@ -186,4 +186,24 @@ void MFftDrawSurface::paintEvent(QPaintEvent *e)
             painter.drawText(rect().right()-max_top_width, rect().top()+30+(i+1)*(fm.height()+5), QString::number(data_top->at(i).freq, 'f', 1) + tr("Hz") + " -> " + QString::number(data_top->at(i).amp, 'f', 4));
         }
     }
+}
+
+void MFftDrawSurface::mousePressEvent(QMouseEvent *event)
+{
+    return;
+}
+
+void MFftDrawSurface::mouseReleaseEvent(QMouseEvent *event)
+{
+    return;
+}
+
+void MFftDrawSurface::mouseMoveEvent(QMouseEvent *event)
+{
+    return;
+}
+
+void MFftDrawSurface::wheelEvent(QWheelEvent *event)
+{
+    return;
 }

@@ -11,8 +11,8 @@
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);
 typedef double (*VariablesFunction) (unsigned int);
-
-typedef double (*GenSoundFunction) (double, double, double, PlaySoundFunction, VariablesFunction);
+typedef void (*UpdateVariablesFunction) (PlaySoundFunction, VariablesFunction);
+typedef double (*GenSoundFunction) (double, double, double);
 
 struct GenSoundChannelInfo {
     double freq;

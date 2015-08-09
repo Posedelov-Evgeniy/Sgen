@@ -152,7 +152,6 @@ void VariablePickersList::send_changed_value()
 {
     VariablePicker *picker = dynamic_cast<VariablePicker*>(this->sender());
     if (picker && SndController::Instance()->getVariables()->contains(picker->getVarname())) {
-        SndController::Instance()->setVariableChanged(true);
-        SndController::Instance()->getVariables()->insert(picker->getVarname(), picker->getValue());
+        SndController::Instance()->setVariable(picker->getVarname(), picker->getValue());
     }
 }

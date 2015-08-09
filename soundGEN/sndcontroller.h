@@ -82,6 +82,7 @@ private:
     qint32 *double_buff;
     unsigned int double_buff_size;
     bool variable_changed;
+    UpdateVariablesFunction update_func;
 
 public:
     static SndController* Instance();
@@ -124,7 +125,7 @@ public:
     void setSystemBufferMsSize(unsigned int value);
 
     QStringList* getInnerVariables() const;
-    void setVariableChanged(bool value);
+    void setVariable(QString varname, double varvalue);
 
 signals:
     void starting();

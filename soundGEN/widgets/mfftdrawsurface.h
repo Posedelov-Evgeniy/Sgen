@@ -29,6 +29,10 @@ public:
     void incT();
 protected:
     virtual void paintEvent(QPaintEvent* e);
+    virtual void mousePressEvent(QMouseEvent * event);
+    virtual void mouseReleaseEvent(QMouseEvent * event);
+    virtual void mouseMoveEvent(QMouseEvent * event);
+    virtual void wheelEvent(QWheelEvent * event);
 };
 
 #endif // MFFTDRAWSURFACE_H

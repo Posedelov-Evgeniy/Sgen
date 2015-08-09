@@ -104,6 +104,7 @@ MGraphicDrawSurface::MGraphicDrawSurface() :
     QWidget()
 {
     grid_k = 1;
+    mpressed = false;
 }
 
 double MGraphicDrawSurface::calculateTGrid(double cl_dt)
@@ -174,7 +175,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 
     x1 = 0;
     if (graphicFunction)
-        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq, base_play_sound, get_variable_value);
+        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq);
     else
         y1 = height_center - k_y_graphic*graphicTFunction(kFreq*t);
 
@@ -184,9 +185,38 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
         x1 = i/2;
 
         if (graphicFunction)
-            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq, base_play_sound, get_variable_value);
+            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq);
         else
             y1 = height_center - k_y_graphic*graphicTFunction((t+i*k_t_graphic)*kFreq);
         painter.drawLine(x0,y0,x1,y1);
     }
+}
+
+void MGraphicDrawSurface::mousePressEvent(QMouseEvent *event)
+{
+    mpressed = true;
+    press_pos = event->pos();
+}
+
+void MGraphicDrawSurface::mouseReleaseEvent(QMouseEvent *event)
+{
+    mpressed = false;
+}
+
+void MGraphicDrawSurface::mouseMoveEvent(QMouseEvent *event)
+{
+    if (mpressed) {
+        QPoint cur = event->pos();
+        scrollChange(cur.x() - press_pos.x(), cur.y() - press_pos.y());
+    }
+}
+
+void MGraphicDrawSurface::wheelEvent(QWheelEvent *event)
+{
+    scrollChange(event->delta()*5, 0);
+}
+
+void MGraphicDrawSurface::scrollChange(int dx, int dy)
+{
+    t += kt*dt*8*dx/width();
 }
