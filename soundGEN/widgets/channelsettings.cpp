@@ -49,6 +49,36 @@ void ChannelSettings::setChannelsCount(unsigned int channels_count)
     ui->label->setText(ltext);
 }
 
+void ChannelSettings::setGraphicsVisibility(bool visible)
+{
+    channel_drawer->setVisible(visible);
+}
+
+bool ChannelSettings::getGraphicsVisibility() const
+{
+    return channel_drawer->isVisible();
+}
+
+void ChannelSettings::setInstAmpVisibility(bool visible)
+{
+    ui->lcdNumber_amp->setVisible(visible);
+}
+
+bool ChannelSettings::getInstAmpVisibility(bool visible) const
+{
+    return ui->lcdNumber_amp->isVisible();
+}
+
+void ChannelSettings::setInstFreqVisibility(bool visible)
+{
+    ui->lcdNumber_freq->setVisible(visible);
+}
+
+bool ChannelSettings::getInstFreqVisibility(bool visible) const
+{
+    return ui->lcdNumber_freq->isVisible();
+}
+
 ChannelSettings::~ChannelSettings()
 {
     channel_drawer->deleteLater();

@@ -82,6 +82,7 @@ private:
     qint32 *double_buff;
     unsigned int double_buff_size;
     bool variable_changed;
+    bool analize_is_active;
     UpdateVariablesFunction update_func;
 
 public:
@@ -127,6 +128,8 @@ public:
     QStringList* getInnerVariables() const;
     void setVariable(QString varname, double varvalue);
 
+    void setPlayAnalizeActivity(bool active);
+    bool getPlayAnalizeActivity() const;
 signals:
     void starting();
     void started();

@@ -193,6 +193,9 @@ void MainWindow::save_settings(QString filename, bool base_settings)
         settings.setValue("graphic/fft_"+QString::number(i), channels.at(i)->getDrawer()->isFft());
         settings.setValue("graphic/dt_fft_"+QString::number(i), channels.at(i)->getDrawer()->getDtFftIntValue());
     }
+    settings.setValue("main/graphics_visible", ui->actionChannel_graphics->isChecked());
+    settings.setValue("main/instamp_visible", ui->actionChannel_instant_amplitude->isChecked());
+    settings.setValue("main/instfreq_visible", ui->actionChannel_instant_frequency->isChecked());
 
     pickers_list->savePickersSettings(&settings);
     variables_list->savePickersSettings(&settings);
@@ -246,6 +249,10 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     if (channels_cnt<=0 || channels_cnt>8) channels_cnt=2;
     pickChannelsCount(channels_cnt);
 
+    ui->actionChannel_graphics->setChecked(settings.value("main/graphics_visible", ui->actionChannel_graphics->isChecked()).toBool());
+    ui->actionChannel_instant_amplitude->setChecked(settings.value("main/instamp_visible", ui->actionChannel_instant_amplitude->isChecked()).toBool());
+    ui->actionChannel_instant_frequency->setChecked(settings.value("main/instfreq_visible", ui->actionChannel_instant_frequency->isChecked()).toBool());
+
     for(i=0; i<sc->getChannelsCount(); i++) {
         channels.at(i)->setFunction(settings.value("main/function_"+QString::number(i), "sin(k*t)").toString());
         channels.at(i)->setAmp(settings.value("main/amp_"+QString::number(i), 1).toDouble());
@@ -256,6 +263,7 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->getDrawer()->setFft(settings.value("graphic/fft_"+QString::number(i), false).toBool());
         channels.at(i)->getDrawer()->setDtFftIntValue(settings.value("graphic/dt_fft_"+QString::number(i), 100).toDouble());
     }
+    doSetVisibility();
 
     pickBufferSize(settings.value("main/buffer_size", 1000).toInt());
 
@@ -491,4 +499,29 @@ void MainWindow::on_action1000_ms_triggered()
 void MainWindow::on_action10000_ms_triggered()
 {
     pickBufferSize(10000);
+}
+
+void MainWindow::doSetVisibility()
+{
+    for(int i = 0; i<channels.length(); i++) {
+        channels.at(i)->setGraphicsVisibility(ui->actionChannel_graphics->isChecked());
+        channels.at(i)->setInstAmpVisibility(ui->actionChannel_instant_amplitude->isChecked());
+        channels.at(i)->setInstFreqVisibility(ui->actionChannel_instant_frequency->isChecked());
+    }
+    sc->setPlayAnalizeActivity(ui->actionChannel_instant_amplitude->isChecked() || ui->actionChannel_instant_frequency->isChecked());
+}
+
+void MainWindow::on_actionChannel_graphics_triggered()
+{
+    doSetVisibility();
+}
+
+void MainWindow::on_actionChannel_instant_frequency_triggered()
+{
+    doSetVisibility();
+}
+
+void MainWindow::on_actionChannel_instant_amplitude_triggered()
+{
+    doSetVisibility();
 }

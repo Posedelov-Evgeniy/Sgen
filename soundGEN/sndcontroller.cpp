@@ -29,6 +29,7 @@ double base_play_sound(int i, unsigned int c, double t) {
 SndController::SndController(QObject *parent) :
     QObject(parent)
 {
+    analize_is_active = true;
     double_buff_size = 0;
     double_buff = NULL;
     sound_system_initialized = false;
@@ -629,6 +630,16 @@ void SndController::setVariable(QString varname, double varvalue)
     if (update_func) update_func(base_play_sound, get_variable_value);
 }
 
+void SndController::setPlayAnalizeActivity(bool active)
+{
+    analize_is_active = active;
+}
+
+bool SndController::getPlayAnalizeActivity() const
+{
+    return analize_is_active;
+}
+
 double SndController::getFrequency() const
 {
     return frequency;
@@ -770,10 +781,12 @@ void SndController::play_cycle(FMOD::Sound *sound)
 
         emit cycle_start();
 
-        for(i=0; i<channels.size(); i++) {
-            analyzer->function_fft_top_only(getChannelFunction(i), t - system_buffer_ms_size/2000.0, t + system_buffer_ms_size/2000.0, channels.at(i)->freq, 1*frequency);
-            channels.at(i)->fr = analyzer->getInstFrequency();
-            channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
+        if (analize_is_active) {
+            for(i=0; i<channels.size(); i++) {
+                analyzer->function_fft_top_only(getChannelFunction(i), t - system_buffer_ms_size/2000.0, t + system_buffer_ms_size/2000.0, channels.at(i)->freq, 1*frequency);
+                channels.at(i)->fr = analyzer->getInstFrequency();
+                channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
+            }
         }
 
         QTimer::singleShot(system_buffer_ms_size, loop, SLOT(quit()));

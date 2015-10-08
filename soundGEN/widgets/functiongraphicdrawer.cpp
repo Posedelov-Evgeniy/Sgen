@@ -9,6 +9,7 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
 {
     ui->setupUi(this);
     block_change = false;
+    need_to_run = false;
 
     #if defined(__ANDROID__) || defined(ANDROID)
     ui->ampSlider->setOrientation(Qt::Horizontal);
@@ -56,6 +57,7 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
 
 functionGraphicDrawer::~functionGraphicDrawer()
 {
+    need_to_run = false;
     mThread->removeGraphic();
     if (mThread->getLinksCount()==0) {
         mThread->Stop = true;
@@ -154,6 +156,20 @@ void functionGraphicDrawer::setFft(bool value)
     block_change = false;
 }
 
+void functionGraphicDrawer::setVisible(bool visible)
+{
+    if (isVisible()!=visible) {
+        if (need_to_run && visible) {
+            drawCycle();
+            mThread->Stop = false;
+            mThread->start();
+        } else if (mThread && mThread->isRunning()) {
+            mThread->Stop = true;
+        }
+    }
+    QWidget::setVisible(visible);
+}
+
 void functionGraphicDrawer::drawCycle()
 {
     widget_drawer->incT();
@@ -165,13 +181,17 @@ void functionGraphicDrawer::drawCycle()
 
 void functionGraphicDrawer::run()
 {
+    need_to_run = true;
     drawCycle();
-    mThread->Stop = false;
-    mThread->start();
+    if (isVisible()) {
+        mThread->Stop = false;
+        mThread->start();
+    }
 }
 
 void functionGraphicDrawer::stop()
 {
+    need_to_run = false;
     mThread->Stop = true;
 }
 

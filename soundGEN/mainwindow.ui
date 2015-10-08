@@ -97,8 +97,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>100</width>
-               <height>30</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <property name="palette">
@@ -289,8 +289,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>100</width>
-               <height>30</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_4"/>
@@ -405,8 +405,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>816</width>
-               <height>269</height>
+               <width>814</width>
+               <height>282</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_6"/>
@@ -468,7 +468,7 @@
      <x>0</x>
      <y>0</y>
      <width>840</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -508,8 +508,17 @@
      <addaction name="action1000_ms"/>
      <addaction name="action10000_ms"/>
     </widget>
+    <widget class="QMenu" name="menuView">
+     <property name="title">
+      <string>View</string>
+     </property>
+     <addaction name="actionChannel_graphics"/>
+     <addaction name="actionChannel_instant_amplitude"/>
+     <addaction name="actionChannel_instant_frequency"/>
+    </widget>
     <addaction name="menuChannels"/>
     <addaction name="menuBuffer"/>
+    <addaction name="menuView"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menuSettings"/>
@@ -637,6 +646,39 @@
    </property>
    <property name="text">
     <string>10000 ms</string>
+   </property>
+  </action>
+  <action name="actionChannel_graphics">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Channel graphics</string>
+   </property>
+  </action>
+  <action name="actionChannel_instant_frequency">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Channel instant frequency</string>
+   </property>
+  </action>
+  <action name="actionChannel_instant_amplitude">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Channel instant amplitude</string>
    </property>
   </action>
  </widget>

@@ -29,6 +29,13 @@ public:
     void setVisibleAmp(double amp);
     void setVisibleFreq(double freq);
     void setChannelsCount(unsigned int channels_count);
+
+    void setGraphicsVisibility(bool visible);
+    bool getGraphicsVisibility() const;
+    void setInstAmpVisibility(bool visible);
+    bool getInstAmpVisibility(bool visible) const;
+    void setInstFreqVisibility(bool visible);
+    bool getInstFreqVisibility(bool visible) const;
 signals:
     void options_changed(int channel_index);
 public slots:
@@ -40,9 +47,7 @@ public slots:
     void stop_graphic();
 private slots:
     void on_doubleSpinBox_amp_valueChanged(double arg1);
-
     void on_doubleSpinBox_freq_valueChanged(double arg1);
-
     void on_dialog_functions_btn_clicked();
 
     void paste_function_accepted();

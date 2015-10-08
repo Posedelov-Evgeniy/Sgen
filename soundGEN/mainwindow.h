@@ -33,50 +33,35 @@ signals:
 private slots:
 
     void sound_stopped();
-
     void sound_started();
-
+    void options_changing();
     void get_message(QString message);
 
     void on_MainWindow_destroyed();
-
     void on_buttonBox_clicked(QAbstractButton *button);
-
     void on_actionOpen_triggered();
-
     void on_actionSave_triggered();
-
     void on_actionSave_as_triggered();
-
     void on_actionExit_triggered();
-
     void on_actionClose_triggered();
-
-    void options_changing();
-
     void channel_options_changing(int channel_index);
-
     void on_action1_Mono_triggered();
-
     void on_action2_Stereo_triggered();
-
     void on_action4_Quadro_triggered();
-
     void on_action6_triggered();
-
     void on_action8_triggered();
-
     void on_actionExport_to_triggered();
-
     void on_action25_ms_triggered();
-
     void on_action50_ms_triggered();
-
     void on_action250_ms_triggered();
-
     void on_action1000_ms_triggered();
-
     void on_action10000_ms_triggered();
+
+    void on_actionChannel_graphics_triggered();
+
+    void on_actionChannel_instant_frequency_triggered();
+
+    void on_actionChannel_instant_amplitude_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -103,6 +88,7 @@ private:
     void pickChannelsCount(unsigned int count);
     void setChannelsCount(unsigned int count);
     void doSetParams();
+    void doSetVisibility();
 };
 
 #endif // MAINWINDOW_H

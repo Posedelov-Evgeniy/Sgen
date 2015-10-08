@@ -36,12 +36,15 @@ public:
 
     bool isFft();
     void setFft(bool value);
+
+    virtual void setVisible(bool visible);
 private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;
     MGraphicDrawSurface *widget_drawer;
     MFftDrawSurface *widget_fft_drawer;
     bool block_change;
+    bool need_to_run;
 signals:
     void changed();
 public slots:
