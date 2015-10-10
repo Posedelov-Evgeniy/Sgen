@@ -15,7 +15,7 @@ SndAnalyzer::~SndAnalyzer()
     delete top_harmonics;
 }
 
-void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, double t1, double t2, double freq, unsigned int points)
+void SndAnalyzer::function_fft_top_only(GenSignalFunction fct, double t1, double t2, double freq, unsigned int points)
 {
     double t, dt;
     unsigned int i;
@@ -46,7 +46,7 @@ void SndAnalyzer::function_fft_top_only(GenSoundFunction fct, double t1, double 
     delete [] cout;
 }
 
-void SndAnalyzer::function_fft_base(GenSoundFunction fct, double t1, double t2, double freq, unsigned int points)
+void SndAnalyzer::function_fft_base(GenSignalFunction fct, double t1, double t2, double freq, unsigned int points)
 {
     double t, dt;
     double timelen = abs(t2-t1);

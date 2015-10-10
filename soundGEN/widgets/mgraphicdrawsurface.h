@@ -13,7 +13,7 @@ class MGraphicDrawSurface : public QWidget
 protected:
     double t, t0, amp, freq, dt, kt, kamp, dt_axis;
     double grid_k;
-    GenSoundFunction graphicFunction;
+    GenSignalFunction graphicFunction;
     base_function_signal graphicTFunction;
     double calculateTGrid(double cl_dt);
 
@@ -47,7 +47,7 @@ public:
 
     virtual void incT();
 
-    void setGraphicFunction(GenSoundFunction value);
+    void setGraphicFunction(GenSignalFunction value);
     void setGraphicFunctionT(base_function_signal value);
     void resetGraphicFunctions();
 

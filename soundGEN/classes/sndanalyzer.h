@@ -17,8 +17,8 @@ class SndAnalyzer
 public:
     SndAnalyzer();
     ~SndAnalyzer();
-    void function_fft_top_only(GenSoundFunction fct, double t1, double t2, double freq, unsigned int points);
-    void function_fft_base(GenSoundFunction fct, double t1, double t2, double freq, unsigned int points);
+    void function_fft_top_only(GenSignalFunction fct, double t1, double t2, double freq, unsigned int points);
+    void function_fft_base(GenSignalFunction fct, double t1, double t2, double freq, unsigned int points);
     double getInstFrequency();
     double getInstAmp();
     unsigned int getTop_harmonic() const;

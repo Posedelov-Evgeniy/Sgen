@@ -70,7 +70,7 @@ functionGraphicDrawer::~functionGraphicDrawer()
     delete ui;
 }
 
-void functionGraphicDrawer::setGraphicFunction(GenSoundFunction value)
+void functionGraphicDrawer::setGraphicFunction(GenSignalFunction value)
 {
     widget_drawer->setGraphicFunction(value);
     widget_fft_drawer->setGraphicFunction(value);

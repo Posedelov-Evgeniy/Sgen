@@ -5,7 +5,7 @@ SndController *SndController::_self_controller = 0;
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
-    SndController::Instance()->fillBuffer(sound, data, datalen, true);
+    SndController::Instance()->fillBuffer(data, datalen, true);
     return FMOD_OK;
 }
 
@@ -27,43 +27,24 @@ double base_play_sound(int i, unsigned int c, double t) {
 }
 
 SndController::SndController(QObject *parent) :
-    QObject(parent)
+    AbstractSndController(parent)
 {
     analize_is_active = true;
-    double_buff_size = 0;
-    double_buff = NULL;
     sound_system_initialized = false;
     baseSoundList = new SoundList(this);
     loop = new QEventLoop();
     timer = new QTimer();
-    variables = new QMap<QString, double>();
-    expressions = new QMap<QString, QString>();
-    update_func = NULL;
-
-    inner_variables = new QStringList();
-    inner_variables->append("t");
-    inner_variables->append("k");
-    inner_variables->append("f");
-    inner_variables->append("__bFunction");
-    inner_variables->append("__cFunction");
-    inner_variables->append("PlaySoundFunction");
-    inner_variables->append("VariablesFunction");
-    inner_variables->append("extern");
-    inner_variables->append("return");
-    inner_variables->append("break");
-    inner_variables->append("continue");
 
     analyzer = new SndAnalyzer();
     analyzer->setTop_harmonic(1);
-    all_functions_loaded = false;
-    channels_count = 0;
-    frequency = 0;
-    oldParseHash = "";
-    sound_functions = "";
+
     is_stopping = false;
     is_running = false;
     process_mode = SndPlay;
     system_buffer_ms_size = 1000;
+
+    setBasePlaySoundFunction(base_play_sound);
+    setVariableValueFunction(get_variable_value);
 
     unsigned int            version;
     /*
@@ -121,9 +102,8 @@ SndController::~SndController()
     delete timer;
     delete baseSoundList;
     delete analyzer;
-    delete inner_variables;
-    delete variables;
-    delete expressions;
+
+
     delete process_thread;
 }
 
@@ -131,7 +111,7 @@ SndController *SndController::Instance()
 {
     if(!_self_controller)
     {
-        _self_controller = new SndController();
+        _self_controller = new SndController(0);
     }
     return _self_controller;
 }
@@ -194,413 +174,17 @@ double SndController::playSound(int index, unsigned int channel, double t)
 
 void SndController::setChannelsCount(unsigned int count)
 {
-    if (count<channels.size()) {
-        while (count>=0 && count<channels.size()) {
-            delete channels.last();
-            channels.remove(channels.size()-1);
-        }
-    } else if (count>channels.size()) {
-        while (count>channels.size()) {
-            GenSoundChannelInfo *info = new GenSoundChannelInfo();
-            info->amp = 1;
-            info->freq = 500;
-            info->channel_fct = NULL;
-            info->function_text = "sin(k*t)";
-            info->k = info->freq*2.0*M_PI;
-            info->fr = 0;
-            info->ar = 0;
-            channels.append(info);
-        }
-    }
-
-    channels_count = count;
-
+    SignalController::setChannelsCount(count);
     createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32); /* Length of PCM data in bytes of whole song (for Sound::getLength) */
     createsoundexinfo_sound.numchannels       = channels_count;                                               /* Number of channels in the sound. */
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
     createsoundexinfo_gen.numchannels = createsoundexinfo_sound.numchannels;
-
     if (sound_system_initialized) initSoundSystem();
-}
-
-unsigned int SndController::getChannelsCount()
-{
-    return channels_count;
-}
-
-void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer)
-{
-    unsigned int count, maxcount, offset;
-    qint32 *buffer = (qint32*)data;
-    qint32 max_val = std::numeric_limits<qint32>::max();
-    double curr;
-    bool old_variable_changed = variable_changed;
-
-    if (!for_second_buffer) buffer_mutex.lock();
-
-    datalen = datalen/sizeof(qint32);
-    maxcount = datalen/channels_count;
-
-    if (all_functions_loaded)
-    {
-        for(unsigned int i=0; i<channels_count; i++)
-        {
-            curr = 0;
-            for (count=0; count<maxcount; count++)
-            {
-                curr = getResult(i, t+count/frequency);
-                buffer[count*channels_count + i] = (qint32)(curr * max_val);
-            }
-        }
-
-        if (old_variable_changed && !for_second_buffer && use_second_buffer && double_buff && double_buff_size>=datalen) {
-            for(unsigned int i=0; i<channels_count; i++)
-            {
-                for (count=0; count<maxcount; count++)
-                {
-                    offset =  count*channels_count + i;
-                    buffer[offset] = round(
-                            (double) buffer[offset]*(count+1)/((double)maxcount) +
-                            (double) double_buff[offset]*(maxcount-count-1)/((double)maxcount)
-                    );
-                }
-            }
-            variable_changed = false;
-        }
-
-        if (!for_second_buffer) t += maxcount/frequency;
-    }
-
-    if (!for_second_buffer && use_second_buffer) {
-        if (double_buff_size < datalen || !double_buff) {
-            if (double_buff) delete[] double_buff;
-            double_buff = new qint32[datalen];
-            double_buff_size = datalen;
-        }
-        fillBuffer(sound, double_buff, datalen*sizeof(qint32), true, true);
-    }
-
-    if (!for_second_buffer) buffer_mutex.unlock();
-}
-
-void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer)
-{
-    fillBuffer(sound, data, datalen, use_second_buffer, false);
-}
-
-void SndController::fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen)
-{
-    fillBuffer(sound, data, datalen, false, false);
-}
-
-QString SndController::getCurrentParseHash()
-{
-    QCryptographicHash hash(QCryptographicHash::Sha1);
-
-    hash.addData(EnvironmentInfo::getConfigsPath().toLatin1());
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-        hash.addData(QString::number(QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/main.dll")).toLatin1());
-    #else
-        hash.addData(QString::number(QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/main.so")).toLatin1());
-    #endif
-    hash.addData(QString::number(channels_count).toLatin1());
-    hash.addData(QString::number(lib.isLoaded()).toLatin1());
-    hash.addData(sound_functions.toLatin1());
-    hash.addData(text_functions.toLatin1());
-    for(int i=0;i<channels_count;i++) {
-        hash.addData(channels.at(i)->function_text.toLatin1());
-    }
-
-    return hash.result().toHex();
-}
-
-bool SndController::checkHash(bool emptyCheck)
-{
-    QString parseHash = "";
-
-    if (emptyCheck || !oldParseHash.isEmpty()) {
-        parseHash = getCurrentParseHash();
-        if (!emptyCheck || oldParseHash.isEmpty()) {
-            qDebug() << tr("Hash is: ") << parseHash;
-        }
-    }
-
-    if (!emptyCheck && !oldParseHash.isEmpty() && !parseHash.isEmpty() && oldParseHash==parseHash) {
-        qDebug() << tr("Hashes equals - no need to parse functions");
-        return true;
-    }
-
-    if (!parseHash.isEmpty()) {
-        oldParseHash = parseHash;
-    }
-
-    return false;
-}
-
-bool SndController::parseFunctions()
-{
-    if (checkHash(false)) return true;
-
-    QString error = "";
-    bool add_base_functions = false;
-    all_functions_loaded = false;
-    unsigned int i;
-
-    if (lib.isLoaded()) {
-        lib.unload();
-    }
-
-    QDir dir(EnvironmentInfo::getConfigsPath());
-    dir.mkdir("efr");
-
-    if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/base_functions.h")) {
-        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp"))
-        {
-            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp");
-        }
-        QFile::copy(EnvironmentInfo::getConfigsPath()+"/base_functions.cpp", EnvironmentInfo::getConfigsPath()+"/efr/base_functions.cpp");
-        if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h"))
-        {
-            QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h");
-        }
-        QFile::copy(EnvironmentInfo::getConfigsPath()+"/base_functions.h", EnvironmentInfo::getConfigsPath()+"/efr/base_functions.h");
-        add_base_functions = true;
-    }
-
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-        QString main_file_name = "main.cpp";
-        QString spec_func_pref = "extern \"C\" __declspec(dllexport)";
-        QString spec_namespace = "using namespace std;\n";
-        QString lib_file = "main.dll";
-    #else
-        QString main_file_name = "main.c";
-        QString spec_func_pref = "extern \"C\"";
-        QString spec_namespace = "";
-        QString lib_file = "main.so";
-    #endif
-
-    if (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file) && !QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file))
-    {
-        qDebug() <<  tr("Can't remove %filename%").replace("%filename%", lib_file) << endl;
-        #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-            int lib_n = 0;
-            do {
-                lib_file = "main_"+QString::number(lib_n)+".dll";
-                lib_n++;
-            } while (QFile::exists(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file) && !QFile::remove(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file));
-        #endif
-    }
-
-    QProcess* pConsoleProc = new QProcess;
-
-    QFile file(EnvironmentInfo::getConfigsPath()+"/efr/main.h");
-    file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-    QTextStream out(&file);
-    out << "#include <math.h>\n";
-    out << "#include <string.h>\n";
-    out << "#include <stdio.h>\n";
-    if (add_base_functions) out << "#include \"base_functions.h\"\n";
-    out << "typedef double (*PlaySoundFunction) (int,unsigned int,double);\n";
-    out << "typedef double (*VariablesFunction) (unsigned int);\n";
-
-    out << spec_func_pref << " void update_vars(PlaySoundFunction __bFunction, VariablesFunction __cFunction);\n";
-
-    for(i=0;i<channels_count;i++) {
-        out << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f);\n";
-    }
-    file.close();
-
-    QFile file2(EnvironmentInfo::getConfigsPath()+"/efr/"+main_file_name);
-    file2.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-    QTextStream out2(&file2);
-    out2 << "#include \"main.h\"\n";
-    out2 << spec_namespace;
-    out2 << "\n";
-    out2 << "static PlaySoundFunction BaseSoundFunction;\n";
-    out2 << "static VariablesFunction BaseVariablesFunction;\n";
-    if (!sound_functions.isEmpty()) {
-        out2 << "\n" + sound_functions + "\n";
-    }
-    if (!text_functions.isEmpty()) {
-        out2 << "\n" + text_functions + "\n";
-    }
-
-    QMap<QString, double>::const_iterator iter_var = variables->constBegin();
-    int ind;
-    while (iter_var != variables->constEnd()) {
-        out2 << "static double " << iter_var.key() << " = " << iter_var.value() << ";\n";
-        ++iter_var;
-    }
-
-    out2 << "\n";
-    out2 << spec_func_pref << " void update_vars(PlaySoundFunction __bFunction, VariablesFunction __cFunction)\n";
-    out2 << "{\n";
-    out2 << "    BaseSoundFunction = __bFunction;\n";
-    out2 << "    BaseVariablesFunction = __cFunction;\n";
-    iter_var = variables->constBegin();
-    ind = 0;
-    while (iter_var != variables->constEnd()) {
-        out2 << "    " << iter_var.key() << " = BaseVariablesFunction(" << ind << ");\n";
-        ++iter_var;
-        ++ind;
-    }
-    out2 << "};\n";
-
-    QMap<QString, QString>::const_iterator iter_expr;
-    QString ftext;
-
-    for(i=0;i<channels_count;i++) {
-        ftext = channels.at(i)->function_text;
-
-        out2 << spec_func_pref << " double sound_func_"+QString::number(i)+"(double t, double k, double f) \n";
-        out2 << "{\n";
-
-        iter_expr = expressions->constBegin();
-        while (iter_expr != expressions->constEnd()) {
-            out2 << "    double " << iter_expr.key() << " = (" << iter_expr.value() << ");\n";
-            ++iter_expr;
-        }
-
-        out2 << "    return (double) ("+ftext+");\n";
-        out2 << "};\n";
-    }
-    out2 << "\n";
-    out2 << "int main(int argc, char *argv[]) {return 0;};\n";
-    file2.close();
-
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-        QString tcmd;
-        QString vcdir = EnvironmentInfo::getVCPath();
-        if (!vcdir.isEmpty())
-        {
-            pConsoleProc->setWorkingDirectory(vcdir);
-            pConsoleProc->start("vcvarsall.bat x86_amd64");
-            pConsoleProc->waitForFinished();
-            qDebug() << pConsoleProc->workingDirectory() << endl;
-        }
-
-        pConsoleProc->setWorkingDirectory(EnvironmentInfo::getConfigsPath()+"/efr");
-        qDebug() << pConsoleProc->workingDirectory() << endl;
-
-        if (add_base_functions) {
-            pConsoleProc->start("cl.exe /c /EHsc base_functions.cpp");
-            pConsoleProc->waitForFinished();
-            qDebug() <<  pConsoleProc->readAll() << endl;
-            pConsoleProc->start("lib base_functions.obj");
-            pConsoleProc->waitForFinished();
-            qDebug() <<  pConsoleProc->readAll() << endl;
-            tcmd = "cl.exe /LD main.cpp /DLL /link base_functions.lib /OUT:" + lib_file;
-        } else {
-            tcmd = "cl.exe /LD main.cpp /link /DLL /OUT:" + lib_file;
-        }
-    #else
-        QFile file3(EnvironmentInfo::getConfigsPath()+"/efr/Makefile");
-        file3.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-        QTextStream out3(&file3);
-
-        #if defined(__LP64__) || defined(__x86_64__) || defined(__ppc64__)
-            int platform = 64;
-        #else
-            int platform = 32;
-        #endif
-
-        out3 << "CC = g++\n";
-        out3 << "MODULES= main.o base_functions.o\n";
-        out3 << "INC=-I/usr/local/sbin -I/usr/local/bin -I/usr/sbin -I/usr/bin -I/sbin -I/bin\n";
-        out3 << "OBJECTS=\n";
-        out3 << "RCLOBJECTS= main.c main.h base_functions.cpp base_functions.h\n";
-        out3 << "all: "+lib_file+"\n";
-        out3 << lib_file+":$(MODULES)\n";
-        out3 << "	$(CC) -shared $(MODULES) -o "+lib_file+"\n";
-        out3 << "base_functions.o: $(RCLOBJECTS)\n";
-        out3 << "	g++ -m" << platform << " -Wall -fPIC -c base_functions.cpp -o base_functions.o\n";
-        out3 << "main.o: $(RCLOBJECTS)\n";
-        out3 << "	g++ -m" << platform << " -Wall -fPIC -c main.c -o main.o\n";
-        out3 << "clean:\n";
-        out3 << "	rm -f *.o\n";
-        out3 << "	rm -f "+lib_file+"\n";
-        file3.close();
-
-        QString tcmd = "make -C \""+EnvironmentInfo::getConfigsPath()+"/efr\" -f Makefile";
-    #endif
-    qDebug() <<  tcmd << endl;
-
-    pConsoleProc->start(tcmd, QProcess::ReadOnly);
-    if(pConsoleProc->waitForFinished()==true)
-    {
-       QByteArray b = pConsoleProc->readAllStandardError();
-       #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(_WIN64)
-           error = pConsoleProc->readAll();
-           qDebug() <<  error << endl;
-           if (error.indexOf("fatal error", 0, Qt::CaseInsensitive)<0 && error.indexOf("error c", 0, Qt::CaseInsensitive)<0) {
-               error = "";
-           }
-       #else
-           error = QString(b);
-       #endif
-       qDebug() <<  error << endl;
-    }
-    pConsoleProc->close();
-    delete pConsoleProc;
-
-    if (error.isEmpty()) {
-        lib.setFileName(EnvironmentInfo::getConfigsPath()+"/efr/"+lib_file);
-        all_functions_loaded = true;
-        for(i=0;i<channels_count;i++) {
-            channels.at(i)->channel_fct = (GenSoundFunction)(lib.resolve(qPrintable("sound_func_"+QString::number(i))));
-            all_functions_loaded = all_functions_loaded && channels.at(i)->channel_fct;
-        }
-        if (all_functions_loaded) {
-            update_func = (UpdateVariablesFunction)(lib.resolve("update_vars"));
-        }
-        checkHash(true);
-    }
-
-    if (!all_functions_loaded) {
-        oldParseHash = "";
-        for(i=0;i<channels_count;i++) {
-            channels.at(i)->channel_fct = NULL;
-        }
-        update_func = NULL;
-    }
-
-    return all_functions_loaded;
-}
-
-double SndController::getResult(unsigned int channel, double current_t)
-{
-    GenSoundChannelInfo *info = channels.at(channel);
-    return info->amp * info->channel_fct(current_t, info->k, info->freq);
-}
-
-void SndController::resetParams()
-{
-    for(unsigned int i=0; i<channels_count; i++) {
-        GenSoundChannelInfo *info = channels.at(i);
-        info->amp = 1;
-        info->freq = 500;
-        info->k = info->freq*2.0*M_PI;
-        info->ar = 0;
-        info->fr = 0;
-        info->function_text = "sin(k*t)";
-    }
-    t = 0.0;
-    t_real = 0.0;
 }
 
 SoundList *SndController::getBaseSoundList() const
 {
     return baseSoundList;
-}
-
-QMap<QString, double>* SndController::getVariables()
-{
-    return variables;
-}
-
-QMap<QString, QString>* SndController::getExpressions()
-{
-    return expressions;
 }
 
 unsigned int SndController::getSystemBufferMsSize() const
@@ -617,19 +201,6 @@ void SndController::setSystemBufferMsSize(unsigned int value)
     createsoundexinfo_gen.length = createsoundexinfo_sound.length;
 }
 
-QStringList* SndController::getInnerVariables() const
-{
-    return inner_variables;
-}
-
-void SndController::setVariable(QString varname, double varvalue)
-{
-    QMutexLocker locker(&buffer_mutex);
-    variable_changed = true;
-    variables->insert(varname, varvalue);
-    if (update_func) update_func(base_play_sound, get_variable_value);
-}
-
 void SndController::setPlayAnalizeActivity(bool active)
 {
     analize_is_active = active;
@@ -640,14 +211,9 @@ bool SndController::getPlayAnalizeActivity() const
     return analize_is_active;
 }
 
-double SndController::getFrequency() const
-{
-    return frequency;
-}
-
 void SndController::setFrequency(double value)
 {
-    frequency = value;
+    SignalController::setFrequency(value);
     createsoundexinfo_sound.decodebuffersize  = (unsigned int) round(frequency * system_buffer_ms_size / 1000); /* Chunk size of stream update in samples.  This will be the amount of data passed to the user callback. */
     createsoundexinfo_sound.length            = ((unsigned int) frequency) * channels_count * sizeof(qint32);   /* Length of PCM data in bytes of whole song (for Sound::getLength) */
     createsoundexinfo_sound.defaultfrequency  = (unsigned int) frequency;                                       /* Default playback rate of sound. */
@@ -656,7 +222,6 @@ void SndController::setFrequency(double value)
     createsoundexinfo_gen.defaultfrequency = createsoundexinfo_sound.defaultfrequency;
     if (sound_system_initialized) initSoundSystem();
 }
-
 
 void SndController::writeWavHeader(FILE *file, FMOD::Sound *sound, int length)
 {
@@ -734,9 +299,9 @@ void SndController::export_cycle(FMOD::Sound *sound)
 
         unsigned int sec_buff_size = ((unsigned int) frequency) * channels_count * sizeof(qint32);
         quint8 *buf = new quint8[sec_buff_size];
-        t = 0.0;
+        resetT();
         for(int second = 0; second<export_max_t; second++) {
-            fillBuffer(0, buf, sec_buff_size);
+            fillBuffer(buf, sec_buff_size);
             datalength += fwrite(buf, 1, sec_buff_size, mainfile);
             emit export_status(round(100.0*second/export_max_t));
         }
@@ -800,11 +365,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
 
     QMutexLocker locker(&buffer_mutex);
 
-    if (double_buff) {
-        delete double_buff;
-        double_buff = NULL;
-        double_buff_size = 0;
-    }
+    removeDoubleBuff();
 }
 
 void SndController::process_sound()
@@ -812,10 +373,10 @@ void SndController::process_sound()
     FMOD::Sound            *sound;
     FMOD_MODE               mode = FMOD_2D | FMOD_OPENUSER | FMOD_LOOP_NORMAL;
     QTextStream             console(stdout);
-    GenSoundChannelInfo    *info;
+    GenChannelInfo    *info;
     bool parsed;
 
-    t = t_real = 0.0;
+    resetT();
     is_stopping = false;
     emit write_message(tr("Initialization..."));
 
@@ -835,8 +396,8 @@ void SndController::process_sound()
         console << tr("Freq %num%:").replace("%num%",QString::number(i)) << " " << info->freq << endl;
     }
 
-    sound_functions = baseSoundList->getFunctionsText();
-    console << tr("Sounds:") << "[" << sound_functions << "]" << endl;
+    setSignalFunctions(baseSoundList->getFunctionsText());
+    console << tr("Sounds:") << "[" << getSignalFunctions() << "]" << endl;
 
     parsed = parseFunctions();
 
@@ -846,9 +407,7 @@ void SndController::process_sound()
         return;
     }
 
-    if (update_func) {
-        this->update_func(base_play_sound, get_variable_value);
-    }
+    variableUpdated();
 
     if (process_mode == SndPlay) emit started();
 
@@ -919,40 +478,6 @@ void SndController::run_export(int seconds, QString filename) {
     while (process_thread->isFinished()) {}
 }
 
-void SndController::setFunctionsStr(QString new_f) {
-    text_functions = new_f;
-}
-
-void SndController::setFunctionStr(unsigned int channel, QString new_text)
-{
-    channels.at(channel)->function_text = new_text;
-}
-
-void SndController::setAmp(unsigned int channel, double new_amp)
-{
-    QMutexLocker locker(&buffer_mutex);
-    variable_changed = true;
-    channels.at(channel)->amp = new_amp;
-}
-
-void SndController::setFreq(unsigned int channel, double new_freq)
-{
-    QMutexLocker locker(&buffer_mutex);
-    variable_changed = true;
-    channels.at(channel)->freq = new_freq;
-    channels.at(channel)->k = new_freq*2.0*M_PI;
-}
-
-double SndController::getInstFreq(unsigned int channel)
-{
-    return channels.at(channel)->fr;
-}
-
-double SndController::getInstAmp(unsigned int channel)
-{
-    return channels.at(channel)->ar;
-}
-
 double SndController::getT()
 {
     double rt;
@@ -963,14 +488,6 @@ double SndController::getT()
         rt = rt / 1000;
     }
     return t_real + rt;
-}
-
-GenSoundFunction SndController::getChannelFunction(unsigned int channel)
-{
-    if (lib.isLoaded() && channel>=0 && channel<channels.size())
-        return channels.at(channel)->channel_fct;
-    else
-        return 0;
 }
 
 FMOD::System *SndController::getFmodSystem()

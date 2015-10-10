@@ -3,18 +3,11 @@
 
 #include <QApplication>
 #include <QTimer>
-#include <QtGui>
-#include <QtCore/QCoreApplication>
-#include <QProcess>
-#include <QVector>
-#include <QMap>
-#include <QCryptographicHash>
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include "base_functions.h"
 #include "abstractsndcontroller.h"
 #include "soundlist.h"
-#include "classes/environmentinfo.h"
 #include "classes/sndanalyzer.h"
 
 #if defined(WIN32) || defined(__WATCOMC__) || defined(_WIN32) || defined(__WIN32__)
@@ -28,7 +21,7 @@ double get_variable_value(unsigned int);
 
 enum SndControllerPlayMode { SndPlay, SndExport };
 
-class SndController : public QObject, public AbstractSndController
+class SndController : public AbstractSndController
 {
     Q_OBJECT
 private:
@@ -38,34 +31,17 @@ private:
 
     Q_DISABLE_COPY(SndController);
 
-    QString getCurrentParseHash();
-    bool checkHash(bool emptyCheck);
-    bool parseFunctions();
-    double getResult(unsigned int channel, double current_t);
-
-    void resetParams();
     void play_cycle(FMOD::Sound *sound);
     void export_cycle(FMOD::Sound *sound);
     void writeWavHeader(FILE *file, FMOD::Sound *sound, int length);
 
     bool is_stopping, is_running;
-    double t, t_real;
+
     qint64 t_real_ms_unixtime;
-    bool all_functions_loaded;
-    unsigned int channels_count;
-    double frequency;
     int export_max_t;
     QString export_filename;
 
-    QVector<GenSoundChannelInfo*> channels;
-    QMap<QString, double> *variables;
-    QMap<QString, QString> *expressions;
-    QStringList *inner_variables;
-
     SoundList *baseSoundList;
-    QString text_functions, sound_functions;
-    QString oldParseHash;
-    QLibrary lib;
     QEventLoop *loop;
     QTimer *timer;
     QThread *process_thread;
@@ -77,38 +53,18 @@ private:
     SndAnalyzer *analyzer;
     bool sound_system_initialized;
     unsigned int system_buffer_ms_size;
-
-    QMutex buffer_mutex;
-    qint32 *double_buff;
-    unsigned int double_buff_size;
-    bool variable_changed;
     bool analize_is_active;
-    UpdateVariablesFunction update_func;
 
 public:
     static SndController* Instance();
     static bool DeleteInstance();
 
-    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer);
-    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen, bool use_second_buffer);
-    void fillBuffer(FMOD_SOUND *sound, void *data, unsigned int datalen);
     double playSound(int index, unsigned int channel, double t);
 
-    void setChannelsCount(unsigned int count);
-    unsigned int getChannelsCount();
+    virtual void setChannelsCount(unsigned int count);
 
-    double getFrequency() const;
-    void setFrequency(double value);
-
-    void setFunctionsStr(QString new_f);
-    void setFunctionStr(unsigned int channel, QString new_text);
-    void setAmp(unsigned int channel, double new_amp);
-    void setFreq(unsigned int channel, double new_freq);
-
-    double getInstFreq(unsigned int channel);
-    double getInstAmp(unsigned int channel);
+    virtual void setFrequency(double value);
     double getT();
-    GenSoundFunction getChannelFunction(unsigned int channel);
 
     FMOD::System *getFmodSystem();
     FMOD_CREATESOUNDEXINFO getFmodSoundCreateInfo();
@@ -119,14 +75,8 @@ public:
     void run_export(int seconds, QString filename);
     void stop_export();
 
-    QMap<QString, double>* getVariables();
-    QMap<QString, QString>* getExpressions();
-
     unsigned int getSystemBufferMsSize() const;
     void setSystemBufferMsSize(unsigned int value);
-
-    QStringList* getInnerVariables() const;
-    void setVariable(QString varname, double varvalue);
 
     void setPlayAnalizeActivity(bool active);
     bool getPlayAnalizeActivity() const;

@@ -71,6 +71,7 @@ android {
 SOURCES += main.cpp\
     base_functions.cpp \
     classes/environmentinfo.cpp \
+    signalcontroller.cpp \
     abstractsndcontroller.cpp \
     kiss_fft/kiss_fft.c \
     kiss_fft/kiss_fftr.c \
@@ -95,6 +96,7 @@ SOURCES += main.cpp\
 
 HEADERS  += base_functions.h \
     classes/environmentinfo.h \
+    signalcontroller.h \
     abstractsndcontroller.h \
     widgets/soundpicker.h \
     soundlist.h \

@@ -185,13 +185,13 @@ QString SoundList::getFunctionsText()
         if (rec->pcmData)
         {
             i = baseSoundsList.indexOf(rec);
-            result += "double " + rec->sound_function + "(double t) { return BaseSoundFunction("+QString::number(i)+", 0, t);} \n";
+            result += "double " + rec->sound_function + "(double t) { return BaseSignalFunction("+QString::number(i)+", 0, t);} \n";
             if (rec->channels_count>=2) {
-                result += "double " + rec->sound_function + "_L(double t) { return BaseSoundFunction("+QString::number(i)+", 1, t);} \n";
-                result += "double " + rec->sound_function + "_R(double t) { return BaseSoundFunction("+QString::number(i)+", 2, t);} \n";
+                result += "double " + rec->sound_function + "_L(double t) { return BaseSignalFunction("+QString::number(i)+", 1, t);} \n";
+                result += "double " + rec->sound_function + "_R(double t) { return BaseSignalFunction("+QString::number(i)+", 2, t);} \n";
             }
             for(j=0;j<rec->channels_count;j++) {
-                result += "double " + rec->sound_function + "_" + QString::number(j)+"(double t) { return BaseSoundFunction("+QString::number(i)+", "+QString::number(j+1)+", t);} \n";
+                result += "double " + rec->sound_function + "_" + QString::number(j)+"(double t) { return BaseSignalFunction("+QString::number(i)+", "+QString::number(j+1)+", t);} \n";
             }
         }
     }
