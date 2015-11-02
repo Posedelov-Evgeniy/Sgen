@@ -5,7 +5,7 @@ SndController *SndController::_self_controller = 0;
 
 FMOD_RESULT F_CALLBACK pcmreadcallback(FMOD_SOUND *sound, void *data, unsigned int datalen)
 {
-    SndController::Instance()->fillBuffer(data, datalen, true);
+    SndController::Instance()->fillBuffer(data, datalen);
     return FMOD_OK;
 }
 
@@ -18,7 +18,7 @@ FMOD_RESULT F_CALLBACK pcmsetposcallback(FMOD_SOUND *sound, int subsound, unsign
 }
 
 double get_variable_value(unsigned int varid) {
-    QMap<QString, double> *variables = SndController::Instance()->getVariables();
+    CVariables *variables = SndController::Instance()->getVariables();
     return variables->value(variables->keys().at(varid));
 }
 
@@ -364,8 +364,6 @@ void SndController::play_cycle(FMOD::Sound *sound)
     }
 
     QMutexLocker locker(&buffer_mutex);
-
-    removeDoubleBuff();
 }
 
 void SndController::process_sound()

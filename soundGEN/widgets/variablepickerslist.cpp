@@ -123,7 +123,7 @@ void VariablePickersList::adjustParams()
 
         current_var_name = picker->getVarname();
         current_var_name = current_var_name.replace(QRegExp("\\W"), "");
-        if (current_var_name.isEmpty() || SndController::Instance()->getInnerVariables()->contains(current_var_name, Qt::CaseInsensitive) || var_names.indexOf(current_var_name)>=0)
+        if (var_names.indexOf(current_var_name)>=0 || !SndController::Instance()->isVariableNameOK(current_var_name))
         {
             while (var_names.indexOf(current_var_name = "var"+QString::number(j))>=0) j++;
         }

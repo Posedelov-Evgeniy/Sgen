@@ -16,6 +16,8 @@ typedef double (*PlaySoundFunction) (int,unsigned int,double);
 typedef double (*VariablesFunction) (unsigned int);
 typedef double (*GenSignalFunction) (double, double, double);
 typedef void (*UpdateVariablesFunction) (PlaySoundFunction, VariablesFunction);
+typedef QMap<QString, double> CVariables;
+typedef QMap<QString, QString> CExpressions;
 
 struct GenChannelInfo {
     double freq;
@@ -27,6 +29,8 @@ struct GenChannelInfo {
     GenSignalFunction channel_fct;
 };
 
+enum SignalControllerVariablesTransition { SCVT_None, SCVT_LinearBuff, SCVT_SquareBuff, SCVT_LinearVar, SCVT_SquareVar};
+
 class SignalController: public QObject
 {
     Q_OBJECT
@@ -34,18 +38,17 @@ public:
     SignalController(QObject *parent = 0);
     ~SignalController();
 
-    QMap<QString, double> *getVariables();
-    QMap<QString, QString> *getExpressions();
+    CVariables *getVariables();
+    CExpressions *getExpressions();
 
     void setAmp(unsigned int channel, double new_amp);
     void setFreq(unsigned int channel, double new_freq);
 
-    void fillBuffer(void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer);
-    void fillBuffer(void *data, unsigned int datalen, bool use_second_buffer);
     void fillBuffer(void *data, unsigned int datalen);
 
     QStringList *getInnerVariables() const;
     void setVariable(QString varname, double varvalue);
+    bool isVariableNameOK(QString varname);
 
     void setFunctionsStr(QString new_f);
     void setFunctionStr(unsigned int channel, QString new_text);
@@ -58,30 +61,28 @@ public:
     virtual double getFrequency() const;
     double getInstFreq(unsigned int channel);
     double getInstAmp(unsigned int channel);
-
 protected:
     double t, t_real;
+    SignalControllerVariablesTransition transition;
+    double transition_time, transition_counter;
     QString oldParseHash;
     QLibrary lib;
     bool all_functions_loaded;
     unsigned int channels_count;
     QVector<GenChannelInfo*> channels;
-    QMap<QString, double> *variables;
-    QMap<QString, QString> *expressions;
+    CVariables *variables, *new_variables, *old_variables, *buff_variables;
+    CExpressions *expressions;
     QStringList *inner_variables;
     QString text_functions, signal_functions;
     double frequency;
 
     QMutex buffer_mutex;
-    qint32 *double_buff;
-    unsigned int double_buff_size;
     bool variable_changed;
     UpdateVariablesFunction update_func;
 
     bool parseFunctions();
     double getResult(unsigned int channel, double current_t);
     void resetParams();
-    void removeDoubleBuff();
     void resetT();
     void variableUpdated();
 
@@ -97,6 +98,10 @@ private:
 
     QString getCurrentParseHash();
     bool checkHash(bool emptyCheck);
+    void flushNewVariables();
+    void setNewVariables();
+    void setOldVariables();
+    double getTransitionKoef(double transition_tk);
 };
 
 #endif // SIGNALCONTROLLER_H

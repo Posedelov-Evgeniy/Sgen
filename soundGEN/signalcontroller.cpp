@@ -8,11 +8,15 @@ SignalController::SignalController(QObject *parent) :
     frequency = 0;
     oldParseHash = "";
     signal_functions = "";
-    double_buff_size = 0;
-    double_buff = NULL;
+    transition = SCVT_LinearBuff;
+    transition_time = 6;
+    transition_counter = 0;
 
-    variables = new QMap<QString, double>();
-    expressions = new QMap<QString, QString>();
+    buff_variables = new CVariables();
+    old_variables = new CVariables();
+    new_variables = new CVariables();
+    variables = new CVariables();
+    expressions = new CExpressions();
     update_func = NULL;
     base_play_sound_function = NULL;
     variable_value_function = NULL;
@@ -42,6 +46,9 @@ SignalController::~SignalController()
 {
     delete inner_variables;
     delete variables;
+    delete new_variables;
+    delete old_variables;
+    delete buff_variables;
     delete expressions;
 }
 
@@ -201,7 +208,7 @@ bool SignalController::parseFunctions()
         out2 << "\n" + text_functions + "\n";
     }
 
-    QMap<QString, double>::const_iterator iter_var = variables->constBegin();
+    CVariables::const_iterator iter_var = variables->constBegin();
     int ind;
     while (iter_var != variables->constEnd()) {
         out2 << "static double " << iter_var.key() << " = " << iter_var.value() << ";\n";
@@ -222,7 +229,7 @@ bool SignalController::parseFunctions()
     }
     out2 << "};\n";
 
-    QMap<QString, QString>::const_iterator iter_expr;
+    CExpressions::const_iterator iter_expr;
     QString ftext;
 
     for(i=0;i<channels_count;i++) {
@@ -380,79 +387,120 @@ GenSignalFunction SignalController::getChannelFunction(unsigned int channel)
         return 0;
 }
 
-QMap<QString, double>* SignalController::getVariables()
+CVariables* SignalController::getVariables()
 {
     return variables;
 }
 
-QMap<QString, QString>* SignalController::getExpressions()
+CExpressions* SignalController::getExpressions()
 {
     return expressions;
 }
 
-void SignalController::fillBuffer(void *data, unsigned int datalen, bool use_second_buffer, bool for_second_buffer)
+double SignalController::getTransitionKoef(double transition_tk)
+{
+    if (transition==SCVT_SquareBuff || transition==SCVT_SquareVar)
+        return transition_tk*transition_tk;
+    return transition_tk;
+}
+
+void SignalController::fillBuffer(void *data, unsigned int datalen)
 {
     unsigned int count, maxcount, offset;
     qint32 *buffer = (qint32*)data;
-    qint32 max_val = std::numeric_limits<qint32>::max();
+    qint32 max_val = std::numeric_limits<qint32>::max()-1;
     double curr;
-    bool old_variable_changed = variable_changed;
 
-    if (!for_second_buffer) buffer_mutex.lock();
+    buffer_mutex.lock();
 
     datalen = datalen/sizeof(qint32);
     maxcount = datalen/channels_count;
 
     if (all_functions_loaded)
     {
-        for(unsigned int i=0; i<channels_count; i++)
-        {
-            curr = 0;
-            for (count=0; count<maxcount; count++)
-            {
-                curr = getResult(i, t+count/frequency);
-                buffer[count*channels_count + i] = (qint32)(curr * max_val);
-            }
-        }
 
-        if (old_variable_changed && !for_second_buffer && use_second_buffer && double_buff && double_buff_size>=datalen) {
-            for(unsigned int i=0; i<channels_count; i++)
-            {
+        if (variable_changed && new_variables->size()>0) {
+            curr = 0;
+            double t_k;
+
+            if (transition==SCVT_LinearBuff || transition==SCVT_SquareBuff) {
+
+                if (!transition_counter) {
+                    setNewVariables();
+                    variableUpdated();
+                }
+
+                for(unsigned int i=0; i<channels_count; i++)
+                {
+                    curr = 0;
+                    for (count=0; count<maxcount; count++)
+                    {
+                        curr = getResult(i, t+count/frequency);
+                        buffer[count*channels_count + i] = (qint32)(curr * max_val);
+                    }
+                }
+
+                setOldVariables();
+                variableUpdated();
+                for (count=0; count<maxcount; count++) {
+                    t_k = getTransitionKoef((frequency*transition_counter + count)/(frequency*transition_time));
+                    if(t_k>1) t_k=1;
+                    for(unsigned int i=0; i<channels_count; i++) {
+                        offset =  count*channels_count + i;
+                        curr = getResult(i, t+count/frequency);
+                        buffer[offset] = (quint32) (floor(curr * max_val)*(1-t_k) + buffer[offset]*t_k);
+                    }
+                }
+
+                if (t_k < 1) {
+                    setNewVariables();
+                    variableUpdated();
+                }
+
+            } else if (transition == SCVT_LinearVar || transition==SCVT_SquareVar) {
+                CVariables::const_iterator iter_var;
                 for (count=0; count<maxcount; count++)
                 {
-                    offset =  count*channels_count + i;
-                    buffer[offset] = round(
-                            (double) buffer[offset]*(count+1)/((double)maxcount) +
-                            (double) double_buff[offset]*(maxcount-count-1)/((double)maxcount)
-                    );
+                    t_k = getTransitionKoef((frequency*transition_counter + count)/(frequency*transition_time));
+                    if(t_k>1) t_k=1;
+                    iter_var = new_variables->constBegin();
+                    while (iter_var != new_variables->constEnd()) {
+                        curr = old_variables->value(iter_var.key())*(1-t_k) + iter_var.value()*t_k;
+                        variables->insert(iter_var.key(), curr);
+                        ++iter_var;
+                    }
+                    variableUpdated();
+                    for(unsigned int i=0; i<channels_count; i++)
+                    {
+                        offset =  count*channels_count + i;
+                        curr = getResult(i, t+count/frequency);
+                        buffer[offset] = (qint32)(curr * max_val);
+                    }
                 }
             }
-            variable_changed = false;
+
+            transition_counter += (maxcount-1) / frequency;
+
+            if (abs(transition_counter-transition_time)<1E-10 || transition_counter>transition_time) {
+                flushNewVariables();
+                variableUpdated();
+            }
+        } else {
+            for(unsigned int i=0; i<channels_count; i++)
+            {
+                curr = 0;
+                for (count=0; count<maxcount; count++)
+                {
+                    curr = getResult(i, t+count/frequency);
+                    buffer[count*channels_count + i] = (qint32)(curr * max_val);
+                }
+            }
         }
 
-        if (!for_second_buffer) t += maxcount/frequency;
+        t += maxcount/frequency;
     }
 
-    if (!for_second_buffer && use_second_buffer) {
-        if (double_buff_size < datalen || !double_buff) {
-            if (double_buff) delete[] double_buff;
-            double_buff = new qint32[datalen];
-            double_buff_size = datalen;
-        }
-        fillBuffer(double_buff, datalen*sizeof(qint32), true, true);
-    }
-
-    if (!for_second_buffer) buffer_mutex.unlock();
-}
-
-void SignalController::fillBuffer(void *data, unsigned int datalen, bool use_second_buffer)
-{
-    fillBuffer(data, datalen, use_second_buffer, false);
-}
-
-void SignalController::fillBuffer(void *data, unsigned int datalen)
-{
-    fillBuffer(data, datalen, false, false);
+    buffer_mutex.unlock();
 }
 
 double SignalController::getFrequency() const
@@ -492,15 +540,6 @@ void SignalController::resetParams()
         info->function_text = "sin(k*t)";
     }
     resetT();
-}
-
-void SignalController::removeDoubleBuff()
-{
-    if (double_buff) {
-        delete double_buff;
-        double_buff = NULL;
-        double_buff_size = 0;
-    }
 }
 
 void SignalController::resetT()
@@ -549,8 +588,64 @@ void SignalController::setVariable(QString varname, double varvalue)
 {
     QMutexLocker locker(&buffer_mutex);
     variable_changed = true;
-    variables->insert(varname, varvalue);
-    variableUpdated();
+
+    if (variables->contains(varname)) {
+        if (transition_counter) {
+            buff_variables->insert(varname, varvalue);
+        } else {
+            new_variables->insert(varname, varvalue);
+            old_variables->insert(varname, variables->value(varname));
+        }
+    } else {
+        variables->insert(varname, varvalue);
+    }
+}
+
+void SignalController::setNewVariables()
+{
+    CVariables::const_iterator iter_var = new_variables->constBegin();
+    while (iter_var != new_variables->constEnd()) {
+        variables->insert(iter_var.key(), iter_var.value());
+        ++iter_var;
+    }
+}
+
+void SignalController::setOldVariables()
+{
+    CVariables::const_iterator iter_var = old_variables->constBegin();
+    while (iter_var != old_variables->constEnd()) {
+        variables->insert(iter_var.key(), iter_var.value());
+        ++iter_var;
+    }
+}
+
+void SignalController::flushNewVariables()
+{
+    setNewVariables();
+    transition_counter = 0;
+    new_variables->clear();
+    old_variables->clear();
+
+    if (!buff_variables->isEmpty()) {
+        CVariables::const_iterator iter_var = variables->constBegin();
+        while (iter_var != variables->constEnd()) {
+            old_variables->insert(iter_var.key(), iter_var.value());
+            ++iter_var;
+        }
+        iter_var = buff_variables->constBegin();
+        while (iter_var != buff_variables->constEnd()) {
+            new_variables->insert(iter_var.key(), iter_var.value());
+            ++iter_var;
+        }
+        buff_variables->clear();
+    } else {
+        variable_changed = false;
+    }
+}
+
+bool SignalController::isVariableNameOK(QString varname)
+{
+    return !varname.isEmpty() && !getInnerVariables()->contains(varname, Qt::CaseInsensitive);
 }
 
 double SignalController::getResult(unsigned int channel, double current_t)
