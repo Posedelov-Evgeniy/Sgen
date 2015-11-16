@@ -348,7 +348,7 @@ void SndController::play_cycle(FMOD::Sound *sound)
 
         if (analize_is_active) {
             for(i=0; i<channels.size(); i++) {
-                analyzer->function_fft_top_only(getChannelFunction(i), t - system_buffer_ms_size/2000.0, t + system_buffer_ms_size/2000.0, channels.at(i)->freq, 1*frequency);
+                analyzer->function_fft_top_only(getChannelFunction(i), t - system_buffer_ms_size/2000.0, t + system_buffer_ms_size/2000.0, 1*frequency);
                 channels.at(i)->fr = analyzer->getInstFrequency();
                 channels.at(i)->ar = channels.at(i)->amp * analyzer->getInstAmp();
             }
@@ -405,7 +405,7 @@ void SndController::process_sound()
         return;
     }
 
-    variableUpdated();
+    flushAllVariables();
 
     if (process_mode == SndPlay) emit started();
 

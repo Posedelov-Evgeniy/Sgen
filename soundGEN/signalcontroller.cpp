@@ -69,6 +69,8 @@ QString SignalController::getCurrentParseHash()
     for(int i=0;i<channels_count;i++) {
         hash.addData(channels.at(i)->function_text.toLatin1());
     }
+    hash.addData(QString::number(variables->count()).toLatin1());
+    hash.addData(QString::number(expressions->count()).toLatin1());
 
     return hash.result().toHex();
 }
@@ -118,6 +120,7 @@ void SignalController::setChannelsCount(unsigned int count)
     }
 
     channels_count = count;
+    setInnerVariables();
 }
 
 bool SignalController::parseFunctions()
@@ -189,7 +192,7 @@ bool SignalController::parseFunctions()
     out << spec_func_pref << " void update_vars(PlaySignalFunction __bFunction, VariablesFunction __cFunction);\n";
 
     for(i=0;i<channels_count;i++) {
-        out << spec_func_pref << " double signal_func_"+QString::number(i)+"(double t, double k, double f);\n";
+        out << spec_func_pref << " double signal_func_"+QString::number(i)+"(double t);\n";
     }
     file.close();
 
@@ -235,7 +238,7 @@ bool SignalController::parseFunctions()
     for(i=0;i<channels_count;i++) {
         ftext = channels.at(i)->function_text;
 
-        out2 << spec_func_pref << " double signal_func_"+QString::number(i)+"(double t, double k, double f) \n";
+        out2 << spec_func_pref << " double signal_func_"+QString::number(i)+"(double t) \n";
         out2 << "{\n";
 
         iter_expr = expressions->constBegin();
@@ -244,7 +247,10 @@ bool SignalController::parseFunctions()
             ++iter_expr;
         }
 
-        out2 << "    return (double) ("+ftext+");\n";
+        out2 << "    double k = k_" << i << ";\n";
+        out2 << "    double f = f_" << i << ";\n";
+
+        out2 << "    return amp_" << i << "*((double) ("+ftext+"));\n";
         out2 << "};\n";
     }
     out2 << "\n";
@@ -369,6 +375,7 @@ void SignalController::setAmp(unsigned int channel, double new_amp)
     QMutexLocker locker(&buffer_mutex);
     variable_changed = true;
     channels.at(channel)->amp = new_amp;
+    setVariable("amp_"+QString::number(channel), new_amp, false);
 }
 
 void SignalController::setFreq(unsigned int channel, double new_freq)
@@ -377,6 +384,8 @@ void SignalController::setFreq(unsigned int channel, double new_freq)
     variable_changed = true;
     channels.at(channel)->freq = new_freq;
     channels.at(channel)->k = new_freq*2.0*M_PI;
+    setVariable("k_"+QString::number(channel), channels.at(channel)->k, false);
+    setVariable("f_"+QString::number(channel), channels.at(channel)->freq, false);
 }
 
 GenSignalFunction SignalController::getChannelFunction(unsigned int channel)
@@ -419,7 +428,7 @@ void SignalController::fillBuffer(void *data, unsigned int datalen)
     if (all_functions_loaded)
     {
 
-        if (variable_changed && new_variables->size()>0) {
+        if (variable_changed && new_variables->size()>0 && transition!=SCVT_None) {
             curr = 0;
             double t_k;
 
@@ -486,6 +495,10 @@ void SignalController::fillBuffer(void *data, unsigned int datalen)
                 variableUpdated();
             }
         } else {
+            if (transition==SCVT_None && variable_changed && new_variables->size()>0) {
+                flushAllVariables();
+            }
+
             for(unsigned int i=0; i<channels_count; i++)
             {
                 curr = 0;
@@ -589,6 +602,13 @@ void SignalController::setVariableValueFunction(const VariablesFunction &value)
     variable_value_function = value;
 }
 
+void SignalController::flushAllVariables()
+{
+    if(new_variables->size()>0) flushNewVariables();
+    if(new_variables->size()>0) flushNewVariables();
+    variableUpdated();
+}
+
 void SignalController::setBasePlaySoundFunction(const PlaySoundFunction &value)
 {
     base_play_sound_function = value;
@@ -604,9 +624,9 @@ PlaySoundFunction SignalController::getBasePlaySoundFunction() const
     return base_play_sound_function;
 }
 
-void SignalController::setVariable(QString varname, double varvalue)
+void SignalController::setVariable(QString varname, double varvalue, bool with_locker)
 {
-    QMutexLocker locker(&buffer_mutex);
+    QMutexLocker locker(with_locker ? &buffer_mutex : NULL);
     variable_changed = true;
 
     if (variables->contains(varname)) {
@@ -636,6 +656,21 @@ void SignalController::setOldVariables()
     while (iter_var != old_variables->constEnd()) {
         variables->insert(iter_var.key(), iter_var.value());
         ++iter_var;
+    }
+}
+
+void SignalController::clearVariables()
+{
+    variables->clear();
+    setInnerVariables();
+}
+
+void SignalController::setInnerVariables()
+{
+    for(int i=0;i<channels_count;i++) {
+        variables->insert("amp_"+QString::number(i), channels.at(i)->amp);
+        variables->insert("k_"+QString::number(i), channels.at(i)->k);
+        variables->insert("f_"+QString::number(i), channels.at(i)->freq);
     }
 }
 
@@ -671,5 +706,5 @@ bool SignalController::isVariableNameOK(QString varname)
 double SignalController::getResult(unsigned int channel, double current_t)
 {
     GenChannelInfo *info = channels.at(channel);
-    return info->amp * info->channel_fct(current_t, info->k, info->freq);
+    return info->channel_fct(current_t);
 }

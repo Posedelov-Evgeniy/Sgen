@@ -20,6 +20,9 @@ public:
     void loadPickersSettings(QSettings *settings);
     void setSNDOptions(SndController* sc);
 
+    bool getEditEnabled() const;
+    void setEditEnabled(bool value);
+
 signals:
     void variables_options_changed();
 
@@ -33,6 +36,7 @@ private:
     Ui::VariablePickersList *ui;
     static const int maxVariables = 10;
     QList<VariablePicker*> variables;
+    bool edit_enabled;
 
     VariablePicker* addVariablePicker(QString var_name);
     void removeVariablePicker(VariablePicker* p);

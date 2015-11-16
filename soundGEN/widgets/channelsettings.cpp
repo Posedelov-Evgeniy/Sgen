@@ -154,8 +154,6 @@ void ChannelSettings::init_snd_channel_params()
     sc->setFunctionStr(channel_index, getFunction());
     sc->setAmp(channel_index, getAmp());
     sc->setFreq(channel_index, getFreq());
-    channel_drawer->setAmp(getAmp());
-    channel_drawer->setFreq(getFreq());
 }
 
 void ChannelSettings::run_graphic()
@@ -173,13 +171,11 @@ void ChannelSettings::stop_graphic()
 void ChannelSettings::on_doubleSpinBox_amp_valueChanged(double arg1)
 {
     sc->setAmp(channel_index, arg1);
-    channel_drawer->setAmp(arg1);
 }
 
 void ChannelSettings::on_doubleSpinBox_freq_valueChanged(double arg1)
 {
     sc->setFreq(channel_index, arg1);
-    channel_drawer->setFreq(arg1);
 }
 
 void ChannelSettings::on_dialog_functions_btn_clicked()

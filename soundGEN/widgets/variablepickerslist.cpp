@@ -6,6 +6,7 @@ VariablePickersList::VariablePickersList(QWidget *parent) :
     ui(new Ui::VariablePickersList)
 {
     ui->setupUi(this);
+    edit_enabled = true;
 }
 
 VariablePickersList::~VariablePickersList()
@@ -15,6 +16,8 @@ VariablePickersList::~VariablePickersList()
 
 VariablePicker* VariablePickersList::addVariablePicker(QString var_name)
 {
+    if (!edit_enabled) return NULL;
+
     VariablePicker *picker = NULL;
     int length = variables.length();
     if (length<maxVariables)
@@ -80,7 +83,7 @@ void VariablePickersList::setSNDOptions(SndController *sc)
 {
     adjustParams();
 
-    sc->getVariables()->clear();
+    sc->clearVariables();
     sc->getExpressions()->clear();
 
     for(int i=0; i<variables.length(); i++) {
@@ -94,6 +97,8 @@ void VariablePickersList::setSNDOptions(SndController *sc)
 
 void VariablePickersList::removeVariablePicker(VariablePicker *p)
 {
+    if (!edit_enabled) return;
+
     int pos = variables.indexOf(p);
     if (pos>=0) {
         ui->variable_container->layout()->removeWidget(p);
@@ -155,3 +160,13 @@ void VariablePickersList::send_changed_value()
         SndController::Instance()->setVariable(picker->getVarname(), picker->getValue());
     }
 }
+bool VariablePickersList::getEditEnabled() const
+{
+    return edit_enabled;
+}
+
+void VariablePickersList::setEditEnabled(bool value)
+{
+    edit_enabled = value;
+}
+

@@ -64,17 +64,11 @@ private slots:
     void on_actionVariables_linear_transition_triggered();
     void on_actionVariables_square_transition_triggered();
     void on_actionNo_transition_triggered();
-
     void on_action0_5s_triggered();
-
     void on_action1s_triggered();
-
     void on_action2s_triggered();
-
     void on_action5s_triggered();
-
     void on_action10s_triggered();
-
     void on_action30s_triggered();
 
 private:

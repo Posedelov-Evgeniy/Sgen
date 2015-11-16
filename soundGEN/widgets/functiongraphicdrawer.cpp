@@ -37,14 +37,10 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
 
     widget_drawer->setT(0.001);
     widget_drawer->setT0(0.001);
-    widget_drawer->setFreq(500);
-    widget_drawer->setAmp(1);
     widget_drawer->setKt(0.005);
     widget_drawer->resetGraphicFunctions();
 
     widget_fft_drawer->setT(0);
-    widget_fft_drawer->setFreq(500);
-    widget_fft_drawer->setAmp(1);
     widget_fft_drawer->setKt(0.005);
     widget_fft_drawer->resetGraphicFunctions();
 
@@ -81,18 +77,6 @@ void functionGraphicDrawer::setGraphicFunction(GenSignalFunction value)
 void functionGraphicDrawer::setT0(double value)
 {
     widget_drawer->setT0(value);
-}
-
-void functionGraphicDrawer::setAmp(double value)
-{
-    widget_drawer->setAmp(value);
-    widget_fft_drawer->setAmp(value);
-}
-
-void functionGraphicDrawer::setFreq(double value)
-{
-    widget_drawer->setFreq(value);
-    widget_fft_drawer->setFreq(value);
 }
 
 int functionGraphicDrawer::getDtIntValue() const

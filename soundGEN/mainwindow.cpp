@@ -98,6 +98,9 @@ void MainWindow::sound_stopped()
     ui->actionVariables_square_transition->setEnabled(true);
     ui->menuTransition_time->setEnabled(true);
 
+    ui->sound_container->setEnabled(true);
+    variables_list->setEditEnabled(true);
+
     ui->actionOpen->setEnabled(true);
     emit stop_channel_graphics();
 
@@ -138,6 +141,9 @@ void MainWindow::sound_started()
     ui->actionVariables_linear_transition->setEnabled(false);
     ui->actionVariables_square_transition->setEnabled(false);
     ui->menuTransition_time->setEnabled(false);
+
+    ui->sound_container->setEnabled(false);
+    variables_list->setEditEnabled(false);
 
     ui->actionOpen->setEnabled(false);
 

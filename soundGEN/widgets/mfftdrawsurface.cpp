@@ -55,7 +55,7 @@ void MFftDrawSurface::recalcData()
             data_top = 0;
         }
         if (!analyzer->getHarmonics() || analyzer->getHarmonics()->isEmpty()) {
-            analyzer->function_fft_base(graphicFunction, t, t+dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+            analyzer->function_fft_base(graphicFunction, t, t+dt, floor(dt*SndController::Instance()->getFrequency()));
         }
         if (analyzer->getHarmonics()) {
             data = new QVector<HarmonicInfo>(*(analyzer->getHarmonics()));
@@ -63,7 +63,7 @@ void MFftDrawSurface::recalcData()
         if (analyzer->getTopHarmonics()) {
             data_top = new QVector<HarmonicInfo>(*(analyzer->getTopHarmonics()));
         }
-        analyzer->function_fft_base(graphicFunction, t+dt, t+2*dt, freq, floor(dt*SndController::Instance()->getFrequency()));
+        analyzer->function_fft_base(graphicFunction, t+dt, t+2*dt, floor(dt*SndController::Instance()->getFrequency()));
         data_buffer = analyzer->getHarmonics();
     }
     last_fmod_dt = cfmod;

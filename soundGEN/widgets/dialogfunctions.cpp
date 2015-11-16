@@ -12,8 +12,6 @@ DialogFunctions::DialogFunctions(QWidget *parent) :
     ui->description_layout->addWidget(widget_drawer);
     widget_drawer->setT(0);
     widget_drawer->setT0(0);
-    widget_drawer->setFreq(500);
-    widget_drawer->setAmp(1);
     widget_drawer->setKamp(1);
     widget_drawer->setKt(0.05);
     widget_drawer->setDt(0.008);

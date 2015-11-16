@@ -14,7 +14,7 @@
 
 typedef double (*PlaySoundFunction) (int,unsigned int,double);
 typedef double (*VariablesFunction) (unsigned int);
-typedef double (*GenSignalFunction) (double, double, double);
+typedef double (*GenSignalFunction) (double);
 typedef void (*UpdateVariablesFunction) (PlaySoundFunction, VariablesFunction);
 typedef QMap<QString, double> CVariables;
 typedef QMap<QString, QString> CExpressions;
@@ -47,7 +47,8 @@ public:
     void fillBuffer(void *data, unsigned int datalen);
 
     QStringList *getInnerVariables() const;
-    void setVariable(QString varname, double varvalue);
+    void setVariable(QString varname, double varvalue, bool with_locker = true);
+    void clearVariables();
     bool isVariableNameOK(QString varname);
 
     void setFunctionsStr(QString new_f);
@@ -97,6 +98,8 @@ protected:
     void setBasePlaySoundFunction(const PlaySoundFunction &value);
     VariablesFunction getVariableValueFunction() const;
     void setVariableValueFunction(const VariablesFunction &value);
+
+    void flushAllVariables();
 private:
     PlaySoundFunction base_play_sound_function;
     VariablesFunction variable_value_function;
@@ -106,6 +109,7 @@ private:
     void flushNewVariables();
     void setNewVariables();
     void setOldVariables();
+    void setInnerVariables();
     double getTransitionKoef(double transition_tk);
 };
 

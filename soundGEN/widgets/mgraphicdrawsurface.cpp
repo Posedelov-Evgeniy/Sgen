@@ -21,26 +21,6 @@ void MGraphicDrawSurface::setT0(double value)
     t0 = value;
 }
 
-double MGraphicDrawSurface::getAmp() const
-{
-    return amp;
-}
-
-void MGraphicDrawSurface::setAmp(double value)
-{
-    amp = value;
-}
-
-double MGraphicDrawSurface::getFreq() const
-{
-    return freq;
-}
-
-void MGraphicDrawSurface::setFreq(double value)
-{
-    freq = value;
-}
-
 double MGraphicDrawSurface::getDt() const
 {
     return dt;
@@ -150,9 +130,9 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 
     int points_count = 2 * width() - 1;
     int height_center = height() / 2;
-    double k_y_graphic = kamp * amp * 0.4 * height();
+    double k_y_graphic = kamp * 0.4 * height();
     double k_t_graphic = dt/points_count;
-    double kFreq = freq*2.0*M_PI;
+    double kFreq = 500.0*2.0*M_PI;
 
     int i;
     double x0, y0, x1, y1;
@@ -175,7 +155,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
 
     x1 = 0;
     if (graphicFunction)
-        y1 = height_center - k_y_graphic*graphicFunction(t, kFreq, freq);
+        y1 = height_center - k_y_graphic*graphicFunction(t);
     else
         y1 = height_center - k_y_graphic*graphicTFunction(kFreq*t);
 
@@ -185,7 +165,7 @@ void MGraphicDrawSurface::paintEvent(QPaintEvent *e)
         x1 = i/2;
 
         if (graphicFunction)
-            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic, kFreq, freq);
+            y1 = height_center - k_y_graphic*graphicFunction(t+i*k_t_graphic);
         else
             y1 = height_center - k_y_graphic*graphicTFunction((t+i*k_t_graphic)*kFreq);
         painter.drawLine(x0,y0,x1,y1);

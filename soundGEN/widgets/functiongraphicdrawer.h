@@ -21,8 +21,6 @@ public:
     void setGraphicFunction(GenSignalFunction value);
 
     void setT0(double value);
-    void setAmp(double value);
-    void setFreq(double value);
 
     int getDtIntValue() const;
     void setDtIntValue(int value);

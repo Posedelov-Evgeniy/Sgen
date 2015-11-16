@@ -11,7 +11,7 @@ class MGraphicDrawSurface : public QWidget
 {
     Q_OBJECT
 protected:
-    double t, t0, amp, freq, dt, kt, kamp, dt_axis;
+    double t, t0, dt, kt, kamp, dt_axis;
     double grid_k;
     GenSignalFunction graphicFunction;
     base_function_signal graphicTFunction;
@@ -27,12 +27,6 @@ public:
 
     double getT0() const;
     void setT0(double value);
-
-    double getAmp() const;
-    void setAmp(double value);
-
-    double getFreq() const;
-    void setFreq(double value);
 
     virtual double getDt() const;
     virtual void setDt(double value);
