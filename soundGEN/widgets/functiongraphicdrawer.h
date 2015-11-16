@@ -37,7 +37,6 @@ public:
     bool isFft();
     void setFft(bool value);
 
-    virtual void setVisible(bool visible);
 private:
     Ui::functionGraphicDrawer *ui;
     static graphicThread *mThread;
@@ -45,11 +44,15 @@ private:
     MFftDrawSurface *widget_fft_drawer;
     bool block_change;
     bool need_to_run;
+    bool old_visible;
 signals:
     void changed();
 public slots:
     void run();
     void stop();
+    virtual void setVisible(bool visible);
+protected:
+    virtual void showEvent(QShowEvent * event);
 private slots:
     void drawCycle();
     void on_durationSlider_valueChanged(int value);

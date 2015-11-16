@@ -9,7 +9,7 @@ SignalController::SignalController(QObject *parent) :
     oldParseHash = "";
     signal_functions = "";
     transition = SCVT_LinearBuff;
-    transition_time = 6;
+    transition_time = 1;
     transition_counter = 0;
 
     buff_variables = new CVariables();
@@ -526,6 +526,26 @@ double SignalController::getInstFreq(unsigned int channel)
 double SignalController::getInstAmp(unsigned int channel)
 {
     return channels.at(channel)->ar;
+}
+
+SignalControllerVariablesTransition SignalController::getTransitionType() const
+{
+    return transition;
+}
+
+void SignalController::setTransitionType(const SignalControllerVariablesTransition &value)
+{
+    transition = value;
+}
+
+double SignalController::getTransitionTime() const
+{
+    return transition_time;
+}
+
+void SignalController::setTransitionTime(double value)
+{
+    transition_time = value;
 }
 
 void SignalController::resetParams()

@@ -53,6 +53,8 @@ functionGraphicDrawer::functionGraphicDrawer(QWidget *parent) :
 
     on_durationSlider_valueChanged(ui->durationSlider->value());
     on_ampSlider_valueChanged(ui->ampSlider->value());
+
+    old_visible = false;
 }
 
 functionGraphicDrawer::~functionGraphicDrawer()
@@ -158,7 +160,8 @@ void functionGraphicDrawer::setFft(bool value)
 
 void functionGraphicDrawer::setVisible(bool visible)
 {
-    if (isVisible()!=visible) {
+    old_visible = isVisible();
+    if (old_visible!=visible) {
         if (need_to_run && visible) {
             drawCycle();
             mThread->Stop = false;
@@ -168,6 +171,20 @@ void functionGraphicDrawer::setVisible(bool visible)
         }
     }
     QWidget::setVisible(visible);
+}
+
+void functionGraphicDrawer::showEvent(QShowEvent *event)
+{
+    if (!old_visible) {
+        if (need_to_run) {
+            drawCycle();
+            mThread->Stop = false;
+            mThread->start();
+        } else if (mThread && mThread->isRunning()) {
+            mThread->Stop = true;
+        }
+    }
+    old_visible = true;
 }
 
 void functionGraphicDrawer::drawCycle()
@@ -181,9 +198,10 @@ void functionGraphicDrawer::drawCycle()
 
 void functionGraphicDrawer::run()
 {
+    old_visible = isVisible();
     need_to_run = true;
     drawCycle();
-    if (isVisible()) {
+    if (old_visible) {
         mThread->Stop = false;
         mThread->start();
     }

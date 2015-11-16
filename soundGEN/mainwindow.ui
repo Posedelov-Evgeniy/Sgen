@@ -500,7 +500,7 @@
     </widget>
     <widget class="QMenu" name="menuBuffer">
      <property name="title">
-      <string>Buffer</string>
+      <string>Buffer size</string>
      </property>
      <addaction name="action25_ms"/>
      <addaction name="action50_ms"/>
@@ -516,8 +516,31 @@
      <addaction name="actionChannel_instant_amplitude"/>
      <addaction name="actionChannel_instant_frequency"/>
     </widget>
+    <widget class="QMenu" name="menuBuffer_transition_type">
+     <property name="title">
+      <string>Buffer transition type</string>
+     </property>
+     <widget class="QMenu" name="menuTransition_time">
+      <property name="title">
+       <string>Transition time</string>
+      </property>
+      <addaction name="action0_5s"/>
+      <addaction name="action1s"/>
+      <addaction name="action2s"/>
+      <addaction name="action5s"/>
+      <addaction name="action10s"/>
+      <addaction name="action30s"/>
+     </widget>
+     <addaction name="actionNo_transition"/>
+     <addaction name="actionResult_linear_transition"/>
+     <addaction name="actionResult_square_transition"/>
+     <addaction name="actionVariables_linear_transition"/>
+     <addaction name="actionVariables_square_transition"/>
+     <addaction name="menuTransition_time"/>
+    </widget>
     <addaction name="menuChannels"/>
     <addaction name="menuBuffer"/>
+    <addaction name="menuBuffer_transition_type"/>
     <addaction name="menuView"/>
    </widget>
    <addaction name="menu"/>
@@ -679,6 +702,100 @@
    </property>
    <property name="text">
     <string>Channel instant amplitude</string>
+   </property>
+  </action>
+  <action name="actionResult_linear_transition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Result linear transition</string>
+   </property>
+  </action>
+  <action name="actionResult_square_transition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Result square transition</string>
+   </property>
+  </action>
+  <action name="actionVariables_linear_transition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Variables linear transition</string>
+   </property>
+  </action>
+  <action name="actionVariables_square_transition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Variables square transition</string>
+   </property>
+  </action>
+  <action name="actionNo_transition">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>No transition</string>
+   </property>
+  </action>
+  <action name="action0_5s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>0.5s</string>
+   </property>
+  </action>
+  <action name="action1s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1s</string>
+   </property>
+  </action>
+  <action name="action2s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>2s</string>
+   </property>
+  </action>
+  <action name="action5s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>5s</string>
+   </property>
+  </action>
+  <action name="action10s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>10s</string>
+   </property>
+  </action>
+  <action name="action30s">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>30s</string>
    </property>
   </action>
  </widget>

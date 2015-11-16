@@ -61,6 +61,11 @@ public:
     virtual double getFrequency() const;
     double getInstFreq(unsigned int channel);
     double getInstAmp(unsigned int channel);
+    SignalControllerVariablesTransition getTransitionType() const;
+    void setTransitionType(const SignalControllerVariablesTransition &value);
+    double getTransitionTime() const;
+    void setTransitionTime(double value);
+
 protected:
     double t, t_real;
     SignalControllerVariablesTransition transition;

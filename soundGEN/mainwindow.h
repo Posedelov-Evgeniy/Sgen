@@ -56,12 +56,26 @@ private slots:
     void on_action250_ms_triggered();
     void on_action1000_ms_triggered();
     void on_action10000_ms_triggered();
-
     void on_actionChannel_graphics_triggered();
-
     void on_actionChannel_instant_frequency_triggered();
-
     void on_actionChannel_instant_amplitude_triggered();
+    void on_actionResult_linear_transition_triggered();
+    void on_actionResult_square_transition_triggered();
+    void on_actionVariables_linear_transition_triggered();
+    void on_actionVariables_square_transition_triggered();
+    void on_actionNo_transition_triggered();
+
+    void on_action0_5s_triggered();
+
+    void on_action1s_triggered();
+
+    void on_action2s_triggered();
+
+    void on_action5s_triggered();
+
+    void on_action10s_triggered();
+
+    void on_action30s_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -89,6 +103,8 @@ private:
     void setChannelsCount(unsigned int count);
     void doSetParams();
     void doSetVisibility();
+    void pickTransitionTime(double timelen);
+    void pickTransitionType(SignalControllerVariablesTransition ttype);
 };
 
 #endif // MAINWINDOW_H

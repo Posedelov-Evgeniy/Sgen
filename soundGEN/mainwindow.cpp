@@ -91,6 +91,13 @@ void MainWindow::sound_stopped()
     ui->action1000_ms->setEnabled(true);
     ui->action10000_ms->setEnabled(true);
 
+    ui->actionNo_transition->setEnabled(true);
+    ui->actionResult_linear_transition->setEnabled(true);
+    ui->actionResult_square_transition->setEnabled(true);
+    ui->actionVariables_linear_transition->setEnabled(true);
+    ui->actionVariables_square_transition->setEnabled(true);
+    ui->menuTransition_time->setEnabled(true);
+
     ui->actionOpen->setEnabled(true);
     emit stop_channel_graphics();
 
@@ -124,6 +131,13 @@ void MainWindow::sound_started()
     ui->action250_ms->setEnabled(false);
     ui->action1000_ms->setEnabled(false);
     ui->action10000_ms->setEnabled(false);
+
+    ui->actionNo_transition->setEnabled(false);
+    ui->actionResult_linear_transition->setEnabled(false);
+    ui->actionResult_square_transition->setEnabled(false);
+    ui->actionVariables_linear_transition->setEnabled(false);
+    ui->actionVariables_square_transition->setEnabled(false);
+    ui->menuTransition_time->setEnabled(false);
 
     ui->actionOpen->setEnabled(false);
 
@@ -183,6 +197,8 @@ void MainWindow::save_settings(QString filename, bool base_settings)
     int i;
 
     settings.setValue("main/channels_count", sc->getChannelsCount());
+    settings.setValue("main/transition_type", sc->getTransitionType());
+    settings.setValue("main/transition_time", sc->getTransitionTime());
     for(i=0; i<sc->getChannelsCount(); i++) {
         settings.setValue("main/function_"+QString::number(i), channels.at(i)->getFunction());
         settings.setValue("main/amp_"+QString::number(i), channels.at(i)->getAmp());
@@ -252,6 +268,9 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     ui->actionChannel_graphics->setChecked(settings.value("main/graphics_visible", ui->actionChannel_graphics->isChecked()).toBool());
     ui->actionChannel_instant_amplitude->setChecked(settings.value("main/instamp_visible", ui->actionChannel_instant_amplitude->isChecked()).toBool());
     ui->actionChannel_instant_frequency->setChecked(settings.value("main/instfreq_visible", ui->actionChannel_instant_frequency->isChecked()).toBool());
+
+    pickTransitionType((SignalControllerVariablesTransition) settings.value("main/transition_type", 1).toInt());
+    pickTransitionTime(settings.value("main/transition_time", 1).toDouble());
 
     for(i=0; i<sc->getChannelsCount(); i++) {
         channels.at(i)->setFunction(settings.value("main/function_"+QString::number(i), "sin(k*t)").toString());
@@ -524,4 +543,82 @@ void MainWindow::on_actionChannel_instant_frequency_triggered()
 void MainWindow::on_actionChannel_instant_amplitude_triggered()
 {
     doSetVisibility();
+}
+
+void MainWindow::pickTransitionType(SignalControllerVariablesTransition ttype)
+{
+    ui->actionResult_linear_transition->setChecked(ttype==SCVT_LinearBuff);
+    ui->actionResult_square_transition->setChecked(ttype==SCVT_SquareBuff);
+    ui->actionVariables_linear_transition->setChecked(ttype==SCVT_LinearVar);
+    ui->actionVariables_square_transition->setChecked(ttype==SCVT_SquareVar);
+    ui->actionNo_transition->setChecked(ttype==SCVT_None);
+    sc->setTransitionType(ttype);
+    ui->menuTransition_time->setEnabled(ttype!=SCVT_None);
+}
+
+void MainWindow::on_actionResult_linear_transition_triggered()
+{
+    pickTransitionType(SCVT_LinearBuff);
+}
+
+void MainWindow::on_actionResult_square_transition_triggered()
+{
+    pickTransitionType(SCVT_SquareBuff);
+}
+
+void MainWindow::on_actionVariables_linear_transition_triggered()
+{
+    pickTransitionType(SCVT_LinearVar);
+}
+
+void MainWindow::on_actionVariables_square_transition_triggered()
+{
+    pickTransitionType(SCVT_SquareVar);
+}
+
+void MainWindow::on_actionNo_transition_triggered()
+{
+    pickTransitionType(SCVT_None);
+}
+
+void MainWindow::pickTransitionTime(double timelen)
+{
+    if (timelen<=0.1) timelen = 0.1;
+    ui->action0_5s->setChecked(timelen==0.5);
+    ui->action1s->setChecked(timelen==1);
+    ui->action2s->setChecked(timelen==2);
+    ui->action5s->setChecked(timelen==5);
+    ui->action10s->setChecked(timelen==10);
+    ui->action30s->setChecked(timelen==30);
+    sc->setTransitionTime(timelen);
+}
+
+void MainWindow::on_action0_5s_triggered()
+{
+    pickTransitionTime(0.5);
+}
+
+void MainWindow::on_action1s_triggered()
+{
+    pickTransitionTime(1);
+}
+
+void MainWindow::on_action2s_triggered()
+{
+    pickTransitionTime(2);
+}
+
+void MainWindow::on_action5s_triggered()
+{
+    pickTransitionTime(5);
+}
+
+void MainWindow::on_action10s_triggered()
+{
+    pickTransitionTime(10);
+}
+
+void MainWindow::on_action30s_triggered()
+{
+    pickTransitionTime(30);
 }
