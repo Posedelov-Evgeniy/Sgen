@@ -184,7 +184,9 @@ bool SignalController::parseFunctions()
     QTextStream out(&file);
     out << "#include <math.h>\n";
     out << "#include <string.h>\n";
-    out << "#include <stdio.h>\n";
+    out << "#include <stdio.h>\n\n";
+    out << "#pragma GCC diagnostic ignored \"-Wunused-variable\"\n";
+    out << "#pragma GCC diagnostic ignored \"-Wunused-function\"\n\n";
     if (add_base_functions) out << "#include \"base_functions.h\"\n";
     out << "typedef double (*PlaySignalFunction) (int,unsigned int,double);\n";
     out << "typedef double (*VariablesFunction) (unsigned int);\n";

@@ -13,7 +13,7 @@ if [ "$buildDir" = '' ] ; then
     exit 0
 fi
 if [ -e "$buildDir/functions.cpp.cfg" ] ; then
-	echo "Files already deployed. Exit.";
+    echo "Files already deployed. Exit.";
     exit 0
 fi
 
