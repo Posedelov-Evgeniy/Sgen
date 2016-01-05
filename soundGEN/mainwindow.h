@@ -10,6 +10,7 @@
 #include "widgets/soundpickerslist.h"
 #include "widgets/variablepickerslist.h"
 #include "widgets/channelsettings.h"
+#include "widgets/iopicker.h"
 #include "widgets/dialogexport.h"
 #include "classes/utextedit.h"
 
@@ -85,6 +86,7 @@ private:
     DialogExport *export_form;
     SoundPickersList *pickers_list;
     VariablePickersList *variables_list;
+    IOPicker *iopicker;
 
     void closeEvent(QCloseEvent *event);
     void setActionEnabled(int index, bool enabled = false);

@@ -115,6 +115,21 @@
     </message>
 </context>
 <context>
+    <name>IOPicker</name>
+    <message>
+        <source>Form</source>
+        <translation type="unfinished">Форма</translation>
+    </message>
+    <message>
+        <source>Output device</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound card:</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>MFftDrawSurface</name>
     <message>
         <source>Hz</source>
@@ -253,7 +268,7 @@
     </message>
     <message>
         <source>Buffer</source>
-        <translation>Буфер</translation>
+        <translation type="vanished">Буфер</translation>
     </message>
     <message>
         <source>25 ms</source>
@@ -274,6 +289,97 @@
     <message>
         <source>10000 ms</source>
         <translation>10000 мс</translation>
+    </message>
+    <message>
+        <source>Devices</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Buffer size</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Buffer transition type</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Transition time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Channel graphics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Channel instant frequency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Channel instant amplitude</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Result linear transition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Result square transition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Variables linear transition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Variables square transition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No transition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>0.5s</source>
+        <translation type="unfinished">8 (7.1) {0.5s?}</translation>
+    </message>
+    <message>
+        <source>1s</source>
+        <translation type="unfinished">8 (7.1) {1s?}</translation>
+    </message>
+    <message>
+        <source>2s</source>
+        <translation type="unfinished">8 (7.1) {2s?}</translation>
+    </message>
+    <message>
+        <source>5s</source>
+        <translation type="unfinished">8 (7.1) {5s?}</translation>
+    </message>
+    <message>
+        <source>10s</source>
+        <translation type="unfinished">8 (7.1) {10s?}</translation>
+    </message>
+    <message>
+        <source>30s</source>
+        <translation type="unfinished">8 (7.1) {30s?}</translation>
+    </message>
+</context>
+<context>
+    <name>SignalController</name>
+    <message>
+        <source>Hash is: </source>
+        <translation type="unfinished">Хеш: </translation>
+    </message>
+    <message>
+        <source>Hashes equals - no need to parse functions</source>
+        <translation type="unfinished">Хеши равны. Парсинг не нужен.</translation>
+    </message>
+    <message>
+        <source>Can&apos;t remove %filename%</source>
+        <translation type="unfinished">Не удаётся удалить %filename%</translation>
     </message>
 </context>
 <context>
@@ -316,11 +422,11 @@
     </message>
     <message>
         <source>Hash is: </source>
-        <translation>Хеш: </translation>
+        <translation type="vanished">Хеш: </translation>
     </message>
     <message>
         <source>Hashes equals - no need to parse functions</source>
-        <translation>Хеши равны. Парсинг не нужен.</translation>
+        <translation type="vanished">Хеши равны. Парсинг не нужен.</translation>
     </message>
     <message>
         <source>Sounds:</source>
@@ -328,7 +434,7 @@
     </message>
     <message>
         <source>Can&apos;t remove %filename%</source>
-        <translation>Не удаётся удалить %filename%</translation>
+        <translation type="vanished">Не удаётся удалить %filename%</translation>
     </message>
     <message>
         <source>Sound object written to file</source>

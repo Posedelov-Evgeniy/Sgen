@@ -15,10 +15,12 @@ MainWindow::MainWindow(QWidget *parent) :
     base_title = windowTitle();
 
     /* adding widgets */
+    iopicker = new IOPicker(ui->io_container);
     pickers_list = new SoundPickersList(ui->sound_container);
     variables_list = new VariablePickersList(ui->variables_container);
     export_form = new DialogExport(parent);
     functions_text = new UTextEdit();
+    ui->io_container->layout()->addWidget(iopicker);
     ui->functions_tab->layout()->addWidget(functions_text);
     ui->sound_container->layout()->addWidget(pickers_list);
     ui->variables_container->layout()->addWidget(variables_list);
@@ -55,6 +57,7 @@ MainWindow::~MainWindow()
     delete export_form;
     delete pickers_list;
     delete variables_list;
+    delete iopicker;
     delete ui;
 }
 

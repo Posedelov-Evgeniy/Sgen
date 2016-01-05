@@ -11,6 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = soundGEN
 TEMPLATE = app
 
+RESOURCES = application.qrc
+
 android {
     # Add files and directories to ship with the application
     # by adapting the examples below.
@@ -40,19 +42,17 @@ android {
     qtcAddDeployment()
 } else:win32 {
     RC_FILE += soundGEN.rc
-    LIBS += $$PWD/api/windows/lib/fmod_vc.lib
     INCLUDEPATH += $$PWD/api/windows/inc
     DEPENDPATH += $$PWD/api/windows/inc
-    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod.dll
-
-    include(deployment_desktop.pri)
-} else:win64 {
-    RC_FILE += soundGEN.rc
-    LIBS += $$PWD/api/windows/lib/fmod64_vc.lib
-    INCLUDEPATH += $$PWD/api/windows/inc
-    DEPENDPATH += $$PWD/api/windows/inc
-    PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod64.dll
-
+    !contains(QMAKE_TARGET.arch, x86_64) {
+        message("x86 build")
+        LIBS += $$PWD/api/windows/lib/fmod_vc.lib
+        PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod.dll
+    } else {
+        message("x86_64 build")
+        LIBS += $$PWD/api/windows/lib/fmod64_vc.lib
+        PRE_TARGETDEPS += $$PWD/api/windows/lib/fmod64.dll
+    }
     include(deployment_desktop.pri)
 } else:unix {
     *-64 {
@@ -92,7 +92,8 @@ SOURCES += main.cpp\
     widgets/dialogexport.cpp \
     widgets/soundpickerslist.cpp \
     widgets/variablepicker.cpp \
-    widgets/variablepickerslist.cpp
+    widgets/variablepickerslist.cpp \
+    widgets/iopicker.cpp
 
 HEADERS  += base_functions.h \
     classes/environmentinfo.h \
@@ -119,7 +120,8 @@ HEADERS  += base_functions.h \
     widgets/dialogexport.h \
     widgets/soundpickerslist.h \
     widgets/variablepicker.h \
-    widgets/variablepickerslist.h
+    widgets/variablepickerslist.h \
+    widgets/iopicker.h
 
 FORMS    += mainwindow.ui \
     widgets/soundpicker.ui \
@@ -129,7 +131,8 @@ FORMS    += mainwindow.ui \
     widgets/dialogexport.ui \
     widgets/soundpickerslist.ui \
     widgets/variablepicker.ui \
-    widgets/variablepickerslist.ui
+    widgets/variablepickerslist.ui \
+    widgets/iopicker.ui
 
 OTHER_FILES += \
     config.cfg \
