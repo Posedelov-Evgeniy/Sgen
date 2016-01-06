@@ -72,6 +72,10 @@ private slots:
     void on_action10s_triggered();
     void on_action30s_triggered();
 
+    void pickBufferSize(unsigned int size);
+    void pickChannelsCount(unsigned int count);
+    void pickTransitionTime(double timelen);
+    void pickTransitionType(SignalControllerVariablesTransition ttype);
 private:
     Ui::MainWindow *ui;
     SndController *sc;
@@ -94,13 +98,10 @@ private:
 
     void save_settings(QString filename, bool base_settings = true);
     void load_settings(QString filename, bool base_settings = true);
-    void pickBufferSize(unsigned int size);
-    void pickChannelsCount(unsigned int count);
+
     void setChannelsCount(unsigned int count);
     void doSetParams();
     void doSetVisibility();
-    void pickTransitionTime(double timelen);
-    void pickTransitionType(SignalControllerVariablesTransition ttype);
 };
 
 #endif // MAINWINDOW_H

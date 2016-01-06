@@ -287,6 +287,19 @@ void SndController::writeWavHeader(FILE *file, FMOD::Sound *sound, int length)
     }
 }
 
+int SndController::getOutDriverIndex() const
+{
+    if (!system) return -1;
+    int driver;
+    system->getDriver(&driver);
+    return driver;
+}
+
+void SndController::setOutDriverIndex(int value)
+{
+    if (system) system->setDriver(value);
+}
+
 void SndController::export_cycle(FMOD::Sound *sound)
 {
     emit export_status(0);

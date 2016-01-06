@@ -80,6 +80,10 @@ public:
 
     void setPlayAnalizeActivity(bool active);
     bool getPlayAnalizeActivity() const;
+
+    int getOutDriverIndex() const;
+    void setOutDriverIndex(int value);
+
 signals:
     void starting();
     void started();

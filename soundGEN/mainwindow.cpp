@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     sound_stopped();
     sc = SndController::Instance();
+    QObject::connect(iopicker, SIGNAL(channels_count_changed(uint)), this, SLOT(pickChannelsCount(uint)));
+    QObject::connect(iopicker, SIGNAL(play_buffer_changed(uint)), this, SLOT(pickBufferSize(uint)));
     pickChannelsCount(2);
 
     /* loading settings */
@@ -81,6 +83,8 @@ void MainWindow::sound_stopped()
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(false);
 
+    iopicker->setEnabled(true);
+
     ui->actionExport_to->setEnabled(true);
     ui->action1_Mono->setEnabled(true);
     ui->action2_Stereo->setEnabled(true);
@@ -124,6 +128,8 @@ void MainWindow::sound_started()
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
     ui->buttonBox->button(QDialogButtonBox::Cancel)->setEnabled(true);
     ui->buttonBox->button(QDialogButtonBox::Retry)->setEnabled(true);
+
+    iopicker->setEnabled(false);
 
     ui->actionExport_to->setEnabled(false);
     ui->action1_Mono->setEnabled(false);
@@ -205,7 +211,8 @@ void MainWindow::save_settings(QString filename, bool base_settings)
     QSettings settings(filename, QSettings::IniFormat);
     int i;
 
-    settings.setValue("main/channels_count", sc->getChannelsCount());
+    iopicker->savePickersSettings(&settings);
+
     settings.setValue("main/transition_type", sc->getTransitionType());
     settings.setValue("main/transition_time", sc->getTransitionTime());
     for(i=0; i<sc->getChannelsCount(); i++) {
@@ -224,8 +231,6 @@ void MainWindow::save_settings(QString filename, bool base_settings)
 
     pickers_list->savePickersSettings(&settings);
     variables_list->savePickersSettings(&settings);
-
-    settings.setValue("main/buffer_size", sc->getSystemBufferMsSize());
 
     if (base_settings) {
 
@@ -267,12 +272,9 @@ void MainWindow::load_settings(QString filename, bool base_settings)
     QSettings settings(filename, QSettings::IniFormat);
     int i;
 
+    iopicker->loadPickersSettings(&settings);
     pickers_list->loadPickersSettings(&settings);
     variables_list->loadPickersSettings(&settings);
-
-    int channels_cnt = settings.value("main/channels_count", 2).toInt();
-    if (channels_cnt<=0 || channels_cnt>8) channels_cnt=2;
-    pickChannelsCount(channels_cnt);
 
     ui->actionChannel_graphics->setChecked(settings.value("main/graphics_visible", ui->actionChannel_graphics->isChecked()).toBool());
     ui->actionChannel_instant_amplitude->setChecked(settings.value("main/instamp_visible", ui->actionChannel_instant_amplitude->isChecked()).toBool());
@@ -292,8 +294,6 @@ void MainWindow::load_settings(QString filename, bool base_settings)
         channels.at(i)->getDrawer()->setDtFftIntValue(settings.value("graphic/dt_fft_"+QString::number(i), 100).toDouble());
     }
     doSetVisibility();
-
-    pickBufferSize(settings.value("main/buffer_size", 1000).toInt());
 
     if (base_settings) {
         QWidget::move(settings.value("window/left", 100).toInt(), settings.value("window/top", 100).toInt());
@@ -419,23 +419,12 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::pickBufferSize(unsigned int size)
 {
-    switch(size) {
-        case 25:
-        case 50:
-        case 250:
-        case 1000:
-        case 10000:
-            break;
-        default:
-            size = 1000;
-    }
-
     ui->action25_ms->setChecked(size==25);
     ui->action50_ms->setChecked(size==50);
     ui->action250_ms->setChecked(size==250);
     ui->action1000_ms->setChecked(size==1000);
     ui->action10000_ms->setChecked(size==10000);
-    sc->setSystemBufferMsSize(size);
+    iopicker->setOutBuffer(size);
 }
 
 void MainWindow::setChannelsCount(unsigned int count)
@@ -460,7 +449,7 @@ void MainWindow::setChannelsCount(unsigned int count)
     }
     for(unsigned int i=0; i<count; i++) channels.at(i)->setChannelsCount(count);
 
-    sc->setChannelsCount(count);
+    iopicker->setOutChannelsCount(count);
 }
 
 void MainWindow::pickChannelsCount(unsigned int count)
